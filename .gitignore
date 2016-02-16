@@ -1,0 +1,18 @@
+# ignore the publish directory
+00-publish/
+
+# ignore node_modules
+node_modules/
+
+# ignore CLJS-generated files
+target/
+public/js/admin.js
+public/js/admin.min.js
+public/js/index.js
+public/js/index.min.js
+
+# ignore less-generated css file
+public/css/main.min.css
+
+# ignore diff files
+*.diff

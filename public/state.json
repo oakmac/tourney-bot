@@ -1,0 +1,14 @@
+{
+  "divisions": {
+    "open": {"name": "Open"}
+  },
+  "fields": {
+    "indoor": {"name": "Indoor Field"}
+  },
+  "teams": {
+    "team1": {"name": "Flying Spiders", "divisionId": "open"}
+  },
+  "games": [
+    {}
+  ]
+}
