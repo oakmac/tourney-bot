@@ -44,7 +44,7 @@
       (let [response-text (aget js-evt "target" "responseText")
             js-result (try (js/JSON.parse response-text)
                         (catch js/Error _error nil))
-            clj-result (js->clj js-result :keywordize true)]
+            clj-result (js->clj js-result :keywordize-keys true)]
         (if (and js-result clj-result)
           (success-fn clj-result)
           (error-fn))))))

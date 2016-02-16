@@ -1,6 +1,6 @@
 # Tourney Bot
 
-An application to help run the Houston Indoor Ultimate Tournament.
+An application to help run the Houston Ultimate Indoor Tournament.
 
 TODO: upload screenshots
 

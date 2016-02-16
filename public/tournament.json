@@ -1,0 +1,55 @@
+{
+  "title": "2016 Houston Indoor",
+  "divisions": {
+    "open": {"name": "Open"}
+  },
+  "fields": {
+    "indoor": {"name": "Indoor Field"}
+  },
+  "teams": {
+    "team1": {"name": "Team 1", "captain": "John Doe"},
+    "team2": {"name": "Team 2", "captain": "John Doe"},
+    "team3": {"name": "Team 3", "captain": "John Doe"},
+    "team4": {"name": "Team 4", "captain": "John Doe"},
+    "team5": {"name": "Team 5", "captain": "John Doe"},
+    "team6": {"name": "Team 6", "captain": "John Doe"},
+    "team7": {"name": "Team 7", "captain": "John Doe"},
+    "team8": {"name": "Team 8", "captain": "John Doe"},
+    "team9": {"name": "Team 9", "captain": "John Doe"},
+    "team10": {"name": "Team 10", "captain": "John Doe"}
+  },
+  "games": {
+    "game1": {"name": "Swiss R1, Game 1", "startTime": "2016-02-28 0900"},
+    "game2": {"name": "Swiss R1, Game 2", "startTime": "2016-02-28 0915"},
+    "game3": {"name": "Swiss R1, Game 3", "startTime": "2016-02-28 0930"},
+    "game4": {"name": "Swiss R1, Game 4", "startTime": "2016-02-28 0945"},
+    "game5": {"name": "Swiss R1, Game 5", "startTime": "2016-02-28 1000"},
+
+    "game6": {"name": "Swiss R2, Game 1", "startTime": "2016-02-28 1015"},
+    "game7": {"name": "Swiss R2, Game 2", "startTime": "2016-02-28 1030"},
+    "game8": {"name": "Swiss R2, Game 3", "startTime": "2016-02-28 1045"},
+    "game9": {"name": "Swiss R2, Game 4", "startTime": "2016-02-28 1100"},
+    "game10": {"name": "Swiss R2, Game 5", "startTime": "2016-02-28 1115"},
+
+    "game11": {"name": "Swiss R3, Game 1", "startTime": "2016-02-28 1130"},
+    "game12": {"name": "Swiss R3, Game 2", "startTime": "2016-02-28 1145"},
+    "game13": {"name": "Swiss R3, Game 3", "startTime": "2016-02-28 1200"},
+    "game14": {"name": "Swiss R3, Game 4", "startTime": "2016-02-28 1215"},
+    "game15": {"name": "Swiss R3, Game 5", "startTime": "2016-02-28 1230"},
+
+    "game16": {"name": "Swiss R4, Game 1", "startTime": "2016-02-28 1245"},
+    "game17": {"name": "Swiss R4, Game 2", "startTime": "2016-02-28 1300"},
+    "game18": {"name": "Swiss R4, Game 3", "startTime": "2016-02-28 1315"},
+    "game19": {"name": "Swiss R4, Game 4", "startTime": "2016-02-28 1330"},
+    "game20": {"name": "Swiss R4, Game 5", "startTime": "2016-02-28 1345"},
+
+    "game21": {"name": "q4v5", "startTime": "2016-02-27 0900"},
+    "game22": {"name": "q3v6", "startTime": "2016-02-27 0901"},
+    "game23": {"name": "q2v7", "startTime": "2016-02-28 0900"},
+    "game24": {"name": "q1v8", "startTime": "2016-02-28 0900"},
+    "game25": {"name": "semi 2v3", "startTime": "2016-02-28 0900"},
+    "game26": {"name": "semi 1v4", "startTime": "2016-02-28 0900"},
+    "game27": {"name": "9th", "startTime": "2016-02-28 0900"},
+    "game28": {"name": "final", "startTime": "2016-02-29 0900"}
+  }
+}
