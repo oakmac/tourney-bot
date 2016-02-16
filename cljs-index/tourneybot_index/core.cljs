@@ -9,7 +9,8 @@
 ;;------------------------------------------------------------------------------
 
 (def initial-page-state
-  {:tab :schedule})
+  {:tab :results
+   :sort-results-by :alpha})
 
 (def page-state (atom initial-page-state))
 
@@ -36,9 +37,103 @@
 ;; Results Page
 ;;------------------------------------------------------------------------------
 
+(def empty-result
+  {:team-id nil
+   :games-won 0
+   :games-lost 0
+   :games-tied 0
+   :games-played 0
+   :points-won 0
+   :points-lost 0
+   :points-played 0
+   :points-diff 0
+   :victory-points 0})
+
+(defn- add-game-to-result [result {:keys [teamA-id teamB-id scoreA scoreB]}]
+  (let [team-id (:team-id result)
+        games-won (:games-won result)
+        games-lost (:games-lost result)
+        games-tied (:games-tied result)
+        games-played (:games-played result)
+        points-won (:points-won result)
+        points-lost (:points-lost result)
+        points-played (:points-played result)
+        points-diff (:points-diff result)
+        victory-points (:victory-points result)
+        won? (or (and (= team-id teamA-id) (> scoreA scoreB))
+                 (and (= team-id teamB-id) (> scoreB scoreA)))
+        lost? (or (and (= team-id teamA-id) (< scoreA scoreB))
+                  (and (= team-id teamB-id) (< scoreB scoreA)))
+        tied? (= scoreA scoreB)
+        scored-for (if (= team-id teamA-id) scoreA scoreB)
+        scored-against (if (= team-id teamA-id) scoreB scoreA)]
+    (assoc result
+      :games-won (if won? (inc games-won) games-won)
+      :games-lost (if lost? (inc games-lost) games-lost)
+      :games-tied (if tied? (inc games-tied) games-tied)
+      :games-played (inc games-played)
+      :points-won (+ points-won scored-for)
+      :points-lost (+ points-lost scored-against)
+      :points-played (+ points-played scoreA scoreB)
+      :points-diff (+ points-diff scored-for (* -1 scored-against)))))
+
+(defn- team->results
+  "Creates a result map for a single team."
+  [games team-id]
+  (let [games-this-team-has-played (filter #(and (= (:status %) "finished")
+                                                 (or (= (:teamA-id %) (name team-id))
+                                                     (= (:teamB-id %) (name team-id))))
+                                           (vals games))]
+    (reduce add-game-to-result
+            (assoc empty-result :team-id (name team-id))
+            games-this-team-has-played)))
+
+(defn- games->results
+  "Creates a results list for all the teams."
+  [teams games]
+  (map (partial team->results games) (keys teams)))
+
+(rum/defc ResultsTableHeader < rum/static
+  [ties-allowed?]
+  [:thead
+    [:tr
+      [:th {:row-span "2"} "Team"]
+      [:th {:row-span "2"} "Wins"]
+      [:th {:row-span "2"} "Losses"]
+      (when ties-allowed?
+        [:th {:row-span "2"} "Ties"])
+      [:th {:row-span "2"} "Played"]
+      [:th {:col-span "4"} "Points"]]
+    [:tr
+      [:th "Won"]
+      [:th "Lost"]
+      [:th "Played"]
+      [:th "Diff"]]])
+
+(rum/defc ResultRow < rum/static
+  [ties-allowed? idx result]
+  [:tr
+    [:td (:team-id result)]
+    [:td (:games-won result)]
+    [:td (:games-lost result)]
+    (when ties-allowed?
+      [:td (:games-tied result)])
+    [:td (:games-played result)]
+    [:td (:points-won result)]
+    [:td (:points-lost result)]
+    [:td (:points-played result)]
+    [:td (:points-diff result)]])
+
 (rum/defc ResultsPage < rum/static
   [state]
-  [:article "TODO: Results Page"])
+  (let [results (games->results (:teams state) (:games state))
+        ties-allowed? (:tiesAllowed state)]
+    [:article.results
+      [:h2 "Results"]
+      [:table
+        (ResultsTableHeader ties-allowed?)
+        [:tbody
+          (map-indexed (partial ResultRow ties-allowed?) results)]]]))
 
 ;;------------------------------------------------------------------------------
 ;; Schedule Page
@@ -48,7 +143,7 @@
   "Returns just the date string from a game."
   [game]
   (-> game
-      :startTime
+      :start-time
       (subs 0 10)))
 
 (defn- get-tourney-dates
@@ -70,16 +165,20 @@
   (let [js-moment (js/moment start-time date-format)]
     (.format js-moment "ddd, MMMM Do, YYYY")))
 
+(defn- format-game [game]
+  ;; TODO: make this smarter depending on how much game information we have
+  (:name game))
+
 (rum/defc ScheduleRow < rum/static
   [game]
   [:tr
-    [:td.time (format-time (:startTime game))]
-    [:td.game (:name game)]])
+    [:td.time (format-time (:start-time game))]
+    [:td.game (format-game game)]])
 
 (rum/defc SingleDaySchedule < rum/static
   [all-games date]
   (let [games-on-this-day (filter #(= date (game->date %)) (vals all-games))
-        games-on-this-day (sort-by :startTime games-on-this-day)]
+        games-on-this-day (sort-by :start-time games-on-this-day)]
     [:div
       [:h3 (format-date date)]
       [:table
@@ -90,6 +189,7 @@
   [state]
   (let [tourney-dates (get-tourney-dates (:games state))]
     [:article.schedule
+      [:h2 "Schedule"]
       (map (partial SingleDaySchedule (:games state)) tourney-dates)]))
 
 ;;------------------------------------------------------------------------------
