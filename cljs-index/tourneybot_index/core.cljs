@@ -59,8 +59,10 @@
 ;; Save UI-specific app state to localStorage
 ;;------------------------------------------------------------------------------
 
+(def ls-key "index-page-state")
+
 ;; load any existing client state on startup
-(when-let [state-string (js/window.localStorage.getItem "client-state")]
+(when-let [state-string (js/window.localStorage.getItem ls-key)]
   (let [js-state (try (js/JSON.parse state-string)
                    (catch js/Error _error nil))]
     (when (object? js-state)
@@ -73,7 +75,7 @@
   (let [ui-only-state (select-keys new-state ui-only-page-state-keys)
         js-state (clj->js ui-only-state)
         js-state-string (js/JSON.stringify js-state)]
-    (js/window.localStorage.setItem "client-state" js-state-string)))
+    (js/window.localStorage.setItem ls-key js-state-string)))
 
 (add-watch page-state :client-state save-client-state)
 
