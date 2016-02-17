@@ -9,16 +9,45 @@
 ;; Page State Atom
 ;;------------------------------------------------------------------------------
 
-;; TODO: save these ui-only options to localstorage and load on init if they are present
+(def info-tab "INFO-TAB")
+(def schedule-tab "SCHEDULE-TAB")
+(def results-tab "RESULTS-TAB")
+(def sort-on-name "SORT-BY-NAME")
+(def sort-on-record "SORT-BY-RECORD")
 
 (def initial-page-state
-  {:tab :results
-   :sort-results-by :name})
+  {:tab info-tab
+   :sort-results-by sort-on-name})
 
+;; TODO: write some simple validator functions around the page-state atom
 (def page-state (atom initial-page-state))
 
 ;; NOTE: useful for debugging
 ; (add-watch page-state :log atom-logger)
+
+;;------------------------------------------------------------------------------
+;; Save UI-specific app state to localStorage
+;;------------------------------------------------------------------------------
+
+;; load any existing client state on startup
+;; TODO: write some simple predicate functions to make sure the state is valid
+(when (js/window.localStorage.getItem "client-state")
+  (let [state-string (js/window.localStorage.getItem "client-state")
+        js-state (try (js/JSON.parse state-string)
+                   (catch js/Error _error nil))]
+    (when (object? js-state)
+      (let [clj-state (js->clj js-state :keywordize-keys true)]
+        (swap! page-state merge clj-state)))))
+
+(def ui-only-page-state-keys (keys initial-page-state))
+
+(defn- save-client-state [_kwd _the-atom _old-state new-state]
+  (let [ui-only-state (select-keys new-state ui-only-page-state-keys)
+        js-state (clj->js ui-only-state)
+        js-state-string (js/JSON.stringify js-state)]
+    (js/window.localStorage.setItem "client-state" js-state-string)))
+
+(add-watch page-state :client-state save-client-state)
 
 ;;------------------------------------------------------------------------------
 ;; Fetch Tournament State
@@ -171,19 +200,19 @@
   (.preventDefault js-evt)
   (swap! page-state assoc :sort-results-by mode))
 
-;; TODO: figure out how to use jquerymobile "tap" event here
-;;       click is too slow
 (rum/defc SortByToggle < rum/static
   [mode]
   [:div.sort-by-container
     [:label "Sort by:"]
-    [:a {:class (if (= mode :name) "active" "")
+    [:a {:class (if (= mode sort-on-name) "active" "")
          :href "#"
-         :on-click (partial click-sort-results-link :name)}
+         :on-click (partial click-sort-results-link sort-on-name)
+         :on-touch-start (partial click-sort-results-link sort-on-name)}
       "Team Name"]
-    [:a {:class (if (= mode :record) "active" "")
+    [:a {:class (if (= mode sort-on-record) "active" "")
          :href "#"
-         :on-click (partial click-sort-results-link :record)}
+         :on-click (partial click-sort-results-link sort-on-record)
+         :on-touch-start (partial click-sort-results-link sort-on-record)}
       "Record"]])
 
 (rum/defc ResultsPage < rum/static
@@ -191,7 +220,7 @@
   (let [ties-allowed? (:tiesAllowed state)
         results (games->results (:teams state) (:games state))
         sort-mode (:sort-results-by state)
-        results (if (= sort-mode :name)
+        results (if (= sort-mode sort-on-name)
                   (sort-by :team-name results)
                   results)]
     [:article.results
@@ -276,7 +305,8 @@
 (rum/defc Tab < rum/static
   [name tab-id current-tab]
   [:li {:class (if (= tab-id current-tab) "active" "")
-        :on-click (partial click-tab tab-id)}
+        :on-click (partial click-tab tab-id)
+        :on-touch-start (partial click-tab tab-id)}
     [:a {:href "#"
          :on-click (fn [js-evt] (.preventDefault js-evt))}
       name]])
@@ -285,9 +315,9 @@
   [current-tab]
   [:nav
     [:ul
-      (Tab "Info" :info current-tab)
-      (Tab "Schedule" :schedule current-tab)
-      (Tab "Results" :results current-tab)]])
+      (Tab "Info" info-tab current-tab)
+      (Tab "Schedule" schedule-tab current-tab)
+      (Tab "Results" results-tab current-tab)]])
 
 ;;------------------------------------------------------------------------------
 ;; Top Level Component
@@ -300,9 +330,10 @@
       [:h1 (:title state)]
       (NavTabs (:tab state))]
     (condp = (:tab state)
-      :info (InfoPage state)
-      :schedule (SchedulePage state)
-      :results (ResultsPage state)
+      info-tab (InfoPage state)
+      schedule-tab (SchedulePage state)
+      results-tab (ResultsPage state)
+      ;; NOTE: this should never happen
       :else [:div "Error: invalid tab"])])
 
 ;;------------------------------------------------------------------------------
