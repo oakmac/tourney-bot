@@ -4,7 +4,7 @@
     cljsjs.moment
     [clojure.string :refer [blank? lower-case]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
-                             fetch-json-as-cljs]]
+                             fetch-json-as-cljs tourney-bot-url]]
     [rum.core :as rum]))
 
 ;;------------------------------------------------------------------------------
@@ -477,8 +477,6 @@
         [:option {:value (first rate)} (second rate)])
       refresh-rates)])
 
-(def tourney-bot-url "https://github.com/oakmac/tourney-bot")
-
 (rum/defc Footer < rum/static
   [refresh-rate]
   [:footer
@@ -514,8 +512,9 @@
 
 (def app-container-el (by-id "indexContainer"))
 
-(defn- on-change-page-state [_kwd _the-atom _old-state new-state]
-  ;; render the new state
+(defn- on-change-page-state
+  "Render the page on every state change."
+  [_kwd _the-atom _old-state new-state]
   (rum/request-render
     (rum/mount (IndexApp new-state) app-container-el)))
 

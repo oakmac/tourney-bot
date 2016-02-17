@@ -23,6 +23,8 @@ body {
   min-width: @minWidth;
 }
 
+// TODO: make the header smaller on screen size breakpoints
+
 header {
   h1 {
     background: @primaryActionColor;
@@ -339,3 +341,38 @@ footer {
     color: #fff
   }
 }
+
+//------------------------------------------------------------------------------
+// Admin
+//------------------------------------------------------------------------------
+
+.admin-container {
+  .top-bar {
+    align-items: center;
+    background: #333;
+    color: #fff;
+    display: flex;
+    padding: 10px 15px;
+
+    .left {
+      font-size: 18px;
+      font-weight: 300;
+      flex: 90;
+    }
+
+    .right {
+      color: #aaa;
+      flex: 10;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+      text-transform: uppercase;
+    }
+  }
+
+  article {
+    min-height: @minBodyHeight;
+  }
+
+  
+} // end .admin-container
