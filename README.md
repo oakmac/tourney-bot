@@ -1,4 +1,4 @@
-# Tourney Bot
+# TourneyBot
 
 An application to help run the Houston Ultimate Indoor Tournament.
 
@@ -9,6 +9,9 @@ TODO: upload screenshots
 Install [Leiningen] and [Node.js]
 
 ```sh
+# install node_modules (one-time)
+npm install
+
 # build CLJS files
 lein clean && lein cljsbuild auto
 

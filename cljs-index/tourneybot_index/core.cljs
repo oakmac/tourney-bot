@@ -8,10 +8,9 @@
     [rum.core :as rum]))
 
 ;;------------------------------------------------------------------------------
-;; Page State Atom
+;; Constants
 ;;------------------------------------------------------------------------------
 
-;; some constants
 (def info-tab "INFO-TAB")
 (def schedule-tab "SCHEDULE-TAB")
 (def results-tab "RESULTS-TAB")
@@ -20,6 +19,13 @@
 (def sort-on-name "SORT-BY-NAME")
 (def sort-on-record "SORT-BY-RECORD")
 (def sort-on-values #{sort-on-name sort-on-record})
+
+(def tournament-state-url "tournament.json")
+(def info-page-url "info.md")
+
+;;------------------------------------------------------------------------------
+;; Page State Atom
+;;------------------------------------------------------------------------------
 
 (def initial-page-state
   {:tab info-tab
@@ -70,11 +76,17 @@
 (def default-state-polling-ms 5000)
 (def state-polling-ms default-state-polling-ms)
 
+(def title-set? (atom false))
+
 (defn- fetch-tourney-state2 [new-state]
+  ;; set the title tag on the first state load
+  (when-not @title-set?
+    (aset js/document "title" (:title new-state))
+    (reset! title-set? true))
   (swap! page-state merge new-state))
 
 (defn- fetch-tourney-state []
-  (fetch-json-as-cljs "tournament.json" fetch-tourney-state2))
+  (fetch-json-as-cljs tournament-state-url fetch-tourney-state2))
 
 (js/setInterval fetch-tourney-state state-polling-ms)
 (fetch-tourney-state)
@@ -85,7 +97,6 @@
 
 ;; TODO: allow the user to override this with a query param
 (def one-minute (* 60 1000))
-;;(def info-polling-ms one-minute)
 (def info-polling-ms one-minute)
 
 (defn- fetch-info-page2 [info-markdown]
@@ -95,7 +106,7 @@
       (aset info-el "innerHTML" info-html))))
 
 (defn- fetch-info-page []
-  (fetch-ajax-text "info.md" fetch-info-page2))
+  (fetch-ajax-text info-page-url fetch-info-page2))
 
 (js/setInterval fetch-info-page info-polling-ms)
 (fetch-info-page)
@@ -104,7 +115,7 @@
 ;; Calculate Results
 ;;------------------------------------------------------------------------------
 
-;; TODO: probably move this result calculation code to cljs-shared
+;; NOTE: we should probably move this result calculation code to cljs-shared
 
 (def empty-result
   {:team-id nil
@@ -418,10 +429,19 @@
       (Tab "Results" results-tab current-tab)]])
 
 ;;------------------------------------------------------------------------------
-;; Top Level Component
+;; Footer
 ;;------------------------------------------------------------------------------
 
-;; TODO: need a small footer "powered by TourneyBot"
+(def tourney-bot-url "https://github.com/oakmac/tourney-bot")
+
+(rum/defc Footer < rum/static
+  []
+  [:footer
+    [:p "powered by " [:a {:href tourney-bot-url} "TourneyBot"]]])
+
+;;------------------------------------------------------------------------------
+;; Top Level Component
+;;------------------------------------------------------------------------------
 
 (rum/defc IndexApp < rum/static
   [state]
@@ -433,11 +453,12 @@
       ;; NOTE: we fill this <div> with raw HTML content so it's important that
       ;;       react.js never touches it
       [:article#infoContainer
-        {:style {:display (if (= info-tab current-tab) "" "none")}}]
+        {:style {:display (if (= info-tab current-tab) "block" "none")}}]
       (when (= current-tab schedule-tab)
         (SchedulePage state))
       (when (= current-tab results-tab)
-        (ResultsPage state))]))
+        (ResultsPage state))
+      (Footer)]))
 
 ;;------------------------------------------------------------------------------
 ;; Render Loop
@@ -455,8 +476,6 @@
 ;;------------------------------------------------------------------------------
 ;; Init
 ;;------------------------------------------------------------------------------
-
-;; TODO: update the <title> tag
 
 (defn- init!
   "Initialize the Index page."
