@@ -1,6 +1,7 @@
 (ns tourneybot-index.core
   (:require
     cljsjs.moment
+    [clojure.string :refer [blank?]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-json-as-cljs]]
     [rum.core :as rum]))
 
@@ -8,9 +9,11 @@
 ;; Page State Atom
 ;;------------------------------------------------------------------------------
 
+;; TODO: save these ui-only options to localstorage and load on init if they are present
+
 (def initial-page-state
   {:tab :results
-   :sort-results-by :alpha})
+   :sort-results-by :name})
 
 (def page-state (atom initial-page-state))
 
@@ -22,7 +25,7 @@
 ;;------------------------------------------------------------------------------
 
 ;; TODO: allow the user to override this with a query param
-(def fetch-interval-ms 5000)
+(def state-polling-ms 1000)
 
 (defn- fetch-tourney-state2 [new-state]
   (swap! page-state merge new-state))
@@ -30,7 +33,7 @@
 (defn- fetch-tourney-state []
   (fetch-json-as-cljs "tournament.json" fetch-tourney-state2))
 
-(js/setInterval fetch-tourney-state fetch-interval-ms)
+(js/setInterval fetch-tourney-state state-polling-ms)
 (fetch-tourney-state)
 
 ;;------------------------------------------------------------------------------
@@ -75,65 +78,129 @@
       :points-won (+ points-won scored-for)
       :points-lost (+ points-lost scored-against)
       :points-played (+ points-played scoreA scoreB)
-      :points-diff (+ points-diff scored-for (* -1 scored-against)))))
+      :points-diff (+ points-diff scored-for (* -1 scored-against))
+      :victory-points (+ victory-points
+                         (if won? 1 0)
+                         (/ scored-for 1000)
+                         (* -1 (/ scored-against 1000))))))
+
 
 (defn- team->results
   "Creates a result map for a single team."
   [games team-id]
-  (let [games-this-team-has-played (filter #(and (= (:status %) "finished")
+  (let [team (get-in @page-state [:teams (keyword team-id)])
+        games-this-team-has-played (filter #(and (= (:status %) "finished")
                                                  (or (= (:teamA-id %) (name team-id))
                                                      (= (:teamB-id %) (name team-id))))
                                            (vals games))]
     (reduce add-game-to-result
-            (assoc empty-result :team-id (name team-id))
+            (assoc empty-result :team-id (name team-id)
+                                :team-name (:name team)
+                                :team-captain (:captain team))
             games-this-team-has-played)))
+
+(defn- compare-victory-points [a b]
+  (let [a-games-played? (not (zero? (:games-played a)))
+        b-games-played? (not (zero? (:games-played b)))
+        a-victory-points (:victory-points a)
+        b-victory-points (:victory-points b)]
+    (cond
+      (and a-games-played? (not b-games-played?))
+      -1
+
+      (and b-games-played? (not a-games-played?))
+      1
+
+      (> a-victory-points b-victory-points)
+      -1
+
+      (> b-victory-points a-victory-points)
+      1
+
+      :else
+      0)))
 
 (defn- games->results
   "Creates a results list for all the teams."
   [teams games]
-  (map (partial team->results games) (keys teams)))
+  (let [results (map (partial team->results games) (keys teams))
+        sorted-results (sort compare-victory-points results)]
+    (map-indexed #(assoc %2 :place (inc %1)) sorted-results)))
 
 (rum/defc ResultsTableHeader < rum/static
   [ties-allowed?]
   [:thead
     [:tr
-      [:th {:row-span "2"} "Team"]
-      [:th {:row-span "2"} "Wins"]
-      [:th {:row-span "2"} "Losses"]
-      (when ties-allowed?
-        [:th {:row-span "2"} "Ties"])
-      [:th {:row-span "2"} "Played"]
-      [:th {:col-span "4"} "Points"]]
-    [:tr
-      [:th "Won"]
-      [:th "Lost"]
-      [:th "Played"]
-      [:th "Diff"]]])
+      [:th {:style {:width "4%"}} ""]
+      [:th {:style {:text-align "left"}} "Team"]
+      [:th {:style {:width "30%"}}
+        [:div.games-header "Games"]
+        [:div.points-header "Points"]]]])
+
+(rum/defc TeamNameCell < rum/static
+  [team-name captain]
+  [:div.team-name-container
+    [:div.team-name team-name]
+    (when (and captain
+               (not (blank? captain)))
+      [:div.captain captain])])
 
 (rum/defc ResultRow < rum/static
-  [ties-allowed? idx result]
+  [ties-allowed? result]
   [:tr
-    [:td (:team-id result)]
-    [:td (:games-won result)]
-    [:td (:games-lost result)]
-    (when ties-allowed?
-      [:td (:games-tied result)])
-    [:td (:games-played result)]
-    [:td (:points-won result)]
-    [:td (:points-lost result)]
-    [:td (:points-played result)]
-    [:td (:points-diff result)]])
+    [:td.place (str "#" (:place result))]
+    [:td.team-name (TeamNameCell (:team-name result) (:team-captain result))]
+    [:td.record-cell
+      [:div.big-record
+        [:span.big-num (:games-won result)]
+        [:span.dash "-"]
+        [:span.big-num (:games-lost result)]
+        (when ties-allowed?
+          (list [:span.dash "-"]
+                [:span.big-num (:games-tied result)]))]
+      [:div.small-points
+        [:span.small-point (str "+" (:points-won result))]
+        [:span ", "]
+        [:span.small-point (str "-" (:points-lost result))]
+        [:span ", "]
+        [:span.small-point (if (neg? (:points-diff result))
+                             (:points-diff result)
+                             (str "+" (:points-diff result)))]]]])
+
+(defn- click-sort-results-link [mode js-evt]
+  (.preventDefault js-evt)
+  (swap! page-state assoc :sort-results-by mode))
+
+;; TODO: figure out how to use jquerymobile "tap" event here
+;;       click is too slow
+(rum/defc SortByToggle < rum/static
+  [mode]
+  [:div.sort-by-container
+    [:label "Sort by:"]
+    [:a {:class (if (= mode :name) "active" "")
+         :href "#"
+         :on-click (partial click-sort-results-link :name)}
+      "Team Name"]
+    [:a {:class (if (= mode :record) "active" "")
+         :href "#"
+         :on-click (partial click-sort-results-link :record)}
+      "Record"]])
 
 (rum/defc ResultsPage < rum/static
   [state]
-  (let [results (games->results (:teams state) (:games state))
-        ties-allowed? (:tiesAllowed state)]
+  (let [ties-allowed? (:tiesAllowed state)
+        results (games->results (:teams state) (:games state))
+        sort-mode (:sort-results-by state)
+        results (if (= sort-mode :name)
+                  (sort-by :team-name results)
+                  results)]
     [:article.results
       [:h2 "Results"]
+      (SortByToggle sort-mode)
       [:table
         (ResultsTableHeader ties-allowed?)
         [:tbody
-          (map-indexed (partial ResultRow ties-allowed?) results)]]]))
+          (map (partial ResultRow ties-allowed?) results)]]]))
 
 ;;------------------------------------------------------------------------------
 ;; Schedule Page

@@ -9,6 +9,7 @@
 @minWidth: 300px;
 
 @primaryActionColor: blue;
+@primaryActionGreen: #9dd102;
 
 //------------------------------------------------------------------------------
 // Tag Selectors
@@ -34,6 +35,9 @@ header {
   }
 }
 
+.team-name-container {
+
+}
 
 //------------------------------------------------------------------------------
 // Schedule
@@ -65,8 +69,108 @@ header {
     width: 100%;
   }
 
+  thead tr {
+    background-color: #aaa;
+  }
+
+  thead th {
+    color: #fff;
+    padding: 10px;
+    font-weight: 300;
+    font-size: 28px;
+  }
+
+  tbody tr {
+    background-color: #fff;
+  }
+
+  tbody tr:nth-child(odd) {
+     background-color: #eee;
+  }
+
   td {
-    border: 1px solid #ccc;
     padding: 8px;
+  }
+
+  .games-header {
+
+  }
+
+  .points-header {
+    //color: #888;
+    font-size: 16px;
+  }
+
+  .place {
+    color: #999;
+    font-size: 14px;
+    text-align: right;
+    font-weight: 700;
+  }
+
+  .record-cell {
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .team-name {
+    font-size: 24px;
+    text-overflow: ellipsis;
+  }
+
+  .captain {
+    color: #999;
+    font-size: 16px;
+    font-style: italic;
+    margin-top: 4px;
+  }
+}
+
+.big-record {
+  .big-num {
+    display: inline-block;
+    font-size: 42px;
+    font-weight: 300;
+  }
+
+  .dash {
+    display: inline-block;
+    font-size: 24px;
+    margin: 0 5px;
+    padding-top: 11px;
+    vertical-align: top;
+  }
+}
+
+.small-points {
+  color: #888;
+  font-size: 16px;
+}
+
+.sort-by-container {
+  label {
+    color: #777;
+    font-family: "Georgia",serif;
+    display: inline-block;
+    margin-right: 10px;
+    font-style: italic;
+    font-size: 16px;
+  }
+
+  a {
+    display: inline-block;
+    background-color: #f6f6f6;
+    border-color: #ddd;
+    color: #333;
+    padding: 8px 12px;
+    text-align: center;
+    text-decoration: none;
+    width: 100px;
+  }
+
+  .active {
+    background-color: #38c;
+    border-color: #38c;
+    color: #fff
   }
 }
