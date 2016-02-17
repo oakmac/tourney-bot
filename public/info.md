@@ -30,8 +30,8 @@ Registration is now open.
 [7115 Clarewood, Houston TX, 77036]
 
 **A note on the venue**: The first 10 years of the event were held at Kicks
-Indoor.  Unfortunately, Kicks has closed its doors, so we were forced to
-relocate to a new site at [Indoor Soccer 59].  The facility has more social
+Indoor. Unfortunately, Kicks has closed its doors, so we were forced to
+relocate to a new site at [Indoor Soccer 59]. The facility has more social
 space, sells food and beer on site, and has a field similar to the size of
 Kicks.
 
@@ -42,7 +42,7 @@ Kicks.
 **3-2 or 2-3 format, offense decides**
 
 Roster limit is 11 players per team, Game play is 5-on-5, normal subbing New for
-2016: We are pushing for an extra lady on the field!  Previous years have been a
+2016: We are pushing for an extra lady on the field! Previous years have been a
 4/1 or 3/2 format. With a women's club team, 3 coed teams, and a college women's
 team all in Houston, it is apropos to change the gender ratio to a more "true"
 coed format to balance play for everyone.
