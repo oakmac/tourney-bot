@@ -35,10 +35,11 @@
 ;;------------------------------------------------------------------------------
 
 (def initial-page-state
-  {:tab info-tab
+  {:hide-finished-games? false
+   :refresh-rate (ffirst refresh-rates)
    :schedule-search-text ""
    :sort-results-by sort-on-name
-   :refresh-rate (ffirst refresh-rates)})
+   :tab info-tab})
 
 (def page-state (atom initial-page-state))
 
@@ -121,21 +122,23 @@
 ;; Fetch Info Page
 ;;------------------------------------------------------------------------------
 
-;; TODO: allow the user to override this with a query param
-(def one-minute (* 60 1000))
-(def info-polling-ms one-minute)
+(def five-minutes (* 5 60 1000))
+(def info-polling-ms five-minutes)
 
-(defn- fetch-info-page2 [info-markdown]
+(defn- fetch-info-page-success [info-markdown]
   (let [info-html (js/marked info-markdown)
         info-el (by-id "infoContainer")]
     (when (and info-html info-el)
       (aset info-el "innerHTML" info-html))))
 
-(defn- fetch-info-page []
-  (fetch-ajax-text info-page-url fetch-info-page2))
+(defn- fetch-info-page! []
+  (fetch-ajax-text info-page-url fetch-info-page-success))
 
-(js/setInterval fetch-info-page info-polling-ms)
-(fetch-info-page)
+;; fetch the info page markdown on load
+(fetch-info-page!)
+
+;; poll for updates every 5 minutes
+(js/setInterval fetch-info-page! info-polling-ms)
 
 ;;------------------------------------------------------------------------------
 ;; Calculate Results
@@ -368,7 +371,8 @@
                               (= status "finished"))
                           scoreA
                           scoreB)]
-    [:tr
+    ;; highlight this row if the game is in progress
+    [:tr {:class (if (= status "in_progress") "in-progress" "")}
       [:td.time (format-time (:start-time game))]
       [:td.game
         (if (and (not teamA-name) (not teamB-name))
@@ -410,6 +414,8 @@
     (or (not= -1 (.indexOf (lower-case game-name) search-txt))
         (not= -1 (.indexOf (lower-case teamA-name) search-txt))
         (not= -1 (.indexOf (lower-case teamB-name) search-txt)))))
+
+;; TODO: add "hide finished games" checkbox
 
 (rum/defc SchedulePage < rum/static
   [state]
@@ -522,6 +528,7 @@
 (defn- init!
   "Initialize the Index page."
   []
+  ;; trigger the initial render
   (swap! page-state identity))
 
 (init!)
