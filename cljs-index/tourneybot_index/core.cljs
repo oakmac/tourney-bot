@@ -282,11 +282,48 @@
   ;; TODO: make this smarter depending on how much game information we have
   (:name game))
 
+(rum/defc GameStatus < rum/static
+  [status]
+  [:span.status
+    (condp = status
+      "scheduled"
+      "scheduled"
+
+      "in_progress"
+      "in progress"
+
+      "finished"
+      "finished")])
+
 (rum/defc ScheduleRow < rum/static
   [game]
-  [:tr
-    [:td.time (format-time (:start-time game))]
-    [:td.game (format-game game)]])
+  (let [game-name (:name game)
+        status (:status game)
+        teamA-id (keyword (:teamA-id game))
+        teamB-id (keyword (:teamB-id game))
+        teamA-name (get-in @page-state [:teams teamA-id :name])
+        teamB-name (get-in @page-state [:teams teamB-id :name])
+        scoreA (:scoreA game)
+        scoreB (:scoreB game)
+        show-scores? (and (or (= status "in_progress")
+                              (= status "finished"))
+                          scoreA
+                          scoreB)]
+    [:tr
+      [:td.time (format-time (:start-time game))]
+      [:td.game
+        (if (and (not teamA-name) (not teamB-name))
+          game-name
+          (list [:div teamA-name
+                      (when show-scores?
+                        (str " (" scoreA ")"))
+                      [:span.vs "vs"]
+                      (when show-scores?
+                        (str "(" scoreB ") "))
+                      teamB-name
+                      (when status
+                        (GameStatus status))]
+                [:div.sub-name game-name]))]]))
 
 (rum/defc SingleDaySchedule < rum/static
   [all-games date]
@@ -304,8 +341,16 @@
 
 (defn- match-game? [search-txt game]
   (let [search-txt (lower-case search-txt)
-        name (lower-case (:name game))]
-    (or (not= -1 (.indexOf name search-txt)))))
+        game-name (:name game)
+        teamA-name (if-let [teamA-id (keyword (:teamA-id game))]
+                      (get-in @page-state [:teams teamA-id :name] "")
+                      "")
+        teamB-name (if-let [teamB-id (keyword (:teamB-id game))]
+                      (get-in @page-state [:teams teamB-id :name] "")
+                      "")]
+    (or (not= -1 (.indexOf (lower-case game-name) search-txt))
+        (not= -1 (.indexOf (lower-case teamA-name) search-txt))
+        (not= -1 (.indexOf (lower-case teamB-name) search-txt)))))
 
 (rum/defc SchedulePage < rum/static
   [state]

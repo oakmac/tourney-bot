@@ -35,7 +35,7 @@
               "scoreA": 11,
               "scoreB": 13},
     "game12": {"name": "Swiss R1, Game 3", "start-time": "2016-02-28 0930",
-               "status": "finished",
+               "status": "in_progress",
                "teamA-id": "team10",
                "teamB-id": "team13",
                "scoreA": 12,
