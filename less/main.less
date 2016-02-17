@@ -5,11 +5,10 @@
 // Variables
 //------------------------------------------------------------------------------
 
-@maxWidth: 1200px;
+@maxWidth: 1024px;
 @minWidth: 300px;
 
-@primaryActionColor: blue;
-@primaryActionGreen: #9dd102;
+@primaryActionColor: #38c;
 
 //------------------------------------------------------------------------------
 // Tag Selectors
@@ -27,16 +26,43 @@ body {
 
 header {
   h1 {
-
+    background: @primaryActionColor;
+    color: #fff;
+    margin: 0;
+    padding: 10px;
+    font-size: 22px;
+    font-weight: 300;
   }
 
   nav {
+    ul {
+      border-bottom: 1px solid #eee;
+      display: flex;
+      margin: 0;
+      padding: 0;
+    }
 
+    li {
+      background: #f5f5f5;
+      cursor: pointer;
+      flex: 1;
+      font-size: 16px;
+      font-weight:300;
+      list-style: none;
+      padding: 15px 0;
+      text-align: center;
+    }
+
+    li.active {
+      background: #ccc;
+      font-weight: 400;
+    }
+
+    a {
+      color: #222;
+      text-decoration: none;
+    }
   }
-}
-
-.team-name-container {
-
 }
 
 //------------------------------------------------------------------------------
@@ -75,9 +101,9 @@ header {
 
   thead th {
     color: #fff;
-    padding: 10px;
+    font-size: 24px;
     font-weight: 300;
-    font-size: 28px;
+    padding: 5px;
   }
 
   tbody tr {
@@ -89,15 +115,10 @@ header {
   }
 
   td {
-    padding: 8px;
-  }
-
-  .games-header {
-
+    padding: 3px 4px;
   }
 
   .points-header {
-    //color: #888;
     font-size: 16px;
   }
 
@@ -109,27 +130,28 @@ header {
   }
 
   .record-cell {
+    padding: 0 0 4px 0;
     text-align: center;
     white-space: nowrap;
   }
 
   .team-name {
-    font-size: 24px;
+    font-size: 18px;
     text-overflow: ellipsis;
   }
 
   .captain {
     color: #999;
-    font-size: 16px;
+    font-size: 14px;
     font-style: italic;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 }
 
 .big-record {
   .big-num {
     display: inline-block;
-    font-size: 42px;
+    font-size: 38px;
     font-weight: 300;
   }
 
@@ -145,12 +167,15 @@ header {
 .small-points {
   color: #888;
   font-size: 16px;
+  margin-top: -5px;
 }
 
 .sort-by-container {
+  margin: 20px 0 20px 10px;
+
   label {
     color: #777;
-    font-family: "Georgia",serif;
+    font-family: "Georgia", serif;
     display: inline-block;
     margin-right: 10px;
     font-style: italic;
@@ -169,8 +194,8 @@ header {
   }
 
   .active {
-    background-color: #38c;
-    border-color: #38c;
+    background-color: @primaryActionColor;
+    border-color: @primaryActionColor;
     color: #fff
   }
 }

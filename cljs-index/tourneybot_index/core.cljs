@@ -195,7 +195,6 @@
                   (sort-by :team-name results)
                   results)]
     [:article.results
-      [:h2 "Results"]
       (SortByToggle sort-mode)
       [:table
         (ResultsTableHeader ties-allowed?)
@@ -256,7 +255,6 @@
   [state]
   (let [tourney-dates (get-tourney-dates (:games state))]
     [:article.schedule
-      [:h2 "Schedule"]
       (map (partial SingleDaySchedule (:games state)) tourney-dates)]))
 
 ;;------------------------------------------------------------------------------
@@ -277,9 +275,10 @@
 
 (rum/defc Tab < rum/static
   [name tab-id current-tab]
-  [:li (when (= tab-id current-tab) {:class "active"})
+  [:li {:class (if (= tab-id current-tab) "active" "")
+        :on-click (partial click-tab tab-id)}
     [:a {:href "#"
-         :on-click (partial click-tab tab-id)}
+         :on-click (fn [js-evt] (.preventDefault js-evt))}
       name]])
 
 (rum/defc NavTabs < rum/static
