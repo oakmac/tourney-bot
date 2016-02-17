@@ -274,7 +274,7 @@
         results (if (= sort-mode sort-on-name)
                   (sort-by :team-name results)
                   results)]
-    [:article.results
+    [:article.results-container
       (SortByToggle sort-mode)
       [:table
         (ResultsTableHeader ties-allowed?)
@@ -393,7 +393,7 @@
                          (filter (partial match-game? search-txt) games)
                          games)
         tourney-dates (games->dates filtered-games)]
-    [:article.schedule
+    [:article.schedule-container
       [:input {:class "big-input"
                :on-change on-change-schedule-search
                :placeholder "Search the schedule..."

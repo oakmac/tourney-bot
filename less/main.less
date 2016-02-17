@@ -6,7 +6,7 @@
 
 @maxWidth: 1024px;
 @minWidth: 300px;
-
+@minBodyHeight: 400px;
 @primaryActionColor: #38c;
 
 //------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ footer {
 
 #infoContainer {
   margin: 10px;
-  min-height: 400px;
+  min-height: @minBodyHeight;
 
   h1 {
     font-size: 28px;
@@ -121,23 +121,23 @@ footer {
     line-height: 1.4em;
     margin: 1em 0;
   }
-}
+} // end #infoContainer
 
 //------------------------------------------------------------------------------
 // Schedule
 //------------------------------------------------------------------------------
 
-.schedule {
-  margin: 0 auto;
-  width: 98%;
+.schedule-container {
+  min-height: @minBodyHeight;
+  margin: 10px 0;
 
   .big-input {
     box-sizing: border-box;
     display: block;
     font-size: 16px;
-    margin: 10px 0 0 0;
+    margin: 10px auto 0 auto;
     padding: 10px;
-    width: 100%;
+    width: 99%;
   }
 
   h3 {
@@ -193,21 +193,25 @@ footer {
     font-style: italic;
     margin-left: 8px;
   }
-}
 
-.no-search-results {
-  color: #777;
-  font-family: "Georgia", serif;
-  font-size: 18px;
-  font-style: italic;
-  margin: 25px 0 0 0;
-}
+  .no-search-results {
+    color: #777;
+    font-family: "Georgia", serif;
+    font-size: 18px;
+    font-style: italic;
+    margin: 25px 0 0 5px;
+  }
+
+} // end .schedule-container
 
 //------------------------------------------------------------------------------
 // Results
 //------------------------------------------------------------------------------
 
-.results {
+.results-container {
+  margin: 10px 0;
+  min-height: @minBodyHeight;
+
   table {
     width: 100%;
   }
@@ -263,7 +267,7 @@ footer {
     font-style: italic;
     margin-top: 2px;
   }
-}
+} // end .results-container
 
 .big-record {
   .big-num {
