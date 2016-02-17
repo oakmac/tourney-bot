@@ -1,8 +1,10 @@
 (ns tourneybot-index.core
   (:require
+    cljsjs.marked
     cljsjs.moment
     [clojure.string :refer [blank? lower-case]]
-    [tourneybot.util :refer [atom-logger by-id js-log log fetch-json-as-cljs]]
+    [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
+                             fetch-json-as-cljs]]
     [rum.core :as rum]))
 
 ;;------------------------------------------------------------------------------
@@ -43,7 +45,6 @@
 ;;------------------------------------------------------------------------------
 
 ;; load any existing client state on startup
-;; TODO: write some simple predicate functions to make sure the state is valid
 (when-let [state-string (js/window.localStorage.getItem "client-state")]
   (let [js-state (try (js/JSON.parse state-string)
                    (catch js/Error _error nil))]
@@ -76,6 +77,26 @@
 
 (js/setInterval fetch-tourney-state state-polling-ms)
 (fetch-tourney-state)
+
+;;------------------------------------------------------------------------------
+;; Fetch Info Page
+;;------------------------------------------------------------------------------
+
+;; TODO: allow the user to override this with a query param
+(def one-minute (* 60 1000))
+(def info-polling-ms one-minute)
+
+(defn- fetch-info-page2 [info-markdown]
+  (let [info-html (js/marked info-markdown)
+        info-el (by-id "infoContainer")]
+    (when (and info-html info-el)
+      (aset info-el "innerHTML" info-html))))
+
+(defn- fetch-info-page []
+  (fetch-ajax-text "info.md" fetch-info-page2))
+
+(js/setInterval fetch-info-page info-polling-ms)
+(fetch-info-page)
 
 ;;------------------------------------------------------------------------------
 ;; Calculate Results
@@ -126,7 +147,6 @@
                          (if won? 1 0)
                          (/ scored-for 1000)
                          (* -1 (/ scored-against 1000))))))
-
 
 (defn- team->results
   "Creates a result map for a single team."
@@ -278,10 +298,6 @@
   (let [js-moment (js/moment start-time date-format)]
     (.format js-moment "ddd, MMMM Do, YYYY")))
 
-(defn- format-game [game]
-  ;; TODO: make this smarter depending on how much game information we have
-  (:name game))
-
 (rum/defc GameStatus < rum/static
   [status]
   [:span.status
@@ -293,8 +309,12 @@
       "in progress"
 
       "finished"
-      "finished")])
+      "finished"
 
+      ;; NOTE: this should never happen
+      "")])
+
+;; TODO: highlight search match text in yellow; stretch goal :)
 (rum/defc ScheduleRow < rum/static
   [game]
   (let [game-name (:name game)
@@ -371,14 +391,6 @@
         (map (partial SingleDaySchedule filtered-games) tourney-dates))]))
 
 ;;------------------------------------------------------------------------------
-;; Info Page
-;;------------------------------------------------------------------------------
-
-(rum/defc InfoPage < rum/static
-  [state]
-  [:article "TODO: Info Page"])
-
-;;------------------------------------------------------------------------------
 ;; Navigation Tabs
 ;;------------------------------------------------------------------------------
 
@@ -407,25 +419,23 @@
 ;; Top Level Component
 ;;------------------------------------------------------------------------------
 
+;; TODO: need a small footer "powered by TourneyBot"
+
 (rum/defc IndexApp < rum/static
   [state]
-  [:div
-    [:header
-      [:h1 (:title state)]
-      (NavTabs (:tab state))]
-    (condp = (:tab state)
-      info-tab
-      (InfoPage state)
-
-      schedule-tab
-      (SchedulePage state)
-
-      results-tab
-      (ResultsPage state)
-
-      ;; NOTE: this should never happen
-      :else
-      [:div "Error: invalid tab"])])
+  (let [current-tab (:tab state)]
+    [:div
+      [:header
+        [:h1 (:title state)]
+        (NavTabs (:tab state))]
+      ;; NOTE: we fill this <div> with raw HTML content so it's important that
+      ;;       react.js never touches it
+      [:article#infoContainer
+        {:style {:display (if (= info-tab current-tab) "" "none")}}]
+      (when (= current-tab schedule-tab)
+        (SchedulePage state))
+      (when (= current-tab results-tab)
+        (ResultsPage state))]))
 
 ;;------------------------------------------------------------------------------
 ;; Render Loop
