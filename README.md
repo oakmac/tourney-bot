@@ -18,7 +18,7 @@ lein clean && lein cljsbuild auto
 # compile LESS into CSS
 grunt watch
 
-# run a local web server out of /public on port 9955
+# run a local web server out of public/ on port 9955
 node server.js 9955
 ```
 
