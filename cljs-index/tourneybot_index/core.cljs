@@ -67,7 +67,8 @@
 ;;------------------------------------------------------------------------------
 
 ;; TODO: allow the user to override this with a query param
-(def state-polling-ms 1000)
+(def default-state-polling-ms 5000)
+(def state-polling-ms default-state-polling-ms)
 
 (defn- fetch-tourney-state2 [new-state]
   (swap! page-state merge new-state))
@@ -84,6 +85,7 @@
 
 ;; TODO: allow the user to override this with a query param
 (def one-minute (* 60 1000))
+;;(def info-polling-ms one-minute)
 (def info-polling-ms one-minute)
 
 (defn- fetch-info-page2 [info-markdown]
