@@ -32,6 +32,9 @@
 ;; AJAX
 ;;------------------------------------------------------------------------------
 
+;; TODO: make a generic AJAX function and combine fetch-json-as-cljs and
+;;       fetch-ajax-text
+
 (defn- http-success? [status]
   (and (>= status 200)
        (< status 400)))

@@ -23,6 +23,13 @@
 (def tournament-state-url "tournament.json")
 (def info-page-url "info.md")
 
+(def refresh-rates
+  [[(* 5 1000)    "5 sec"]
+   [(* 30 1000)   "30 sec"]
+   [(* 60 1000)   "1 min"]
+   [(* 2 60 1000) "2 min"]
+   [(* 5 60 1000) "5 min"]])
+
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
 ;;------------------------------------------------------------------------------
@@ -30,7 +37,8 @@
 (def initial-page-state
   {:tab info-tab
    :schedule-search-text ""
-   :sort-results-by sort-on-name})
+   :sort-results-by sort-on-name
+   :refresh-rate (ffirst refresh-rates)})
 
 (def page-state (atom initial-page-state))
 
@@ -72,24 +80,42 @@
 ;; Fetch Tournament State
 ;;------------------------------------------------------------------------------
 
-;; TODO: allow the user to override this with a query param
-(def default-state-polling-ms 5000)
-(def state-polling-ms default-state-polling-ms)
-
+(def js-state-polling-interval nil)
 (def title-set? (atom false))
 
-(defn- fetch-tourney-state2 [new-state]
+(defn- fetch-tourney-state-success [new-state]
   ;; set the title tag on the first state load
   (when-not @title-set?
     (aset js/document "title" (:title new-state))
     (reset! title-set? true))
+  ;; merge the tournament state with the page state
   (swap! page-state merge new-state))
 
-(defn- fetch-tourney-state []
-  (fetch-json-as-cljs tournament-state-url fetch-tourney-state2))
+(defn- fetch-tourney-state! []
+  (fetch-json-as-cljs tournament-state-url fetch-tourney-state-success))
 
-(js/setInterval fetch-tourney-state state-polling-ms)
-(fetch-tourney-state)
+;; kick off the initial state fetch
+(fetch-tourney-state!)
+
+;; begin the polling
+(set! js-state-polling-interval
+  (js/setInterval fetch-tourney-state! (:refresh-rate @page-state)))
+
+(defn- update-polling-interval
+  "Update the state polling rate when it changes."
+  [_kwd _the-atom old-state new-state]
+  (let [old-rate (:refresh-rate old-state)
+        new-rate (:refresh-rate new-state)]
+    (when (not= old-rate new-rate)
+      ;; clear the previous polling interval
+      (js/clearInterval js-state-polling-interval)
+      ;; set the new one
+      (set! js-state-polling-interval
+        (js/setInterval fetch-tourney-state! new-rate))
+      ;; kick off another refresh for good measure
+      (fetch-tourney-state!))))
+
+(add-watch page-state :state-polling update-polling-interval)
 
 ;;------------------------------------------------------------------------------
 ;; Fetch Info Page
@@ -432,12 +458,28 @@
 ;; Footer
 ;;------------------------------------------------------------------------------
 
+(defn- on-change-refresh-rate [js-evt]
+  (let [new-value (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc :refresh-rate (int new-value))))
+
+(rum/defc RefreshOptions < rum/static
+  [refresh-rate]
+  [:select {:on-change on-change-refresh-rate
+            :value refresh-rate}
+    (map
+      (fn [rate]
+        [:option {:value (first rate)} (second rate)])
+      refresh-rates)])
+
 (def tourney-bot-url "https://github.com/oakmac/tourney-bot")
 
 (rum/defc Footer < rum/static
-  []
+  [refresh-rate]
   [:footer
-    [:p "powered by " [:a {:href tourney-bot-url} "TourneyBot"]]])
+    [:div.left
+      "auto-refresh " (RefreshOptions refresh-rate)]
+    [:div.right
+      "powered by " [:a {:href tourney-bot-url} "TourneyBot"]]])
 
 ;;------------------------------------------------------------------------------
 ;; Top Level Component
@@ -449,7 +491,7 @@
     [:div
       [:header
         [:h1 (:title state)]
-        (NavTabs (:tab state))]
+        (NavTabs current-tab)]
       ;; NOTE: we fill this <div> with raw HTML content so it's important that
       ;;       react.js never touches it
       [:article#infoContainer
@@ -458,7 +500,7 @@
         (SchedulePage state))
       (when (= current-tab results-tab)
         (ResultsPage state))
-      (Footer)]))
+      (Footer (:refresh-rate state))]))
 
 ;;------------------------------------------------------------------------------
 ;; Render Loop

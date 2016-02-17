@@ -65,11 +65,26 @@ header {
 }
 
 footer {
+  align-items: center;
   background: #333;
   color: #828282;
+  display: flex;
   font-size: 12px;
   margin: 0;
   padding: 20px 10px;
+
+  .left {
+    flex: 1;
+
+    select {
+      color: #222;
+    }
+  }
+
+  .right {
+    flex: 1;
+    text-align: right;
+  }
 
   p {
     margin: 0;
