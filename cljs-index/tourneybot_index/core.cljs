@@ -1,7 +1,7 @@
 (ns tourneybot-index.core
   (:require
     cljsjs.moment
-    [clojure.string :refer [blank?]]
+    [clojure.string :refer [blank? lower-case]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-json-as-cljs]]
     [rum.core :as rum]))
 
@@ -9,21 +9,34 @@
 ;; Page State Atom
 ;;------------------------------------------------------------------------------
 
+;; some constants
 (def info-tab "INFO-TAB")
 (def schedule-tab "SCHEDULE-TAB")
 (def results-tab "RESULTS-TAB")
+(def tab-values #{info-tab schedule-tab results-tab})
+
 (def sort-on-name "SORT-BY-NAME")
 (def sort-on-record "SORT-BY-RECORD")
+(def sort-on-values #{sort-on-name sort-on-record})
 
 (def initial-page-state
   {:tab info-tab
+   :schedule-search-text ""
    :sort-results-by sort-on-name})
 
-;; TODO: write some simple validator functions around the page-state atom
 (def page-state (atom initial-page-state))
 
 ;; NOTE: useful for debugging
 ; (add-watch page-state :log atom-logger)
+
+(defn- valid-page-state?
+  "Some simple predicates to make sure the state is valid."
+  [new-state]
+  (and (map? new-state)
+       (contains? tab-values (:tab new-state))
+       (contains? sort-on-values (:sort-results-by new-state))))
+
+(set-validator! page-state valid-page-state?)
 
 ;;------------------------------------------------------------------------------
 ;; Save UI-specific app state to localStorage
@@ -31,9 +44,8 @@
 
 ;; load any existing client state on startup
 ;; TODO: write some simple predicate functions to make sure the state is valid
-(when (js/window.localStorage.getItem "client-state")
-  (let [state-string (js/window.localStorage.getItem "client-state")
-        js-state (try (js/JSON.parse state-string)
+(when-let [state-string (js/window.localStorage.getItem "client-state")]
+  (let [js-state (try (js/JSON.parse state-string)
                    (catch js/Error _error nil))]
     (when (object? js-state)
       (let [clj-state (js->clj js-state :keywordize-keys true)]
@@ -66,8 +78,10 @@
 (fetch-tourney-state)
 
 ;;------------------------------------------------------------------------------
-;; Results Page
+;; Calculate Results
 ;;------------------------------------------------------------------------------
+
+;; TODO: probably move this result calculation code to cljs-shared
 
 (def empty-result
   {:team-id nil
@@ -156,6 +170,10 @@
         sorted-results (sort compare-victory-points results)]
     (map-indexed #(assoc %2 :place (inc %1)) sorted-results)))
 
+;;------------------------------------------------------------------------------
+;; Results Page
+;;------------------------------------------------------------------------------
+
 (rum/defc ResultsTableHeader < rum/static
   [ties-allowed?]
   [:thead
@@ -170,7 +188,7 @@
   [team-name captain]
   [:div.team-name-container
     [:div.team-name team-name]
-    (when (and captain
+    (when (and (string? captain)
                (not (blank? captain)))
       [:div.captain captain])])
 
@@ -241,10 +259,10 @@
       :start-time
       (subs 0 10)))
 
-(defn- get-tourney-dates
+(defn- games->dates
   "Returns an ordered, distinct list of tournament dates."
   [games]
-  (let [days-set (reduce (fn [dates-set [game-id game]]
+  (let [days-set (reduce (fn [dates-set game]
                            (conj dates-set (game->date game)))
                          #{}
                          games)]
@@ -272,7 +290,7 @@
 
 (rum/defc SingleDaySchedule < rum/static
   [all-games date]
-  (let [games-on-this-day (filter #(= date (game->date %)) (vals all-games))
+  (let [games-on-this-day (filter #(= date (game->date %)) all-games)
         games-on-this-day (sort-by :start-time games-on-this-day)]
     [:div
       [:h3 (format-date date)]
@@ -280,11 +298,32 @@
         [:tbody
           (map ScheduleRow games-on-this-day)]]]))
 
+(defn- on-change-schedule-search [js-evt]
+  (let [new-text (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc :schedule-search-text new-text)))
+
+(defn- match-game? [search-txt game]
+  (let [search-txt (lower-case search-txt)
+        name (lower-case (:name game))]
+    (or (not= -1 (.indexOf name search-txt)))))
+
 (rum/defc SchedulePage < rum/static
   [state]
-  (let [tourney-dates (get-tourney-dates (:games state))]
+  (let [games (vals (:games state))
+        search-txt (:schedule-search-text state)
+        filtered-games (if-not (blank? search-txt)
+                         (filter (partial match-game? search-txt) games)
+                         games)
+        tourney-dates (games->dates filtered-games)]
     [:article.schedule
-      (map (partial SingleDaySchedule (:games state)) tourney-dates)]))
+      [:input {:class "big-input"
+               :on-change on-change-schedule-search
+               :placeholder "Search the schedule..."
+               :type "text"
+               :value search-txt}]
+      (if (empty? filtered-games)
+        [:div.no-search-results "No games found."]
+        (map (partial SingleDaySchedule filtered-games) tourney-dates))]))
 
 ;;------------------------------------------------------------------------------
 ;; Info Page
@@ -330,11 +369,18 @@
       [:h1 (:title state)]
       (NavTabs (:tab state))]
     (condp = (:tab state)
-      info-tab (InfoPage state)
-      schedule-tab (SchedulePage state)
-      results-tab (ResultsPage state)
+      info-tab
+      (InfoPage state)
+
+      schedule-tab
+      (SchedulePage state)
+
+      results-tab
+      (ResultsPage state)
+
       ;; NOTE: this should never happen
-      :else [:div "Error: invalid tab"])])
+      :else
+      [:div "Error: invalid tab"])])
 
 ;;------------------------------------------------------------------------------
 ;; Render Loop
@@ -352,6 +398,8 @@
 ;;------------------------------------------------------------------------------
 ;; Init
 ;;------------------------------------------------------------------------------
+
+;; TODO: update the <title> tag
 
 (defn- init!
   "Initialize the Index page."

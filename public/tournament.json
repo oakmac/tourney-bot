@@ -44,12 +44,12 @@
     "game14": {"name": "Swiss R1, Game 5", "start-time": "2016-02-28 1000"},
     "game15": {"name": "Swiss R1, Game 6", "start-time": "2016-02-28 1015"},
 
-    "game20": {"name": "Swiss R2, Game 1", "start-time": "2016-02-28 1030"},
-    "game21": {"name": "Swiss R2, Game 2", "start-time": "2016-02-28 1045"},
-    "game22": {"name": "Swiss R2, Game 3", "start-time": "2016-02-28 1100"},
-    "game23": {"name": "Swiss R2, Game 4", "start-time": "2016-02-28 1115"},
-    "game24": {"name": "Swiss R2, Game 5", "start-time": "2016-02-28 1130"},
-    "game25": {"name": "Swiss R2, Game 6", "start-time": "2016-02-28 1145"},
+    "game20": {"name": "Swiss R2, Game 1", "start-time": "2016-02-27 1030"},
+    "game21": {"name": "Swiss R2, Game 2", "start-time": "2016-02-27 1045"},
+    "game22": {"name": "Swiss R2, Game 3", "start-time": "2016-02-27 1100"},
+    "game23": {"name": "Swiss R2, Game 4", "start-time": "2016-02-27 1115"},
+    "game24": {"name": "Swiss R2, Game 5", "start-time": "2016-02-27 1130"},
+    "game25": {"name": "Swiss R2, Game 6", "start-time": "2016-02-27 1145"},
 
     "game30": {"name": "Swiss R3, Game 1", "start-time": "2016-02-28 1200"},
     "game31": {"name": "Swiss R3, Game 2", "start-time": "2016-02-28 1215"},

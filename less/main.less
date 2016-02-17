@@ -70,20 +70,49 @@ header {
 //------------------------------------------------------------------------------
 
 .schedule {
+  margin: 0 auto;
+  width: 98%;
+
+  .big-input {
+    box-sizing: border-box;
+    display: block;
+    font-size: 20px;
+    margin: 20px 0;
+    padding: 10px;
+    width: 100%;
+  }
+
+  h3 {
+    border-bottom: 1px solid #ddd;
+    font-size: 20px;
+    font-weight: 300;
+    margin: 20px 0 10px 0;
+    padding: 10px 0 10px 5px;
+  }
+
   td {
-    padding: 4px 0;
+    padding: 8px 0;
   }
 
   .time {
     color: #999;
     font-size: 14px;
+    padding-left: 5px;
     text-align: right;
-    width: 75px;
   }
 
   .game {
+    font-size: 18px;
     padding-left: 10px;
   }
+}
+
+.no-search-results {
+  color: #777;
+  font-family: "Georgia", serif;
+  font-size: 18px;
+  font-style: italic;
+  margin: 25px 0 0 0;
 }
 
 //------------------------------------------------------------------------------
