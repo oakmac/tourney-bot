@@ -46,7 +46,7 @@
 
 (def tournament-state-keys
   "These keys represent the tournament state and should always be reflected in
-   tourmanet.json."
+   tournament.json."
   #{:title
     :tiesAllowed
     :divisions
@@ -206,7 +206,9 @@
      :on-touch-start prevent-default}
     txt])
 
-(defn- click-back-btn [])
+(defn- click-back-btn []
+  ;; TODO: write this
+  nil)
 
 (rum/defc GameInput < rum/static
   [game-id game]
@@ -251,10 +253,22 @@
 ;; Games Page
 ;;------------------------------------------------------------------------------
 
+(rum/defc GameRow < rum/static
+  [[game-id game]]
+  (let [games-vec nil]
+    [:div.game-row
+      (name game-id)]))
+
+(defn- compare-games [a b]
+  (compare (-> a second :start-time)
+           (-> b second :start-time)))
+
 (rum/defc GamesPage < rum/static
   [games-map]
-  [:article.games-container
-    (GameInput :game11 (get-in @page-state [:games :game11]))])
+  (let [games-vec (vec games-map)
+        sorted-games (sort compare-games games-vec)]
+    [:article.games-container
+      (map GameRow sorted-games)]))
 
 ;;------------------------------------------------------------------------------
 ;; Teams Page
