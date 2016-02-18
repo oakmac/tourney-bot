@@ -406,4 +406,90 @@ footer {
     margin-left: 70px;
   }
 
+  .game-input-container {
+    .teams {
+      align-items: center;
+      display: flex;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .team-name {
+      flex: 45;
+      font-size: 24px;
+      font-weight: 300;
+    }
+
+    .vs {
+      flex: 10;
+    }
+
+    .scores {
+      display: flex;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .score {
+      flex: 45;
+    }
+
+    .button {
+      border-radius: 4px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 auto;
+      padding: 15px 0px;
+      width: 80px;
+    }
+
+    .button.up {
+      background-color: #26D026;
+    }
+
+    .button.down {
+      background-color: #FF3C3C;
+    }
+
+    .button.disabled {
+      opacity: 0.4;
+    }
+
+    .big-score {
+      font-size: 64px;
+      font-weight: 300;
+    }
+
+    .status {
+      display: flex;
+      margin: 20px;
+    }
+
+    .tab {
+      background-color: #f6f6f6;
+      border-color: #eee;
+      color: #333;
+      flex: 1;
+      font-size: 18px;
+      padding: 15px 0;
+      text-align: center;
+    }
+
+    .tab.active {
+      background-color: @primaryActionColor;
+      color: #fff;
+    }
+
+    .back-btn {
+      border: 1px solid #ddd;
+      border-radius: 2px;
+      background-color: #eee;
+      display: inline-block;
+      margin: 0 20px 20px 20px;
+      padding: 15px;
+    }
+
+  } // end .game-input-container
+
 } // end .admin-container

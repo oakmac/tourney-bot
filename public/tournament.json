@@ -1,6 +1,7 @@
 {
   "title": "2016 Houston Indoor",
   "tiesAllowed": false,
+  "maxScore": 14,
   "divisions": {
     "open": {"name": "Open"}
   },

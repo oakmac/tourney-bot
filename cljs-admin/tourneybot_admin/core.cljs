@@ -149,13 +149,91 @@
     "TODO: swiss rounds page"])
 
 ;;------------------------------------------------------------------------------
+;; Game Input
+;;------------------------------------------------------------------------------
+
+(defn- prevent-default [js-evt]
+  (.preventDefault js-evt))
+
+(defn- click-add-point [game-id score-key js-evt]
+  (.preventDefault js-evt)
+  (swap! page-state update-in [:games game-id score-key] inc))
+
+(defn- click-remove-point [game-id score-key js-evt]
+  (.preventDefault js-evt)
+  (swap! page-state update-in [:games game-id score-key] dec))
+
+(defn- click-status-tab [game-id new-status])
+
+(defn- click-back-btn [])
+
+(rum/defc DisabledDownBtn < rum/static
+  []
+  [:div.button.down.disabled
+    {:on-click prevent-default
+     :on-touch-start prevent-default}
+    "-1"])
+
+(rum/defc StatusTab < rum/static
+  [txt status active?]
+  [:div {:class "tab"
+         :on-click click-status-tab}])
+
+(rum/defc GameInput < rum/static
+  [game-id game]
+  (let [teamA-id (keyword (:teamA-id game))
+        teamB-id (keyword (:teamB-id game))
+        teamA (get-in @page-state [:teams teamA-id])
+        teamB (get-in @page-state [:teams teamB-id])]
+    [:div.game-input-container
+      [:div.teams
+        [:div.team-name (:name teamA)]
+        [:div.vs "vs"]
+        [:div.team-name (:name teamB)]]
+      [:div.scores
+        [:div.score
+          [:div.button.up
+            {:on-click (partial click-add-point game-id :scoreA)
+             :on-touch-start (partial click-add-point game-id :scoreA)}
+            "+1"]
+          [:div.big-score (:scoreA game)]
+          (if (zero? (:scoreA game))
+            (DisabledDownBtn)
+            [:div.button.down
+              {:on-click (partial click-remove-point game-id :scoreA)
+               :on-touch-start (partial click-remove-point game-id :scoreA)}
+              "-1"])]
+        ;; NOTE: this empty element just used as a spacer
+        [:div.vs ""]
+        [:div.score
+          [:div.button.up
+            {:on-click (partial click-add-point game-id :scoreB)
+             :on-touch-start (partial click-add-point game-id :scoreB)}
+            "+1"]
+          [:div.big-score (:scoreB game)]
+          (if (zero? (:scoreB game))
+            (DisabledDownBtn)
+            [:div.button.down
+              {:on-click (partial click-remove-point game-id :scoreB)
+               :on-touch-start (partial click-remove-point game-id :scoreB)}
+              "-1"])]]
+      [:div.status
+        [:div.tab "Scheduled"]
+        [:div.tab.active "In Progress"]
+        [:div.tab "Finished"]]
+      [:div.back-btn
+        {:on-click click-back-btn
+         :on-touch-start click-back-btn}
+        "Go Back"]]))
+
+;;------------------------------------------------------------------------------
 ;; Games Page
 ;;------------------------------------------------------------------------------
 
 (rum/defc GamesPage < rum/static
-  [state]
+  [games-map]
   [:article.games-container
-    "TODO: games page"])
+    (GameInput :game11 (get-in @page-state [:games :game11]))])
 
 ;;------------------------------------------------------------------------------
 ;; Teams Page
@@ -263,7 +341,7 @@
         (TeamsPage (:teams state))
 
         games-tab
-        (GamesPage state)
+        (GamesPage (:games state))
 
         swiss-tab
         (SwissPage state)
