@@ -41,6 +41,31 @@
 (set-validator! page-state valid-page-state?)
 
 ;;------------------------------------------------------------------------------
+;; Update the tournament state
+;;------------------------------------------------------------------------------
+
+(def tournament-state-keys
+  "These keys represent the tournament state and should always be reflected in
+   tourmanet.json."
+  #{:title
+    :tiesAllowed
+    :divisions
+    :fields
+    :teams
+    :games})
+
+;; TODO: need to figure out if we want this to happen on every update (ie: add-watch)
+;;       or trigger it manually from a "Save" button or similar
+;;       Another option would be to poll for changes every N seconds and only
+;;       send an update if anything has changed.
+
+(defn- upload-tournament-state!
+  "Update "
+  [_kwd _the-atom _old-state new-state])
+
+;;(add-watch page-state :upload upload-tournament-state!)
+
+;;------------------------------------------------------------------------------
 ;; Save UI-specific app state to localStorage
 ;;------------------------------------------------------------------------------
 
@@ -85,8 +110,12 @@
 ;; kick off the initial state fetch
 (fetch-tourney-state!)
 
+;; TODO: I'm not sure we want to poll for tournament state here
+;;       the admin should always be "sending" the state, not "receiving" it
+;;       maybe once a minute in case somehow they get out of sync?
+
 ;; begin the polling
-(js/setInterval fetch-tourney-state! polling-rate-ms)
+;;(js/setInterval fetch-tourney-state! polling-rate-ms)
 
 ;;------------------------------------------------------------------------------
 ;; Fetch Info Page
@@ -132,10 +161,39 @@
 ;; Teams Page
 ;;------------------------------------------------------------------------------
 
+(defn- on-change-team-name [team-id js-evt]
+  (let [new-name (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc-in [:teams team-id :name] new-name)))
+
+(defn- on-change-team-captain [team-id js-evt]
+  (let [new-name (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc-in [:teams team-id :captain] new-name)))
+
+(rum/defc TeamInput < rum/static
+  [[team-id team]]
+  [:div.team-input-container
+    [:div.small-id (name team-id)]
+    [:div.row
+      [:label "Name"]
+      [:input {:on-change (partial on-change-team-name team-id)
+               :type "text"
+               :value (:name team)}]]
+    [:div.row
+      [:label "Captain"]
+      [:input {:on-change (partial on-change-team-captain team-id)
+               :type "text"
+               :value (:captain team)}]]])
+
 (rum/defc TeamsPage < rum/static
-  [state]
-  [:article.teams-container
-    "TODO: teams page"])
+  [teams-map]
+  (let [teams-vec (vec teams-map)
+        sorted-teams (sort #(compare (first %1) (first %2)) teams-vec)]
+    [:article.teams-container
+      ;; TODO: finish this idea
+      ; [:input {:type "button"
+      ;          :on-click click-new-team-btn
+      ;          :value "New Team"}]
+      (map TeamInput sorted-teams)]))
 
 ;;------------------------------------------------------------------------------
 ;; Info Page
@@ -202,7 +260,7 @@
         (InfoPage state)
 
         teams-tab
-        (TeamsPage state)
+        (TeamsPage (:teams state))
 
         games-tab
         (GamesPage state)
