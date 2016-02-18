@@ -156,16 +156,30 @@
   (.preventDefault js-evt))
 
 (defn- click-add-point [game-id score-key js-evt]
-  (.preventDefault js-evt)
-  (swap! page-state update-in [:games game-id score-key] inc))
+  (prevent-default js-evt)
+  (swap! page-state update-in [:games game-id score-key] inc)
+
+  ;; games with any points cannot have status "scheduled"
+  (when (= "scheduled" (get-in @page-state [:games game-id :status]))
+    (swap! page-state assoc-in [:games game-id :status] "in_progress")))
 
 (defn- click-remove-point [game-id score-key js-evt]
-  (.preventDefault js-evt)
+  (prevent-default js-evt)
   (swap! page-state update-in [:games game-id score-key] dec))
 
-(defn- click-status-tab [game-id new-status])
+(rum/defc UpBtn < rum/static
+  [game-id score-key]
+  [:div.button.up
+    {:on-click (partial click-add-point game-id score-key)
+     :on-touch-start (partial click-add-point game-id score-key)}
+    "+1"])
 
-(defn- click-back-btn [])
+(rum/defc DownBtn < rum/static
+  [game-id score-key]
+  [:div.button.down
+    {:on-click (partial click-remove-point game-id score-key)
+     :on-touch-start (partial click-remove-point game-id score-key)}
+    "-1"])
 
 (rum/defc DisabledDownBtn < rum/static
   []
@@ -174,17 +188,33 @@
      :on-touch-start prevent-default}
     "-1"])
 
+(defn- click-status-tab [game-id new-status js-evt]
+  (prevent-default js-evt)
+  (swap! page-state assoc-in [:games game-id :status] new-status))
+
 (rum/defc StatusTab < rum/static
-  [txt status active?]
-  [:div {:class "tab"
-         :on-click click-status-tab}])
+  [txt status current-status game-id]
+  [:div {:class (str "tab" (when (= current-status status) " active"))
+         :on-click (partial click-status-tab game-id status)
+         :on-touch-start (partial click-status-tab game-id status)}
+    txt])
+
+(rum/defc DisabledStatusTab < rum/static
+  [txt]
+  [:div.tab.disabled
+    {:on-click prevent-default
+     :on-touch-start prevent-default}
+    txt])
+
+(defn- click-back-btn [])
 
 (rum/defc GameInput < rum/static
   [game-id game]
   (let [teamA-id (keyword (:teamA-id game))
         teamB-id (keyword (:teamB-id game))
         teamA (get-in @page-state [:teams teamA-id])
-        teamB (get-in @page-state [:teams teamB-id])]
+        teamB (get-in @page-state [:teams teamB-id])
+        current-status (:status game)]
     [:div.game-input-container
       [:div.teams
         [:div.team-name (:name teamA)]
@@ -192,35 +222,26 @@
         [:div.team-name (:name teamB)]]
       [:div.scores
         [:div.score
-          [:div.button.up
-            {:on-click (partial click-add-point game-id :scoreA)
-             :on-touch-start (partial click-add-point game-id :scoreA)}
-            "+1"]
+          (UpBtn game-id :scoreA)
           [:div.big-score (:scoreA game)]
           (if (zero? (:scoreA game))
             (DisabledDownBtn)
-            [:div.button.down
-              {:on-click (partial click-remove-point game-id :scoreA)
-               :on-touch-start (partial click-remove-point game-id :scoreA)}
-              "-1"])]
+            (DownBtn game-id :scoreA))]
         ;; NOTE: this empty element just used as a spacer
         [:div.vs ""]
         [:div.score
-          [:div.button.up
-            {:on-click (partial click-add-point game-id :scoreB)
-             :on-touch-start (partial click-add-point game-id :scoreB)}
-            "+1"]
+          (UpBtn game-id :scoreB)
           [:div.big-score (:scoreB game)]
           (if (zero? (:scoreB game))
             (DisabledDownBtn)
-            [:div.button.down
-              {:on-click (partial click-remove-point game-id :scoreB)
-               :on-touch-start (partial click-remove-point game-id :scoreB)}
-              "-1"])]]
+            (DownBtn game-id :scoreB))]]
       [:div.status
-        [:div.tab "Scheduled"]
-        [:div.tab.active "In Progress"]
-        [:div.tab "Finished"]]
+        (if (or (> (:scoreA game) 0)
+                (> (:scoreB game) 0))
+          (DisabledStatusTab "Scheduled")
+          (StatusTab "Scheduled" "scheduled" current-status game-id))
+        (StatusTab "In Progress" "in_progress" current-status game-id)
+        (StatusTab "Finished" "finished" current-status game-id)]
       [:div.back-btn
         {:on-click click-back-btn
          :on-touch-start click-back-btn}
