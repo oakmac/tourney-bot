@@ -234,6 +234,7 @@
                (not (blank? captain)))
       [:div.captain captain])])
 
+;; TODO: when a team has zero games played, display "-" instead of all zeroes
 (rum/defc ResultRow < rum/static
   [ties-allowed? result]
   [:tr
