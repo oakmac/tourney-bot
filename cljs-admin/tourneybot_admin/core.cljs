@@ -7,9 +7,12 @@
                              game-statuses
                              ensure-tournament-state]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
-                             fetch-json-as-cljs tourney-bot-url
-                             game->date game->time]]
+                             fetch-json-as-cljs tourney-bot-url]]
+    [tourneybot-admin.api :refer [save-tournament-state!]]
     [rum.core :as rum]))
+
+;; TODO: set up some logic such that when a quarterfinals game is finished, it
+;;       automatically seeds the team into the next bracket game
 
 ;;------------------------------------------------------------------------------
 ;; Constants
