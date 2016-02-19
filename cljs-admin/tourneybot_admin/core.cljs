@@ -226,13 +226,27 @@
 ;; TODO: highlight the winning team in yellow
 ;;       and include a "final score" note
 
+(rum/defc ScoreInput < rum/static
+  [game-id game score-key finished?]
+  (let [current-score (get game score-key 0)]
+    [:div.score
+      (if finished?
+        (InvisibleBtn)
+        (UpBtn game-id score-key))
+      [:div.big-score current-score]
+      (if finished?
+        (InvisibleBtn)
+        (if (zero? current-score)
+          (DisabledDownBtn)
+          (DownBtn game-id score-key)))]))
+
 (rum/defc EditGamePage < rum/static
   [teams game-id game]
   (let [teamA-id (keyword (:teamA-id game))
         teamB-id (keyword (:teamB-id game))
         teamA (get teams teamA-id)
         teamB (get teams teamB-id)
-        current-status (:status game)
+        current-status (:status game scheduled-status)
         finished? (= current-status finished-status)]
     [:article.game-input-container
       [:div.teams
@@ -240,28 +254,9 @@
         [:div.vs "vs"]
         [:div.team-name (:name teamB)]]
       [:div.scores
-        [:div.score
-          (if finished?
-            (InvisibleBtn)
-            (UpBtn game-id :scoreA))
-          [:div.big-score (:scoreA game)]
-          (if finished?
-            (InvisibleBtn)
-            (if (zero? (:scoreA game))
-              (DisabledDownBtn)
-              (DownBtn game-id :scoreA)))]
-        ;; NOTE: this empty element just used as a spacer
-        [:div.vs ""]
-        [:div.score
-          (if finished?
-            (InvisibleBtn)
-            (UpBtn game-id :scoreB))
-          [:div.big-score (:scoreB game)]
-          (if finished?
-            (InvisibleBtn)
-            (if (zero? (:scoreB game))
-              (DisabledDownBtn)
-              (DownBtn game-id :scoreB)))]]
+        (ScoreInput game-id game :scoreA finished?)
+        [:div.vs ""] ;; NOTE: this empty element just used as a spacer
+        (ScoreInput game-id game :scoreB finished?)]
       [:div.status
         (if (or (> (:scoreA game) 0)
                 (> (:scoreB game) 0))
@@ -305,6 +300,7 @@
 (defn- compare-team-name [[teamA-id teamA] [teamB-id teamB]]
   (compare (:name teamA) (:name teamB)))
 
+;; TODO: use a faster component for team selection than a <select>
 (rum/defc TeamSelect < rum/static
   [teams game-id game team-key]
   (let [sorted-teams (sort compare-team-name teams)]
@@ -313,11 +309,11 @@
       [:option {:value ""} "-- Select a Team --"]
       (map TeamOption sorted-teams)]))
 
-(rum/defc GameRow < rum/static
-  [teams [game-id game]]
-  (let [games-vec nil
-        start-day (game->date game)
-        start-time (:start-time game)]
+;; TODO: prevent them from picking the same team for teamA and teamB
+
+(rum/defc ScheduledGameRow < rum/static
+  [teams game-id game]
+  (let [start-time (:start-time game)]
     [:div.admin-input-row.games
       [:div.small-id (name game-id)]
       [:div.row
@@ -337,9 +333,59 @@
       [:div.row
         [:label "Team B"]
         (TeamSelect teams game-id game :teamB-id)]
-      [:button {:on-click (partial click-edit-game game-id)
-                :on-touch-start (partial click-edit-game game-id)}
+      ;; only show the "Edit Scores" button when both teams have been selected
+      (when (and (get teams (keyword (:teamA-id game)) false)
+                 (get teams (keyword (:teamB-id game)) false))
+        [:div.edit-scores-btn
+          {:on-click (partial click-edit-game game-id)
+           :on-touch-start (partial click-edit-game game-id)}
+          "Edit Scores"])]))
+
+(def date-format "YYYY-MM-DD HHmm")
+
+(defn- format-start-time [start-time]
+  (let [js-moment (js/moment start-time date-format)]
+    (.format js-moment "ddd, DD MMM YYYY, h:mma")))
+
+(rum/defc NonScheduledGameRow < rum/static
+  [teams game-id game]
+  (let [teamA (get teams (keyword (:teamA-id game)))
+        teamB (get teams (keyword (:teamB-id game)))
+        scoreA (:scoreA game)
+        scoreB (:scoreB game)
+        start-time (:start-time game)
+        status (:status game)]
+    [:div {:class (str "admin-input-row" (when (= status in-progress-status) " in-progress"))}
+      [:div.small-id (name game-id)]
+      [:div.row
+        [:label.muted "Name"]
+        [:input {:on-change (partial on-change-game-name game-id)
+                 :type "text"
+                 :value (:name game)}]]
+      [:div.row
+        [:label.muted "Time"]
+        [:span (format-start-time start-time)]]
+      [:div.row
+        [:label.muted "Team A"]
+        [:span (str (:name teamA) " (" scoreA ")")]]
+      [:div.row
+        [:label.muted "Team B"]
+        [:span (str (:name teamB) " (" scoreB ")")]]
+      [:div.row
+        [:label.muted "Status"]
+        [:span (if (= status in-progress-status)
+                 "In Progress"
+                 "Finished")]]
+      [:div.edit-scores-btn
+        {:on-click (partial click-edit-game game-id)
+         :on-touch-start (partial click-edit-game game-id)}
         "Edit Scores"]]))
+
+(rum/defc GameRow < rum/static
+  [teams [game-id game]]
+  (if (= (:status game scheduled-status) scheduled-status)
+    (ScheduledGameRow teams game-id game)
+    (NonScheduledGameRow teams game-id game)))
 
 (defn- toggle-hide-finished-games [js-evt]
   (prevent-default js-evt)

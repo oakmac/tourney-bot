@@ -195,18 +195,6 @@ footer {
     width: 93%;
   }
 
-  .vs {
-    display: inline-block;
-    margin: 0 5px;
-    font-size: 12px;
-  }
-
-  .sub-name {
-    color: #666;
-    font-size: 12px;
-    margin-top: 3px;
-  }
-
   .status {
     color: #777;
     display: inline-block;
@@ -214,6 +202,12 @@ footer {
     font-size: 14px;
     font-style: italic;
     margin-left: 8px;
+  }
+
+  .sub-name {
+    color: #666;
+    font-size: 12px;
+    margin-top: 3px;
   }
 
   .no-search-results {
@@ -225,6 +219,12 @@ footer {
   }
 
 } // end .schedule-container
+
+.vs {
+  display: inline-block;
+  margin: 0 5px;
+  font-size: 12px;
+}
 
 //------------------------------------------------------------------------------
 // Results
@@ -406,12 +406,23 @@ footer {
       width: 60px;
     }
 
+    .muted {
+      color: #777;
+      font-family: "Georgia", serif;
+      font-size: 14px;
+      font-style: italic;
+    }
+
     input {
       flex: 1;
       font-size: 16px;
       padding: 6px;
     }
   } // end .admin-input-row
+
+  .admin-input-row.in-progress {
+    background-color: #ff8;
+  }
 
   .small-id {
     color: #aaa;
@@ -451,6 +462,7 @@ footer {
     .button {
       border-radius: 4px;
       color: #fff;
+      cursor: pointer;
       font-size: 18px;
       font-weight: 700;
       margin: 0 auto;
@@ -484,6 +496,7 @@ footer {
       background-color: #f6f6f6;
       border-color: #eee;
       color: #333;
+      cursor: pointer;
       flex: 1;
       font-size: 18px;
       padding: 15px 0;
@@ -503,10 +516,22 @@ footer {
       border: 1px solid #ddd;
       border-radius: 2px;
       background-color: #eee;
+      cursor: pointer;
       display: inline-block;
       margin: 0 20px 20px 20px;
-      padding: 15px;
+      padding: 10px 20px;
     }
+
   } // end .game-input-container
+
+  .edit-scores-btn {
+    background: @primaryActionColor;
+    border-radius: 2px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    margin-left: 70px;
+    padding: 10px 20px;
+  }
 
 } // end .admin-container
