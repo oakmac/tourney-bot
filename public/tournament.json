@@ -1,6 +1,6 @@
 {
   "title": "2016 Houston Indoor",
-  "tiesAllowed": false,
+  "tiesAllowed": true,
   "maxScore": 14,
   "divisions": {
     "open": {"name": "Open"}
@@ -9,7 +9,7 @@
     "indoor": {"name": "Indoor Field"}
   },
   "teams": {
-    "team10": {"name": "Balooba Toyletry", "captain": "Alston Cotton"},
+    "team10": {"name": "Catsby Fizzle", "captain": "Alston Cotton"},
     "team11": {"name": "Zentury Kog", "captain": "Frankie Shaw"},
     "team12": {"name": "Turnabout Buzzmaker", "captain": "Wynn Henson"},
     "team13": {"name": "Geofram Tripsch", "captain": "Castro Osborn"},
@@ -47,7 +47,12 @@
               "teamB-id": "team21",
               "scoreA": 2,
               "scoreB": 4},
-    "game14": {"name": "Swiss R1, Game 5", "start-time": "2016-02-27 1000"},
+    "game14": {"name": "Swiss R1, Game 5", "start-time": "2016-02-27 1000",
+              "status": "scheduled",
+              "teamA-id": "team15",
+              "teamB-id": "team17",
+              "scoreA": 0,
+              "scoreB": 0},
     "game15": {"name": "Swiss R1, Game 6", "start-time": "2016-02-27 1015"},
 
     "game20": {"name": "Swiss R2, Game 1", "start-time": "2016-02-28 1030"},

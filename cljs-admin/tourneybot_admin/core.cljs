@@ -20,6 +20,11 @@
 (def tournament-state-url "tournament.json")
 (def info-page-url "info.md")
 
+(def scheduled-status "scheduled")
+(def in-progress-status "in_progress")
+(def finished-status "finished")
+(def game-statuses #{scheduled-status in-progress-status finished-status})
+
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
 ;;------------------------------------------------------------------------------
@@ -376,7 +381,8 @@
         (TeamsPage (:teams state))
 
         games-tab
-        (GamesPage (:games state))
+        ;;(GamesPage (:games state))
+        (GameInput :game13 (get-in state [:games :game13]))
 
         swiss-tab
         (SwissPage state)

@@ -23,12 +23,8 @@
 (def tournament-state-url "tournament.json")
 (def info-page-url "info.md")
 
-(def refresh-rates
-  [[(* 5 1000)    "5 sec"]
-   [(* 30 1000)   "30 sec"]
-   [(* 60 1000)   "1 min"]
-   [(* 2 60 1000) "2 min"]
-   [(* 5 60 1000) "5 min"]])
+;; TODO: allow this to be overriden with a query param
+(def refresh-rate-ms 5000)
 
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
@@ -36,7 +32,6 @@
 
 (def initial-page-state
   {:hide-finished-games? false
-   :refresh-rate (ffirst refresh-rates)
    :schedule-search-text ""
    :sort-results-by sort-on-name
    :tab info-tab})
@@ -101,24 +96,7 @@
 (fetch-tourney-state!)
 
 ;; begin the polling
-(set! js-state-polling-interval
-  (js/setInterval fetch-tourney-state! (:refresh-rate @page-state)))
-
-(defn- update-polling-interval
-  "Update the state polling rate when it changes."
-  [_kwd _the-atom old-state new-state]
-  (let [old-rate (:refresh-rate old-state)
-        new-rate (:refresh-rate new-state)]
-    (when (not= old-rate new-rate)
-      ;; clear the previous polling interval
-      (js/clearInterval js-state-polling-interval)
-      ;; set the new one
-      (set! js-state-polling-interval
-        (js/setInterval fetch-tourney-state! new-rate))
-      ;; kick off another refresh for good measure
-      (fetch-tourney-state!))))
-
-(add-watch page-state :state-polling update-polling-interval)
+(js/setInterval fetch-tourney-state! refresh-rate-ms)
 
 ;;------------------------------------------------------------------------------
 ;; Fetch Info Page
@@ -194,8 +172,8 @@
 
 (defn- team->results
   "Creates a result map for a single team."
-  [games team-id]
-  (let [team (get-in @page-state [:teams (keyword team-id)])
+  [teams games team-id]
+  (let [team (get teams (keyword team-id))
         games-this-team-has-played (filter #(and (= (:status %) "finished")
                                                  (or (= (:teamA-id %) (name team-id))
                                                      (= (:teamB-id %) (name team-id))))
@@ -230,7 +208,7 @@
 (defn- games->results
   "Creates a results list for all the teams."
   [teams games]
-  (let [results (map (partial team->results games) (keys teams))
+  (let [results (map (partial team->results teams games) (keys teams))
         sorted-results (sort compare-victory-points results)]
     (map-indexed #(assoc %2 :place (inc %1)) sorted-results)))
 
@@ -360,13 +338,13 @@
 
 ;; TODO: highlight search match text in yellow; stretch goal :)
 (rum/defc ScheduleRow < rum/static
-  [game]
+  [teams game]
   (let [game-name (:name game)
         status (:status game)
         teamA-id (keyword (:teamA-id game))
         teamB-id (keyword (:teamB-id game))
-        teamA-name (get-in @page-state [:teams teamA-id :name])
-        teamB-name (get-in @page-state [:teams teamB-id :name])
+        teamA-name (get-in teams [teamA-id :name])
+        teamB-name (get-in teams [teamB-id :name])
         scoreA (:scoreA game)
         scoreB (:scoreB game)
         show-scores? (and (or (= status "in_progress")
@@ -391,27 +369,27 @@
                 [:div.sub-name game-name]))]]))
 
 (rum/defc SingleDaySchedule < rum/static
-  [all-games date]
-  (let [games-on-this-day (filter #(= date (game->date %)) all-games)
+  [teams games date]
+  (let [games-on-this-day (filter #(= date (game->date %)) games)
         games-on-this-day (sort-by :start-time games-on-this-day)]
     [:div
       [:h3 (format-date date)]
       [:table
         [:tbody
-          (map ScheduleRow games-on-this-day)]]]))
+          (map (partial ScheduleRow teams) games-on-this-day)]]]))
 
 (defn- on-change-schedule-search [js-evt]
   (let [new-text (aget js-evt "currentTarget" "value")]
     (swap! page-state assoc :schedule-search-text new-text)))
 
-(defn- match-game? [search-txt game]
+(defn- match-game? [teams search-txt game]
   (let [search-txt (lower-case search-txt)
         game-name (:name game)
         teamA-name (if-let [teamA-id (keyword (:teamA-id game))]
-                      (get-in @page-state [:teams teamA-id :name] "")
+                      (get-in teams [teamA-id :name] "")
                       "")
         teamB-name (if-let [teamB-id (keyword (:teamB-id game))]
-                      (get-in @page-state [:teams teamB-id :name] "")
+                      (get-in teams [teamB-id :name] "")
                       "")]
     (or (not= -1 (.indexOf (lower-case game-name) search-txt))
         (not= -1 (.indexOf (lower-case teamA-name) search-txt))
@@ -422,9 +400,10 @@
 (rum/defc SchedulePage < rum/static
   [state]
   (let [games (vals (:games state))
+        teams (:teams state)
         search-txt (:schedule-search-text state)
         filtered-games (if-not (blank? search-txt)
-                         (filter (partial match-game? search-txt) games)
+                         (filter (partial match-game? teams search-txt) games)
                          games)
         tourney-dates (games->dates filtered-games)]
     [:article.schedule-container
@@ -435,7 +414,7 @@
                :value search-txt}]
       (if (empty? filtered-games)
         [:div.no-search-results "No games found."]
-        (map (partial SingleDaySchedule filtered-games) tourney-dates))]))
+        (map (partial SingleDaySchedule teams filtered-games) tourney-dates))]))
 
 ;;------------------------------------------------------------------------------
 ;; Navigation Tabs
@@ -466,25 +445,11 @@
 ;; Footer
 ;;------------------------------------------------------------------------------
 
-(defn- on-change-refresh-rate [js-evt]
-  (let [new-value (aget js-evt "currentTarget" "value")]
-    (swap! page-state assoc :refresh-rate (int new-value))))
-
-(rum/defc RefreshOptions < rum/static
-  [refresh-rate]
-  [:select {:on-change on-change-refresh-rate
-            :value refresh-rate}
-    (map
-      (fn [rate]
-        [:option {:value (first rate)} (second rate)])
-      refresh-rates)])
-
 (rum/defc Footer < rum/static
   [refresh-rate]
   [:footer
+    ;; TODO: add a "last updated" timestamp?
     [:div.left
-      "auto-refresh " (RefreshOptions refresh-rate)]
-    [:div.right
       "powered by " [:a {:href tourney-bot-url} "TourneyBot"]]])
 
 ;;------------------------------------------------------------------------------
