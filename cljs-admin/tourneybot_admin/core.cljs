@@ -3,8 +3,8 @@
     cljsjs.marked
     cljsjs.moment
     [clojure.string :refer [blank? lower-case]]
-    [tourneybot.data :refer [scheduled-status in-progress-status finished-status
-                             game-statuses
+    [tourneybot.data :refer [scheduled-status in-progress-status finished-status game-statuses
+                             games->results
                              ensure-tournament-state]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
                              fetch-json-as-cljs tourney-bot-url]]
@@ -153,10 +153,89 @@
 ;; Swiss Rounds Page
 ;;------------------------------------------------------------------------------
 
+(defn- is-swiss-game? [g]
+  (integer? (:swiss-round g)))
+
+;; TODO: take "ties-allowed?" into account here
+(rum/defc SwissResultsRow < rum/static
+  [{:keys [team-name games-won games-lost games-tied
+           points-won points-lost points-diff
+           victory-points]}]
+  [:tr
+    [:td.name team-name]
+    [:td (str games-won "-" games-lost "-" games-tied)]
+    [:td (str "+" points-won ",  "
+              "-" (js/Math.abs points-lost) ", "
+              (if (neg? points-diff)
+                points-diff
+                (str "+" points-diff)))]
+    [:td victory-points]])
+
+(rum/defc SwissResultsTHead < rum/static
+  []
+  [:thead
+    [:tr
+      [:th.name {:style {:width "40%"}} "Name"]
+      [:th "Record"]
+      [:th "Points"]
+      [:th "Victory" [:br] "Points"]]])
+
+(rum/defc SwissResultsTable < rum/static
+  [results]
+  [:table.small-results-tbl
+    (SwissResultsTHead)
+    [:tbody
+      (map SwissResultsRow results)]])
+
+(rum/defc SwissRound < rum/static
+  [teams all-games swiss-round]
+  (let [;; get all the games for this swiss round and below
+        games-to-look-at (filter #(and (is-swiss-game? (second %))
+                                       (<= (:swiss-round (second %)) swiss-round))
+                                 all-games)
+        ;; get all the games in just this swiss round
+        games-in-this-round (filter #(and (is-swiss-game? (second %))
+                                          (= (:swiss-round (second %)) swiss-round))
+                                    games-to-look-at)
+        num-games-in-this-round (count games-in-this-round)
+        ;; are all the games in this swiss round finished?
+        num-games-finished (count (filter #(= (:status (second %)) finished-status)
+                                          games-in-this-round))
+        all-finished? (= num-games-in-this-round num-games-finished)]
+    [:div.swiss-round-container
+      [:h2 (str "Swiss Round #" swiss-round)]
+      [:p.info
+        (cond
+          all-finished?
+          (str "All " num-games-in-this-round " games in Swiss Round #" swiss-round " have been played.")
+
+          (zero? num-games-finished)
+          (str "Swiss Round #" swiss-round " has not started yet.")
+
+          :else
+          (str num-games-finished " out of " num-games-in-this-round " rounds have been played in Swiss Round #" swiss-round))]
+      (when-not (zero? num-games-finished)
+        (list
+          [:h3 (str "Swiss Round #" swiss-round " Results")]
+          (SwissResultsTable (games->results teams games-to-look-at))
+          [:h3 (str "Matchups for Swiss Round #" (inc swiss-round))]))]))
+
 (rum/defc SwissPage < rum/static
-  [state]
-  [:article.swiss-container
-    "TODO: swiss rounds page"])
+  [teams games]
+  (let [;; create a set of the Swiss Round numbers
+        swiss-rounds (reduce (fn [rounds game]
+                               (if (integer? (:swiss-round game))
+                                 (conj rounds (:swiss-round game))
+                                 rounds))
+                             #{}
+                             (vals games))
+        ;; sort and convert to list
+        swiss-rounds (sort swiss-rounds)]
+    [:article.swiss-container
+      (if (empty? swiss-rounds)
+        ;; TODO: style this
+        [:div "This tournament does not have any Swiss Rounds."]
+        (map (partial SwissRound teams games) swiss-rounds))]))
 
 ;;------------------------------------------------------------------------------
 ;; Scores Input
@@ -528,7 +607,7 @@
         (EditGamePage teams editing-game-id (get-in state [:games editing-game-id]))
 
         swiss-tab
-        (SwissPage state)
+        (SwissPage teams games)
 
         ;; NOTE: this should never happen
         [:div "Error: invalid tab"])
