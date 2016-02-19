@@ -446,7 +446,7 @@
 ;;------------------------------------------------------------------------------
 
 (rum/defc Footer < rum/static
-  [refresh-rate]
+  []
   [:footer
     ;; TODO: add a "last updated" timestamp?
     [:div.left
@@ -471,7 +471,7 @@
         (SchedulePage state))
       (when (= current-tab results-tab)
         (ResultsPage state))
-      (Footer (:refresh-rate state))]))
+      (Footer)]))
 
 ;;------------------------------------------------------------------------------
 ;; Render Loop

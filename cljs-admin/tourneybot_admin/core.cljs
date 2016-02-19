@@ -14,8 +14,9 @@
 (def info-tab "INFO-TAB")
 (def teams-tab "TEAMS-TAB")
 (def games-tab "GAMES-TAB")
+(def edit-game-tab "EDIT-GAME-TAB")
 (def swiss-tab "SWISS-TAB")
-(def tab-values #{info-tab teams-tab games-tab swiss-tab})
+(def tab-values #{info-tab teams-tab games-tab edit-game-tab swiss-tab})
 
 (def tournament-state-url "tournament.json")
 (def info-page-url "info.md")
@@ -30,7 +31,8 @@
 ;;------------------------------------------------------------------------------
 
 (def initial-page-state
-  {:tab info-tab})
+  {:tab info-tab
+   :editing-game-id nil})
 
 (def page-state (atom initial-page-state))
 
@@ -172,6 +174,10 @@
   (prevent-default js-evt)
   (swap! page-state update-in [:games game-id score-key] dec))
 
+(rum/defc InvisibleBtn < rum/static
+  []
+  [:div.button.up {:style {:visibility "hidden"}} "+1"])
+
 (rum/defc UpBtn < rum/static
   [game-id score-key]
   [:div.button.up
@@ -211,44 +217,56 @@
      :on-touch-start prevent-default}
     txt])
 
-(defn- click-back-btn []
-  ;; TODO: write this
-  nil)
+(defn- click-back-btn [js-evt]
+  (prevent-default js-evt)
+  (swap! page-state assoc :tab games-tab))
 
-(rum/defc GameInput < rum/static
-  [game-id game]
+;; TODO: highlight the winning team in yellow
+;;       and include a "final score" note
+
+(rum/defc EditGamePage < rum/static
+  [teams game-id game]
   (let [teamA-id (keyword (:teamA-id game))
         teamB-id (keyword (:teamB-id game))
-        teamA (get-in @page-state [:teams teamA-id])
-        teamB (get-in @page-state [:teams teamB-id])
-        current-status (:status game)]
-    [:div.game-input-container
+        teamA (get teams teamA-id)
+        teamB (get teams teamB-id)
+        current-status (:status game)
+        finished? (= current-status finished-status)]
+    [:article.game-input-container
       [:div.teams
         [:div.team-name (:name teamA)]
         [:div.vs "vs"]
         [:div.team-name (:name teamB)]]
       [:div.scores
         [:div.score
-          (UpBtn game-id :scoreA)
+          (if finished?
+            (InvisibleBtn)
+            (UpBtn game-id :scoreA))
           [:div.big-score (:scoreA game)]
-          (if (zero? (:scoreA game))
-            (DisabledDownBtn)
-            (DownBtn game-id :scoreA))]
+          (if finished?
+            (InvisibleBtn)
+            (if (zero? (:scoreA game))
+              (DisabledDownBtn)
+              (DownBtn game-id :scoreA)))]
         ;; NOTE: this empty element just used as a spacer
         [:div.vs ""]
         [:div.score
-          (UpBtn game-id :scoreB)
+          (if finished?
+            (InvisibleBtn)
+            (UpBtn game-id :scoreB))
           [:div.big-score (:scoreB game)]
-          (if (zero? (:scoreB game))
-            (DisabledDownBtn)
-            (DownBtn game-id :scoreB))]]
+          (if finished?
+            (InvisibleBtn)
+            (if (zero? (:scoreB game))
+              (DisabledDownBtn)
+              (DownBtn game-id :scoreB)))]]
       [:div.status
         (if (or (> (:scoreA game) 0)
                 (> (:scoreB game) 0))
           (DisabledStatusTab "Scheduled")
-          (StatusTab "Scheduled" "scheduled" current-status game-id))
-        (StatusTab "In Progress" "in_progress" current-status game-id)
-        (StatusTab "Finished" "finished" current-status game-id)]
+          (StatusTab "Scheduled" scheduled-status current-status game-id))
+        (StatusTab "In Progress" in-progress-status current-status game-id)
+        (StatusTab "Finished" finished-status current-status game-id)]
       [:div.back-btn
         {:on-click click-back-btn
          :on-touch-start click-back-btn}
@@ -258,11 +276,19 @@
 ;; Games Page
 ;;------------------------------------------------------------------------------
 
+(defn- click-edit-game [game-id js-evt]
+  (prevent-default js-evt)
+  (swap! page-state assoc :tab edit-game-tab
+                          :editing-game-id game-id))
+
 (rum/defc GameRow < rum/static
   [[game-id game]]
   (let [games-vec nil]
     [:div.game-row
-      (name game-id)]))
+      (name game-id)
+      [:button {:on-click (partial click-edit-game game-id)
+                :on-touch-start (partial click-edit-game game-id)}
+        "Edit Game"]]))
 
 (defn- compare-games [a b]
   (compare (-> a second :start-time)
@@ -366,7 +392,10 @@
 
 (rum/defc AdminApp < rum/static
   [state]
-  (let [current-tab (:tab state)]
+  (let [current-tab (:tab state)
+        editing-game-id (keyword (:editing-game-id state))
+        teams (:teams state)
+        games (:games state)]
     [:div.admin-container
       [:header
         [:div.top-bar
@@ -378,11 +407,13 @@
         (InfoPage state)
 
         teams-tab
-        (TeamsPage (:teams state))
+        (TeamsPage teams)
 
         games-tab
-        ;;(GamesPage (:games state))
-        (GameInput :game13 (get-in state [:games :game13]))
+        (GamesPage games)
+
+        edit-game-tab
+        (EditGamePage teams editing-game-id (get-in state [:games editing-game-id]))
 
         swiss-tab
         (SwissPage state)
