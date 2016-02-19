@@ -4,7 +4,8 @@
     cljsjs.moment
     [clojure.string :refer [blank? lower-case]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
-                             fetch-json-as-cljs tourney-bot-url]]
+                             fetch-json-as-cljs tourney-bot-url
+                             game->date game->time]]
     [rum.core :as rum]))
 
 ;;------------------------------------------------------------------------------
@@ -31,8 +32,9 @@
 ;;------------------------------------------------------------------------------
 
 (def initial-page-state
-  {:tab info-tab
-   :editing-game-id nil})
+  {:editing-game-id nil
+   :hide-finished-games? true
+   :tab info-tab})
 
 (def page-state (atom initial-page-state))
 
@@ -156,7 +158,7 @@
     "TODO: swiss rounds page"])
 
 ;;------------------------------------------------------------------------------
-;; Game Input
+;; Scores Input
 ;;------------------------------------------------------------------------------
 
 (defn- prevent-default [js-evt]
@@ -281,25 +283,87 @@
   (swap! page-state assoc :tab edit-game-tab
                           :editing-game-id game-id))
 
+(defn- on-change-game-name [game-id js-evt]
+  (let [new-name (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc-in [:games game-id :name] new-name)))
+
+(defn- on-change-start-time [game-id js-evt]
+  (let [new-time (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc-in [:games game-id :start-time] new-time)))
+
+;; TODO: need an on-blur function to make sure the time is formatted properly
+
+(defn- on-change-team-dropdown [game-id team-key js-evt]
+  (let [team-id (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc-in [:games game-id team-key] team-id)))
+
+(rum/defc TeamOption < rum/static
+  [[team-id team]]
+  [:option {:value (name team-id)}
+    (:name team)])
+
+(defn- compare-team-name [[teamA-id teamA] [teamB-id teamB]]
+  (compare (:name teamA) (:name teamB)))
+
+(rum/defc TeamSelect < rum/static
+  [teams game-id game team-key]
+  (let [sorted-teams (sort compare-team-name teams)]
+    [:select {:on-change (partial on-change-team-dropdown game-id team-key)
+              :value (team-key game)}
+      [:option {:value ""} "-- Select a Team --"]
+      (map TeamOption sorted-teams)]))
+
 (rum/defc GameRow < rum/static
-  [[game-id game]]
-  (let [games-vec nil]
-    [:div.game-row
-      (name game-id)
+  [teams [game-id game]]
+  (let [games-vec nil
+        start-day (game->date game)
+        start-time (:start-time game)]
+    [:div.admin-input-row.games
+      [:div.small-id (name game-id)]
+      [:div.row
+        [:label "Name"]
+        [:input {:on-change (partial on-change-game-name game-id)
+                 :type "text"
+                 :value (:name game)}]]
+      [:div.row
+        [:label "Start Time"]
+        [:input {:on-change (partial on-change-start-time game-id)
+                 :placeholder "YYYY-MM-DD HHMM"
+                 :type "text"
+                 :value start-time}]]
+      [:div.row
+        [:label "Team A"]
+        (TeamSelect teams game-id game :teamA-id)]
+      [:div.row
+        [:label "Team B"]
+        (TeamSelect teams game-id game :teamB-id)]
       [:button {:on-click (partial click-edit-game game-id)
                 :on-touch-start (partial click-edit-game game-id)}
-        "Edit Game"]]))
+        "Edit Scores"]]))
+
+(defn- toggle-hide-finished-games [js-evt]
+  (prevent-default js-evt)
+  (swap! page-state update-in [:hide-finished-games?] not))
 
 (defn- compare-games [a b]
   (compare (-> a second :start-time)
            (-> b second :start-time)))
 
 (rum/defc GamesPage < rum/static
-  [games-map]
-  (let [games-vec (vec games-map)
-        sorted-games (sort compare-games games-vec)]
+  [teams games hide-finished-games?]
+  (let [games (if hide-finished-games?
+                (remove #(= (:status (second %)) finished-status) games)
+                games)
+        sorted-games (sort compare-games games)]
     [:article.games-container
-      (map GameRow sorted-games)]))
+      [:label.top-option
+        {:on-click toggle-hide-finished-games
+         :on-touch-start toggle-hide-finished-games}
+        (if hide-finished-games?
+          [:i.fa.fa-check-square-o]
+          [:i.fa.fa-square-o])
+        "Hide finished games"]
+      (map (partial GameRow teams) sorted-games)]))
 
 ;;------------------------------------------------------------------------------
 ;; Teams Page
@@ -315,7 +379,7 @@
 
 (rum/defc TeamInput < rum/static
   [[team-id team]]
-  [:div.team-input-container
+  [:div.admin-input-row
     [:div.small-id (name team-id)]
     [:div.row
       [:label "Name"]
@@ -329,9 +393,8 @@
                :value (:captain team)}]]])
 
 (rum/defc TeamsPage < rum/static
-  [teams-map]
-  (let [teams-vec (vec teams-map)
-        sorted-teams (sort #(compare (first %1) (first %2)) teams-vec)]
+  [teams]
+  (let [sorted-teams (sort #(compare (first %1) (first %2)) teams)]
     [:article.teams-container
       ;; TODO: finish this idea
       ; [:input {:type "button"
@@ -395,7 +458,8 @@
   (let [current-tab (:tab state)
         editing-game-id (keyword (:editing-game-id state))
         teams (:teams state)
-        games (:games state)]
+        games (:games state)
+        hide-finished-games? (:hide-finished-games? state)]
     [:div.admin-container
       [:header
         [:div.top-bar
@@ -410,7 +474,7 @@
         (TeamsPage teams)
 
         games-tab
-        (GamesPage games)
+        (GamesPage teams games hide-finished-games?)
 
         edit-game-tab
         (EditGamePage teams editing-game-id (get-in state [:games editing-game-id]))

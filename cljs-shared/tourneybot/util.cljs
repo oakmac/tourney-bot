@@ -35,6 +35,24 @@
   (js/document.getElementById id))
 
 ;;------------------------------------------------------------------------------
+;; Game Functions
+;;------------------------------------------------------------------------------
+
+(defn game->date
+  "Returns just the date string from a game."
+  [game]
+  (-> game
+      :start-time
+      (subs 0 10)))
+
+(defn game->time
+  "Returns just the time string from a game."
+  [game]
+  (-> game
+      :start-time
+      (subs 11 15)))
+
+;;------------------------------------------------------------------------------
 ;; AJAX
 ;;------------------------------------------------------------------------------
 

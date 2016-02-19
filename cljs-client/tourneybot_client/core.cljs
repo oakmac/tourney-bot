@@ -4,7 +4,8 @@
     cljsjs.moment
     [clojure.string :refer [blank? lower-case]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
-                             fetch-json-as-cljs tourney-bot-url]]
+                             fetch-json-as-cljs tourney-bot-url
+                             game->date]]
     [rum.core :as rum]))
 
 ;;------------------------------------------------------------------------------
@@ -294,13 +295,6 @@
 ;;------------------------------------------------------------------------------
 ;; Schedule Page
 ;;------------------------------------------------------------------------------
-
-(defn- game->date
-  "Returns just the date string from a game."
-  [game]
-  (-> game
-      :start-time
-      (subs 0 10)))
 
 (defn- games->dates
   "Returns an ordered, distinct list of tournament dates."
