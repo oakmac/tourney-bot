@@ -271,7 +271,7 @@
       [:div.back-btn
         {:on-click click-back-btn
          :on-touch-start click-back-btn}
-        [:i.fa.fa-hand-o-left] " Go Back"]]))
+        [:i.fa.fa-arrow-left] " Go Back"]]))
 
 ;;------------------------------------------------------------------------------
 ;; Games Page
