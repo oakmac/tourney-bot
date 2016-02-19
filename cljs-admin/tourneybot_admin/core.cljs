@@ -3,6 +3,9 @@
     cljsjs.marked
     cljsjs.moment
     [clojure.string :refer [blank? lower-case]]
+    [tourneybot.data :refer [scheduled-status in-progress-status finished-status
+                             game-statuses
+                             ensure-tournament-state]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
                              fetch-json-as-cljs tourney-bot-url
                              game->date game->time]]
@@ -21,11 +24,6 @@
 
 (def tournament-state-url "../tournament.json")
 (def info-page-url "../info.md")
-
-(def scheduled-status "scheduled")
-(def in-progress-status "in_progress")
-(def finished-status "finished")
-(def game-statuses #{scheduled-status in-progress-status finished-status})
 
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
@@ -161,6 +159,9 @@
 ;; Scores Input
 ;;------------------------------------------------------------------------------
 
+;; TODO: do not allow a game to reach "Finished" state if the scores are equal
+;;       and ties are not allowed
+
 (defn- prevent-default [js-evt]
   (.preventDefault js-evt))
 
@@ -169,7 +170,7 @@
   (swap! page-state update-in [:games game-id score-key] inc)
 
   ;; games with any points cannot have status "scheduled"
-  (when (= "scheduled" (get-in @page-state [:games game-id :status]))
+  (when (= scheduled-status (get-in @page-state [:games game-id :status] scheduled-status))
     (swap! page-state assoc-in [:games game-id :status] "in_progress")))
 
 (defn- click-remove-point [game-id score-key js-evt]
@@ -438,14 +439,12 @@
                :type "text"
                :value (:captain team)}]]])
 
+;; TODO: allow them to create a team here
+
 (rum/defc TeamsPage < rum/static
   [teams]
   (let [sorted-teams (sort #(compare (first %1) (first %2)) teams)]
     [:article.teams-container
-      ;; TODO: finish this idea
-      ; [:input {:type "button"
-      ;          :on-click click-new-team-btn
-      ;          :value "New Team"}]
       (map TeamInput sorted-teams)]))
 
 ;;------------------------------------------------------------------------------
@@ -487,7 +486,7 @@
 ;; Footer
 ;;------------------------------------------------------------------------------
 
-;; TODO: link between admin and client side
+;; TODO: link to the client site from the admin page, open in a new window
 
 (rum/defc Footer < rum/static
   []

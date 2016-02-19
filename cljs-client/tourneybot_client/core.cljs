@@ -3,6 +3,9 @@
     cljsjs.marked
     cljsjs.moment
     [clojure.string :refer [blank? lower-case]]
+    [tourneybot.data :refer [scheduled-status in-progress-status finished-status
+                             game-statuses
+                             ensure-tournament-state]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
                              fetch-json-as-cljs tourney-bot-url
                              game->date]]
@@ -175,7 +178,7 @@
   "Creates a result map for a single team."
   [teams games team-id]
   (let [team (get teams (keyword team-id))
-        games-this-team-has-played (filter #(and (= (:status %) "finished")
+        games-this-team-has-played (filter #(and (= (:status %) finished-status)
                                                  (or (= (:teamA-id %) (name team-id))
                                                      (= (:teamB-id %) (name team-id))))
                                            (vals games))]
@@ -235,28 +238,35 @@
                (not (blank? captain)))
       [:div.captain captain])])
 
-;; TODO: when a team has zero games played, display "-" instead of all zeroes
+(rum/defc RecordCell < rum/static
+  [ties-allowed? {:keys [games-won games-lost games-tied
+                         points-won points-lost points-diff]}]
+  [:td.record-cell
+    [:div.big-record
+      [:span.big-num games-won]
+      [:span.dash "-"]
+      [:span.big-num games-lost]
+      (when ties-allowed?
+        (list [:span.dash "-"]
+              [:span.big-num games-tied]))]
+    [:div.small-points
+      [:span.small-point (str "+" points-won)]
+      [:span ", "]
+      [:span.small-point (str "-" points-lost)]
+      [:span ", "]
+      [:span.small-point (if (neg? points-diff)
+                           points-diff
+                           (str "+" points-diff))]]])
+
 (rum/defc ResultRow < rum/static
   [ties-allowed? result]
   [:tr
     [:td.place (str "#" (:place result))]
     [:td.team-name (TeamNameCell (:team-name result) (:team-captain result))]
-    [:td.record-cell
-      [:div.big-record
-        [:span.big-num (:games-won result)]
-        [:span.dash "-"]
-        [:span.big-num (:games-lost result)]
-        (when ties-allowed?
-          (list [:span.dash "-"]
-                [:span.big-num (:games-tied result)]))]
-      [:div.small-points
-        [:span.small-point (str "+" (:points-won result))]
-        [:span ", "]
-        [:span.small-point (str "-" (:points-lost result))]
-        [:span ", "]
-        [:span.small-point (if (neg? (:points-diff result))
-                             (:points-diff result)
-                             (str "+" (:points-diff result)))]]]])
+    (if (and (zero? (:games-won result))
+             (zero? (:games-lost result)))
+      [:td.record-cell.no-games "-"]
+      (RecordCell ties-allowed? result))])
 
 (defn- click-sort-results-link [mode js-evt]
   (.preventDefault js-evt)
@@ -319,13 +329,13 @@
   [status]
   [:span.status
     (condp = status
-      "scheduled"
+      scheduled-status
       "scheduled"
 
-      "in_progress"
+      in-progress-status
       "in progress"
 
-      "finished"
+      finished-status
       "finished"
 
       ;; NOTE: this should never happen
@@ -342,12 +352,12 @@
         teamB-name (get-in teams [teamB-id :name])
         scoreA (:scoreA game)
         scoreB (:scoreB game)
-        show-scores? (and (or (= status "in_progress")
-                              (= status "finished"))
+        show-scores? (and (or (= status in-progress-status)
+                              (= status finished-status))
                           scoreA
                           scoreB)]
     ;; highlight this row if the game is in progress
-    [:tr {:class (if (= status "in_progress") "in-progress" "")}
+    [:tr {:class (if (= status in-progress-status) "in-progress" "")}
       [:td.time (format-time (:start-time game))]
       [:td.game
         (if (and (not teamA-name) (not teamB-name))
