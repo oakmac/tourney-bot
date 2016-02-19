@@ -19,8 +19,8 @@
 
   :clean-targets ["public/js/admin.js"
                   "public/js/admin.js"
-                  "public/js/index.js"
-                  "public/js/index.min.js"]
+                  "public/js/client.js"
+                  "public/js/client.min.js"]
 
   :cljsbuild
     {:builds
@@ -35,13 +35,13 @@
                    :optimizations :advanced
                    :pretty-print false}}
 
-       {:id "index-dev"
-        :source-paths ["cljs-index" "cljs-shared"]
-        :compiler {:output-to "public/js/index.js"
+       {:id "client-dev"
+        :source-paths ["cljs-client" "cljs-shared"]
+        :compiler {:output-to "public/js/client.js"
                    :optimizations :whitespace}}
 
-       {:id "index-prod"
-        :source-paths ["cljs-index" "cljs-shared"]
-        :compiler {:output-to "public/js/index.min.js"
+       {:id "client-prod"
+        :source-paths ["cljs-client" "cljs-shared"]
+        :compiler {:output-to "public/js/client.min.js"
                    :optimizations :advanced
                    :pretty-print false}}]})

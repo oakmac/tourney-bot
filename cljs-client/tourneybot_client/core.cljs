@@ -1,4 +1,4 @@
-(ns tourneybot-index.core
+(ns tourneybot-client.core
   (:require
     cljsjs.marked
     cljsjs.moment

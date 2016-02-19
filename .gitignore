@@ -16,3 +16,6 @@ public/css/main.min.css
 
 # ignore diff files
 *.diff
+
+# ignore publish script
+publish.sh

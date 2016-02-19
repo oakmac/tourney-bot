@@ -99,16 +99,13 @@ function snowflakeCount() {
 //------------------------------------------------------------------------------
 
 function preBuildSanityCheck() {
-  if (! grunt.file.exists('public/index.html')) {
-    grunt.fail.warn('Could not find public/index.html! Aborting...');
+  if (! grunt.file.exists('public/js/admin.min.js')) {
+    grunt.fail.warn('Could not find public/js/admin.min.js! Aborting...');
   }
 
-  if (! grunt.file.exists('public/js/cheatsheet.min.js')) {
-    grunt.fail.warn('Could not find public/js/cheatsheet.min.js! Aborting...');
+  if (! grunt.file.exists('public/js/client.min.js')) {
+    grunt.fail.warn('Could not find public/js/client.min.js! Aborting...');
   }
-
-  // TODO: check to make sure the ctime on cheatsheet.min.js is pretty fresh
-  //       (< 5 minutes)
 
   grunt.log.writeln('Everything looks ok for a build.');
 }
@@ -116,28 +113,42 @@ function preBuildSanityCheck() {
 function hashAssets() {
   const cssFile = grunt.file.read('00-publish/css/main.min.css');
   const cssHash = md5(cssFile).substr(0, 8);
-  const jsFile = grunt.file.read('00-publish/js/cheatsheet.min.js');
-  const jsHash = md5(jsFile).substr(0, 8);
-  const htmlFile = grunt.file.read('00-publish/index.html');
+
+  const adminJsFile = grunt.file.read('00-publish/js/admin.min.js');
+  const adminJsHash = md5(adminJsFile).substr(0, 8);
+
+  const clientJsFile = grunt.file.read('00-publish/js/client.min.js');
+  const clientJsHash = md5(clientJsFile).substr(0, 8);
+
+  const adminHtmlFile = grunt.file.read('00-publish/admin/index.html');
+  const clientHtmlFile = grunt.file.read('00-publish/index.html');
 
   // write the new files
   grunt.file.write('00-publish/css/main.min.' + cssHash + '.css', cssFile);
-  grunt.file.write('00-publish/js/cheatsheet.min.' + jsHash + '.js', jsFile);
+  grunt.file.write('00-publish/js/admin.min.' + adminJsHash + '.js', adminJsFile);
+  grunt.file.write('00-publish/js/client.min.' + clientJsHash + '.js', clientJsFile);
 
   // delete the old files
   grunt.file.delete('00-publish/css/main.min.css');
-  grunt.file.delete('00-publish/js/cheatsheet.min.js');
+  grunt.file.delete('00-publish/js/admin.min.js');
+  grunt.file.delete('00-publish/js/client.min.js');
 
-  // update the HTML file
+  // update the HTML files
+  grunt.file.write('00-publish/admin/index.html',
+    adminHtmlFile.replace('main.min.css', 'main.min.' + cssHash + '.css')
+    .replace('admin.min.js', 'admin.min.' + adminJsHash + '.js'));
+
   grunt.file.write('00-publish/index.html',
-    htmlFile.replace('main.min.css', 'main.min.' + cssHash + '.css')
-    .replace('cheatsheet.min.js', 'cheatsheet.min.' + jsHash + '.js'));
+    clientHtmlFile.replace('main.min.css', 'main.min.' + cssHash + '.css')
+    .replace('client.min.js', 'client.min.' + clientJsHash + '.js'));
 
   // show some output
   grunt.log.writeln('00-publish/css/main.min.css → ' +
                     '00-publish/css/main.min.' + cssHash + '.css');
-  grunt.log.writeln('00-publish/js/cheatsheet.min.js → ' +
-                    '00-publish/js/cheatsheet.min.' + jsHash + '.js');
+  grunt.log.writeln('00-publish/js/admin.min.js → ' +
+                    '00-publish/js/admin.min.' + adminJsHash + '.js');
+  grunt.log.writeln('00-publish/js/client.min.js → ' +
+                    '00-publish/js/client.min.' + clientJsHash + '.js');
 }
 
 //------------------------------------------------------------------------------
@@ -154,12 +165,17 @@ grunt.initConfig({
     // remove all the files in the 00-publish folder
     pre: ['00-publish'],
 
-    // remove the uncompressed CLJS client file
-    post: ['00-publish/js/cheatsheet.js']
+    // remove some dev files
+    post: [
+      '00-publish/js/admin.js',
+      '00-publish/js/client.js',
+      '00-publish/index-dev.html',
+      '00-publish/admin/index-dev.html'
+    ]
   },
 
   copy: {
-    cheatsheet: {
+    publish: {
       files: [
         {expand: true, cwd: 'public/', src: ['**'], dest: '00-publish/'}
       ]
@@ -205,9 +221,9 @@ grunt.registerTask('build', [
   'pre-build-sanity-check',
   'clean:pre',
   'less',
-  'copy:cheatsheet',
-  'clean:post',
-  'hash-assets'
+  'copy:publish',
+  'hash-assets',
+  'clean:post'
 ]);
 
 grunt.registerTask('snowflake', snowflakeCount);

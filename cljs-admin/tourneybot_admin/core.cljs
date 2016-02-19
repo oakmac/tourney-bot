@@ -18,8 +18,8 @@
 (def swiss-tab "SWISS-TAB")
 (def tab-values #{info-tab teams-tab games-tab edit-game-tab swiss-tab})
 
-(def tournament-state-url "tournament.json")
-(def info-page-url "info.md")
+(def tournament-state-url "../tournament.json")
+(def info-page-url "../info.md")
 
 (def scheduled-status "scheduled")
 (def in-progress-status "in_progress")
