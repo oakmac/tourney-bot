@@ -8,8 +8,8 @@ node_modules/
 target/
 public/js/admin.js
 public/js/admin.min.js
-public/js/index.js
-public/js/index.min.js
+public/js/client.js
+public/js/client.min.js
 
 # ignore less-generated css file
 public/css/main.min.css
