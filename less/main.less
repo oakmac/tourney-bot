@@ -31,14 +31,13 @@ header {
     background: @primaryActionColor;
     color: #fff;
     margin: 0;
-    padding: 10px;
+    padding: 5px 10px;
     font-size: 22px;
     font-weight: 300;
   }
 
   nav {
     ul {
-      border-bottom: 1px solid #eee;
       display: flex;
       margin: 0;
       padding: 0;
@@ -46,18 +45,24 @@ header {
 
     li {
       background: #f5f5f5;
+      border-right: 1px solid #e6e6e6;
       cursor: pointer;
       flex: 1;
       font-size: 16px;
       font-weight:300;
       list-style: none;
-      padding: 12px 0;
+      padding: 10px 0;
       text-align: center;
     }
 
     li.active {
       background: #ccc;
       font-weight: 400;
+    }
+
+    // hide the border on the last tab
+    li:nth-last-of-type(1) {
+      border-right: 0;
     }
 
     a {
@@ -154,8 +159,8 @@ footer {
     display: block;
     font-size: 16px;
     margin: 10px auto 0 auto;
-    padding: 10px;
-    width: 99%;
+    padding: 6px 10px;
+    width: 98%;
   }
 
   h3 {
@@ -244,9 +249,9 @@ footer {
 
   thead th {
     color: #fff;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 300;
-    padding: 5px;
+    padding: 2px 5px;
   }
 
   tbody tr {
@@ -262,7 +267,7 @@ footer {
   }
 
   .points-header {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .place {
@@ -352,6 +357,46 @@ footer {
 // Admin
 //------------------------------------------------------------------------------
 
+.admin-nav-container {
+  display: flex;
+  height: 100%;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  z-index: 100;
+
+  .links {
+    background: #222;
+    color: #fff;
+    margin: 0;
+    order: 1;
+    padding: 0;
+    flex: 70;
+
+    li {
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 300;
+      padding: 15px;
+    }
+
+    a {
+      color: #fff;
+      text-decoration: none;
+    }
+  }
+
+  .overlay {
+    background: #777;
+    flex: 30;
+    opacity: 0.5;
+    order: 2;
+  }
+} // end .admin-nav-container
+
 .admin-container {
   .top-bar {
     align-items: center;
@@ -371,46 +416,6 @@ footer {
       font-size: 32px;
       padding: 10px 18px;
       text-align: right;
-    }
-  }
-
-  .admin-nav {
-    display: flex;
-    height: 100%;
-    left: 0;
-    top: 0;
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    z-index: 100;
-
-    .links {
-      background: #222;
-      color: #fff;
-      margin: 0;
-      order: 1;
-      padding: 0;
-      flex: 70;
-
-      li {
-        border-bottom: 1px solid #444;
-        cursor: pointer;
-        font-size: 18px;
-        font-weight: 300;
-        padding: 15px;
-      }
-
-      a {
-        color: #fff;
-        text-decoration: none;
-      }
-    }
-
-    .overlay {
-      background: #777;
-      flex: 30;
-      opacity: 0.5;
-      order: 2;
     }
   }
 

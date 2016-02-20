@@ -583,7 +583,7 @@
 
 (rum/defc NavMenu < rum/static
   []
-  [:div.admin-nav
+  [:div.admin-nav-container
     [:div.overlay {:on-click toggle-nav-menu
                    :on-touch-start toggle-nav-menu}]
     [:ul.links
