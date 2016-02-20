@@ -184,12 +184,12 @@
   [mode]
   [:div.sort-by-container
     [:label "Sort by:"]
-    [:a {:class (if (= mode sort-on-name) "active" "")
+    [:a {:class (str "left" (when (= mode sort-on-name) " active"))
          :href "#"
          :on-click (partial click-sort-results-link sort-on-name)
          :on-touch-start (partial click-sort-results-link sort-on-name)}
       "Team Name"]
-    [:a {:class (if (= mode sort-on-record) "active" "")
+    [:a {:class (str "right" (when (= mode sort-on-record) " active"))
          :href "#"
          :on-click (partial click-sort-results-link sort-on-record)
          :on-touch-start (partial click-sort-results-link sort-on-record)}

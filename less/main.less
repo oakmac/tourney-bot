@@ -9,6 +9,7 @@
 @minWidth: 300px;
 @minBodyHeight: 400px;
 @primaryActionColor: #38c;
+@smallBreakpoint: 750px;
 
 //------------------------------------------------------------------------------
 // Tag Selectors
@@ -24,15 +25,13 @@ body {
   min-width: @minWidth;
 }
 
-// TODO: make the header smaller on screen size breakpoints
-
 header {
   h1 {
     background: @primaryActionColor;
     color: #fff;
     margin: 0;
-    padding: 5px 10px;
-    font-size: 22px;
+    padding: 15px;
+    font-size: 24px;
     font-weight: 300;
   }
 
@@ -48,10 +47,10 @@ header {
       border-right: 1px solid #e6e6e6;
       cursor: pointer;
       flex: 1;
-      font-size: 16px;
+      font-size: 18px;
       font-weight:300;
       list-style: none;
-      padding: 10px 0;
+      padding: 15px 0;
       text-align: center;
     }
 
@@ -69,6 +68,19 @@ header {
       color: #222;
       text-decoration: none;
     }
+  }
+}
+
+// squeeze up the header when we're on a smaller screen
+@media all and (max-width: @smallBreakpoint) {
+  header h1 {
+    padding: 5px 10px;
+    font-size: 22px;
+  }
+
+  header nav li {
+    font-size: 16px;
+    padding: 10px 0;
   }
 }
 
@@ -157,10 +169,10 @@ footer {
   .big-input {
     box-sizing: border-box;
     display: block;
-    font-size: 16px;
+    font-size: 18px;
     margin: 10px auto 0 auto;
-    padding: 6px 10px;
-    width: 98%;
+    padding: 10px 10px;
+    width: 99%;
   }
 
   .option-container {
@@ -242,6 +254,16 @@ footer {
   }
 
 } // end .schedule-container
+
+@media all and (max-width: @smallBreakpoint) {
+  .schedule-container {
+    .big-input {
+      font-size: 16px;
+      padding: 6px 10px;
+      width: 98%;
+    }
+  }
+}
 
 .vs {
   display: inline-block;
@@ -348,7 +370,7 @@ footer {
     color: #777;
     font-family: "Georgia", serif;
     display: inline-block;
-    margin-right: 10px;
+    margin-right: 8px;
     font-style: italic;
     font-size: 16px;
   }
@@ -356,12 +378,22 @@ footer {
   a {
     display: inline-block;
     background-color: #f6f6f6;
-    border-color: #eee;
+    border: 1px solid #eee;
     color: #333;
     padding: 8px 12px;
     text-align: center;
     text-decoration: none;
     width: 100px;
+  }
+
+  .left {
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+  }
+
+  .right {
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
 
   .active {
