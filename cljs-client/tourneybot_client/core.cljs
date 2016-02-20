@@ -308,26 +308,39 @@
         (not= -1 (.indexOf (lower-case teamA-name) search-txt))
         (not= -1 (.indexOf (lower-case teamB-name) search-txt)))))
 
-;; TODO: add "hide finished games" checkbox
+(defn- toggle-hide-finished-games [js-evt]
+  (.preventDefault js-evt)
+  (swap! page-state update-in [:hide-finished-games?] not))
 
 (rum/defc SchedulePage < rum/static
   [state]
-  (let [games (vals (:games state))
+  (let [games-vec (vals (:games state))
         teams (:teams state)
         search-txt (:schedule-search-text state)
-        filtered-games (if-not (blank? search-txt)
-                         (filter (partial match-game? teams search-txt) games)
-                         games)
-        tourney-dates (games->dates filtered-games)]
+        hide-finished-games? (:hide-finished-games? state)
+        filtered-games1 (if-not (blank? search-txt)
+                         (filter (partial match-game? teams search-txt) games-vec)
+                         games-vec)
+        filtered-games2 (if hide-finished-games?
+                          (remove #(= finished-status (:status %)) filtered-games1)
+                          filtered-games1)
+        tourney-dates (games->dates filtered-games2)]
     [:article.schedule-container
       [:input {:class "big-input"
                :on-change on-change-schedule-search
                :placeholder "Search the schedule..."
                :type "text"
                :value search-txt}]
-      (if (empty? filtered-games)
+      [:div.option-container
+        [:label {:on-click toggle-hide-finished-games
+                 :on-touch-start toggle-hide-finished-games}
+          (if hide-finished-games?
+            [:i.fa.fa-check-square-o]
+            [:i.fa.fa-square-o])
+          "Hide finished games"]]
+      (if (empty? filtered-games2)
         [:div.no-search-results "No games found."]
-        (map (partial SingleDaySchedule teams filtered-games) tourney-dates))]))
+        (map (partial SingleDaySchedule teams filtered-games2) tourney-dates))]))
 
 ;;------------------------------------------------------------------------------
 ;; Navigation Tabs
