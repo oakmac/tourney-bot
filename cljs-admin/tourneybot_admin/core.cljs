@@ -18,12 +18,12 @@
 ;; Constants
 ;;------------------------------------------------------------------------------
 
-(def info-tab "INFO-TAB")
-(def teams-tab "TEAMS-TAB")
-(def games-tab "GAMES-TAB")
-(def edit-game-tab "EDIT-GAME-TAB")
-(def swiss-tab "SWISS-TAB")
-(def tab-values #{info-tab teams-tab games-tab edit-game-tab swiss-tab})
+(def info-page "INFO-PAGE")
+(def teams-page "TEAMS-PAGE")
+(def games-page "GAMES-PAGE")
+(def edit-game-page "EDIT-GAME-PAGE")
+(def swiss-page "SWISS-PAGE")
+(def page-values #{info-page teams-page games-page edit-game-page swiss-page})
 
 (def tournament-state-url "../tournament.json")
 (def info-page-url "../info.md")
@@ -35,7 +35,8 @@
 (def initial-page-state
   {:editing-game-id nil
    :hide-finished-games? true
-   :tab info-tab})
+   :page info-page
+   :nav-menu-showing? false})
 
 (def page-state (atom initial-page-state))
 
@@ -46,7 +47,7 @@
   "Some simple predicates to make sure the state is valid."
   [new-state]
   (and (map? new-state)
-       (contains? tab-values (:tab new-state))))
+       (contains? page-values (:page new-state))))
 
 (set-validator! page-state valid-page-state?)
 
@@ -153,6 +154,22 @@
 ;; Swiss Rounds Page
 ;;------------------------------------------------------------------------------
 
+;; TODO: this can be replaced using a set of sets:
+;; #{ #{teamA teamB}
+;;    #{teamA teamB}
+;;    ...}
+(defn- teams-already-played? [teamA-id teamB-id all-games]
+  (let [teamA-id (name teamA-id)
+        teamB-id (name teamB-id)
+        games-list (vals all-games)
+        games-where-teams-played-each-other
+          (filter #(or (and (= teamA-id (:teamA-id %)) (= teamB-id (:teamB-id %)))
+                       (and (= teamB-id (:teamA-id %)) (= teamA-id (:teamB-id %))))
+                  games-list)]
+    (if (empty? games-where-teams-played-each-other)
+      false
+      (first games-where-teams-played-each-other))))
+
 (defn- is-swiss-game? [g]
   (integer? (:swiss-round g)))
 
@@ -219,6 +236,11 @@
           [:h3 (str "Swiss Round #" swiss-round " Results")]
           (SwissResultsTable (games->results teams games-to-look-at))
           [:h3 (str "Matchups for Swiss Round #" (inc swiss-round))]))]))
+          ;;[:div (pr-str (teams-already-played? :team12 :team18 all-games))]
+          ;;[:div (pr-str (teams-already-played? :team13 :team19 all-games))]))]))
+
+;; TODO: break out each swiss round into it's own page?
+;; there's a lot happening here
 
 (rum/defc SwissPage < rum/static
   [teams games]
@@ -304,7 +326,7 @@
 
 (defn- click-back-btn [js-evt]
   (prevent-default js-evt)
-  (swap! page-state assoc :tab games-tab))
+  (swap! page-state assoc :page games-page))
 
 ;; TODO: highlight the winning team in yellow
 ;;       and include a "final score" note
@@ -358,7 +380,7 @@
 
 (defn- click-edit-game [game-id js-evt]
   (prevent-default js-evt)
-  (swap! page-state assoc :tab edit-game-tab
+  (swap! page-state assoc :page edit-game-page
                           :editing-game-id game-id))
 
 (defn- on-change-game-name [game-id js-evt]
@@ -539,30 +561,36 @@
     "TODO: info page"])
 
 ;;------------------------------------------------------------------------------
-;; Navigation Tabs
+;; Nav Menu
 ;;------------------------------------------------------------------------------
 
-(defn- click-tab [tab-id js-evt]
-  (.preventDefault js-evt)
-  (swap! page-state assoc :tab tab-id))
+(defn- toggle-nav-menu [js-evt]
+  (prevent-default js-evt)
+  (swap! page-state update-in [:nav-menu-showing?] not))
 
-(rum/defc Tab < rum/static
-  [name tab-id current-tab]
-  [:li {:class (if (= tab-id current-tab) "active" "")
-        :on-click (partial click-tab tab-id)
-        :on-touch-start (partial click-tab tab-id)}
+(defn- click-page-link [page-id js-evt]
+  (.preventDefault js-evt)
+  (swap! page-state assoc :page page-id
+                          :nav-menu-showing? false))
+
+(rum/defc PageLink < rum/static
+  [name page-id]
+  [:li {:on-click (partial click-page-link page-id)
+        :on-touch-start (partial click-page-link page-id)}
     [:a {:href "#"
-         :on-click (fn [js-evt] (.preventDefault js-evt))}
+         :on-click prevent-default}
       name]])
 
-(rum/defc NavTabs < rum/static
-  [current-tab]
-  [:nav
-    [:ul
-      (Tab "Info" info-tab current-tab)
-      (Tab "Teams" teams-tab current-tab)
-      (Tab "Games" games-tab current-tab)
-      (Tab "Swiss Rounds" swiss-tab current-tab)]])
+(rum/defc NavMenu < rum/static
+  []
+  [:div.admin-nav
+    [:div.overlay {:on-click toggle-nav-menu
+                   :on-touch-start toggle-nav-menu}]
+    [:ul.links
+      (PageLink "Info" info-page)
+      (PageLink "Teams" teams-page)
+      (PageLink "Games" games-page)
+      (PageLink "Swiss Rounds" swiss-page)]])
 
 ;;------------------------------------------------------------------------------
 ;; Footer
@@ -582,35 +610,40 @@
 
 (rum/defc AdminApp < rum/static
   [state]
-  (let [current-tab (:tab state)
+  (let [page (:page state)
         editing-game-id (keyword (:editing-game-id state))
         teams (:teams state)
         games (:games state)
-        hide-finished-games? (:hide-finished-games? state)]
+        hide-finished-games? (:hide-finished-games? state)
+        nav-menu-showing? (:nav-menu-showing? state)]
     [:div.admin-container
       [:header
         [:div.top-bar
           [:div.left (:title state)]
-          [:div.right "Admin"]]
-        (NavTabs current-tab)]
-      (condp = current-tab
-        info-tab
+          [:div.right
+            {:on-click toggle-nav-menu
+             :on-touch-start toggle-nav-menu}
+            [:i.fa.fa-bars]]]]
+      (when nav-menu-showing?
+        (NavMenu))
+      (condp = page
+        info-page
         (InfoPage state)
 
-        teams-tab
+        teams-page
         (TeamsPage teams)
 
-        games-tab
+        games-page
         (GamesPage teams games hide-finished-games?)
 
-        edit-game-tab
+        edit-game-page
         (EditGamePage teams editing-game-id (get-in state [:games editing-game-id]))
 
-        swiss-tab
+        swiss-page
         (SwissPage teams games)
 
         ;; NOTE: this should never happen
-        [:div "Error: invalid tab"])
+        [:div "Error: invalid page"])
       (Footer)]))
 
 ;;------------------------------------------------------------------------------
