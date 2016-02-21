@@ -287,7 +287,7 @@
         games-on-this-day (sort-by :start-time games-on-this-day)]
     [:div
       [:h3 (format-date date)]
-      [:table
+      [:table.schedule-tbl
         [:tbody
           (map (partial ScheduleRow teams) games-on-this-day)]]]))
 
