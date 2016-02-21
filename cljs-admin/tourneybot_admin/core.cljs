@@ -385,11 +385,11 @@
 
 (defn- on-change-game-name [game-id js-evt]
   (let [new-name (aget js-evt "currentTarget" "value")]
-    (swap! page-state assoc-in [:games game-id :name] new-name)))
+    (swap! page-state assoc-in [:games (keyword game-id) :name new-name])))
 
 (defn- on-change-start-time [game-id js-evt]
   (let [new-time (aget js-evt "currentTarget" "value")]
-    (swap! page-state assoc-in [:games game-id :start-time] new-time)))
+    (swap! page-state assoc-in [:games (keyword game-id) :start-time new-time])))
 
 ;; TODO: need an on-blur function to make sure the time is formatted properly
 
@@ -522,8 +522,13 @@
 
 
 (defn- on-change-score [game-id score-key js-evt]
-  (let [new-score (int (aget js-evt "currentTarget" "value"))]
-    (swap! page-state assoc-in [:games (keyword game-id) score-key] new-score)))
+  (let [new-score (int (aget js-evt "currentTarget" "value"))
+        game-id (keyword game-id)]
+    (swap! page-state assoc-in [:games game-id score-key] new-score)
+
+    ;; games with any points cannot have status "scheduled"
+    (when (= scheduled-status (get-in @page-state [:games game-id :status] scheduled-status))
+      (swap! page-state assoc-in [:games game-id :status] in-progress-status))))
 
 (defn- on-change-status [game-id status-val js-evt]
   (prevent-default js-evt)
@@ -532,7 +537,7 @@
 (rum/defc ScoreInput2 < rum/static
   [game-id current-score score-key finished?]
   (if finished?
-    [:span (str current-score)]
+    [:span.final-score (str current-score)]
     [:input
       {:on-change (partial on-change-score game-id score-key)
        :max "100"
@@ -540,21 +545,32 @@
        :type "number"
        :value current-score}]))
 
-(rum/defc StatusInput < rum/static
- [game-id status-txt status-val current-status]
- (let [selected? (= status-val current-status)]
-   [:span
-     {:class (str "status-tab" (when selected? " active"))
-      :on-click (partial on-change-status game-id status-val)
-      :on-touch-start (partial on-change-status game-id status-val)}
-     status-txt]))
+(def status-text
+  {scheduled-status "Scheduled"
+   in-progress-status "In Progress"
+   finished-status "Finished"})
 
-(rum/defc SmallGameRow < rum/static
+(rum/defc StatusInput < rum/static
+ [game-id status-val current-status disabled?]
+ (let [selected? (= status-val current-status)]
+   (if disabled?
+     [:span.status-tab.disabled (get status-text status-val)]
+     [:span
+       {:class (str "status-tab" (when selected? " active"))
+        :on-click (partial on-change-status game-id status-val)
+        :on-touch-start (partial on-change-status game-id status-val)}
+       (get status-text status-val)])))
+
+(rum/defc GameRow2 < rum/static
   [teams [game-id game]]
-  (let [{:keys [scoreA scoreB start-time teamA-id teamB-id]} game
+  (let [{:keys [start-time teamA-id teamB-id]} game
         status (get game :status scheduled-status)
         teamA (get teams (keyword teamA-id) false)
         teamB (get teams (keyword teamB-id) false)
+        both-teams-selected? (and teamA teamB)
+        scoreA (:scoreA game 0)
+        scoreB (:scoreB game 0)
+        any-points? (or (pos? scoreA) (pos? scoreB))
         game-name (:name game)
         finished? (= status finished-status)
         scorable? (or finished?
@@ -565,31 +581,38 @@
         [:tbody
           [:tr
             [:td.label-cell "Name"]
-            [:td [:input {:type "text"
-                          :value game-name}]]
+            [:td.name-input-cell
+              [:input {:on-change (partial on-change-game-name game-id)
+                       :type "text"
+                       :value game-name}]]
             [:td.label-cell "Start Time"]
-            [:td [:input {:type "text"
+            [:td [:input {:on-change (partial on-change-start-time game-id)
+                          :placeholder "YYYY-MM-DD HHMM"
+                          :type "text"
                           :value start-time}]]]
           [:tr
+              ;; TODO: do not allow them to have the same team play each other
             [:td.label-cell "Team A"]
             [:td (if-not scorable?
                    (TeamSelect teams game-id game :teamA-id)
                    (:name teamA))]
-            [:td.label-cell (when scorable? "Score A")]
-            [:td (when scorable? (ScoreInput2 game-id scoreA :scoreA finished?))]]
+            [:td.label-cell (when both-teams-selected? "Score A")]
+            [:td.score-cell (when both-teams-selected? (ScoreInput2 game-id scoreA :scoreA finished?))]]
           [:tr
             [:td.label-cell "Team B"]
             [:td (if-not scorable?
                    (TeamSelect teams game-id game :teamB-id)
                    (:name teamB))]
-            [:td.label-cell (when scorable? "Score B")]
-            [:td (when scorable? (ScoreInput2 game-id scoreB :scoreB finished?))]]
+            [:td.label-cell (when both-teams-selected? "Score B")]
+            [:td.score-cell (when both-teams-selected? (ScoreInput2 game-id scoreB :scoreB finished?))]]
           [:tr
             [:td.label-cell "Status"]
             [:td {:col-span "3"}
-              (StatusInput game-id "Scheduled" scheduled-status status)
-              (StatusInput game-id "In Progress" in-progress-status status)
-              (StatusInput game-id "Finished" finished-status status)]]]]]))
+              ;; TODO: do not let them move the game from "Scheduled"
+              ;; if there is not a time, teamA, and teamB
+              (StatusInput game-id scheduled-status status any-points?)
+              (StatusInput game-id in-progress-status status (not both-teams-selected?))
+              (StatusInput game-id finished-status status (not both-teams-selected?))]]]]]))
 
 (rum/defc GamesPage < rum/static
   [teams games hide-finished-games?]
@@ -598,14 +621,14 @@
                 games)
         sorted-games (sort compare-games games)]
     [:article.games-container
-      [:label.top-option
-        {:on-click toggle-hide-finished-games
-         :on-touch-start toggle-hide-finished-games}
-        (if hide-finished-games?
-          [:i.fa.fa-check-square-o]
-          [:i.fa.fa-square-o])
-        "Hide finished games"]
-      (map (partial SmallGameRow teams) sorted-games)]))
+      ; [:label.top-option
+      ;   {:on-click toggle-hide-finished-games
+      ;    :on-touch-start toggle-hide-finished-games}
+      ;   (if hide-finished-games?
+      ;     [:i.fa.fa-check-square-o]
+      ;     [:i.fa.fa-square-o])
+      ;   "Hide finished games"]
+      (map (partial GameRow2 teams) sorted-games)]))
 
 ;;------------------------------------------------------------------------------
 ;; Teams Page

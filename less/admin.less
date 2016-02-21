@@ -322,9 +322,10 @@ body {
 
 .game-row-container {
   border-bottom: 1px solid #ddd;
+  padding-bottom: 20px;
 
   h3 {
-    color: #aaa;
+    color: #888;
     margin: 15px 0 5px 5px;
     padding: 0;
     font-size: 14px;
@@ -332,7 +333,8 @@ body {
   }
 
   td {
-    padding: 6px;
+    padding: 6px 4px;
+    height: 30px;
   }
 
   input[type="text"] {
@@ -340,9 +342,21 @@ body {
   }
 
   input[type="number"] {
+    box-sizing: border-box;
     padding: 2px;
     text-align: right;
-    width: 45px;
+    width: 50px;
+  }
+
+  .final-score {
+    box-sizing: border-box;
+    display: inline-block;
+    text-align: right;
+    width: 31px;
+  }
+
+  .name-input-cell {
+    width: 250px;
   }
 
   .label-cell {
@@ -361,12 +375,17 @@ body {
     font-size: 14px;
     padding: 6px 0;
     text-align: center;
-    width: 100px;
+    width: 120px;
   }
 
   .status-tab.active {
     background: #38c;
     color: #fff;
+  }
+
+  .status-tab.disabled {
+    cursor: auto;
+    opacity: 0.35;
   }
 
   .status-tab:first-child {
