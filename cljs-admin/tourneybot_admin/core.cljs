@@ -561,6 +561,7 @@
         :on-touch-start (partial on-change-status game-id status-val)}
        (get status-text status-val)])))
 
+;; TODO: do not allow teamA and teamB to be the same in a single game
 (rum/defc GameRow2 < rum/static
   [teams [game-id game]]
   (let [{:keys [start-time teamA-id teamB-id]} game
@@ -591,7 +592,6 @@
                           :type "text"
                           :value start-time}]]]
           [:tr
-              ;; TODO: do not allow them to have the same team play each other
             [:td.label-cell "Team A"]
             [:td (if-not scorable?
                    (TeamSelect teams game-id game :teamA-id)
@@ -608,8 +608,6 @@
           [:tr
             [:td.label-cell "Status"]
             [:td {:col-span "3"}
-              ;; TODO: do not let them move the game from "Scheduled"
-              ;; if there is not a time, teamA, and teamB
               (StatusInput game-id scheduled-status status any-points?)
               (StatusInput game-id in-progress-status status (not both-teams-selected?))
               (StatusInput game-id finished-status status (not both-teams-selected?))]]]]]))
