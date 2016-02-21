@@ -266,10 +266,10 @@
                           scoreB)]
     ;; highlight this row if the game is in progress
     [:tr {:class (if (= status in-progress-status) "in-progress" "")}
-      [:td.time (format-time (:start-time game))]
-      [:td.game
+      [:td.time-cell (format-time (:start-time game))]
+      [:td.game-cell
         (if (and (not teamA-name) (not teamB-name))
-          game-name
+          [:div.pending-game game-name]
           (list [:div teamA-name
                       (when show-scores?
                         (str " (" scoreA ")"))

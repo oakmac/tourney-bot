@@ -217,17 +217,22 @@ footer {
     padding: 8px 0;
   }
 
-  .time {
+  .time-cell {
     color: #999;
     font-size: 14px;
     padding-left: 5px;
     text-align: right;
   }
 
-  .game {
+  .game-cell {
     font-size: 16px;
     padding-left: 10px;
     width: 93%;
+  }
+
+  .pending-game {
+    font-style: italic;
+    padding: 8px 0;
   }
 
   .status {
@@ -261,6 +266,26 @@ footer {
       font-size: 16px;
       padding: 6px 10px;
       width: 98%;
+    }
+
+    td {
+      padding: 6px 0;
+    }
+
+    .game-cell {
+      font-size: 15px;
+    }
+
+    .time-cell {
+      font-size: 13px;
+    }
+
+    .status {
+      font-size: 13px;
+    }
+
+    .sub-name {
+      font-size: 11px;
     }
   }
 }
@@ -361,6 +386,40 @@ footer {
   color: #888;
   font-size: 16px;
   margin-top: -5px;
+}
+
+@media all and (max-width: @smallBreakpoint) {
+  .results-container {
+    .team-name {
+      font-size: 17px;
+    }
+
+    .place {
+      font-size: 13px;
+    }
+
+    .captain {
+      font-size: 13px;
+      margin-top: 0;
+    }
+  }
+
+  .big-record {
+    .big-num {
+      font-size: 28px;
+    }
+
+    .dash {
+      font-size: 22px;
+      margin: 0 3px;
+      padding-top: 4px;
+    }
+  }
+
+  .small-points {
+    font-size: 14px;
+    margin-top: -3px;
+  }
 }
 
 .sort-by-container {
