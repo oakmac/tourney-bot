@@ -308,6 +308,10 @@
         (not= -1 (.indexOf (lower-case teamA-name) search-txt))
         (not= -1 (.indexOf (lower-case teamB-name) search-txt)))))
 
+(defn- clear-search [js-evt]
+  (.preventDefault js-evt)
+  (swap! page-state assoc :schedule-search-text ""))
+
 (defn- toggle-hide-finished-games [js-evt]
   (.preventDefault js-evt)
   (swap! page-state update-in [:hide-finished-games?] not))
@@ -332,13 +336,21 @@
                :type "text"
                :value search-txt}]
       [:div.option-container
-        [:label {:on-click toggle-hide-finished-games
-                 :on-touch-start toggle-hide-finished-games}
-          [:span.icon-wrapper
-            (if hide-finished-games?
-              [:img.icon {:src "img/check-square-o.svg"}]
-              [:img.icon {:src "img/square-o.svg"}])]
-          "Hide finished games"]]
+        [:div.left
+          (when-not (blank? search-txt)
+            [:a.clear-search-link {:href "#"
+                                   :on-click clear-search
+                                   :on-touch-start clear-search}
+              "clear search"])]
+        [:div.right
+          [:label.hide-finished-games
+            {:on-click toggle-hide-finished-games
+             :on-touch-start toggle-hide-finished-games}
+            [:span.icon-wrapper
+              (if hide-finished-games?
+                [:img.icon {:src "img/check-square-o.svg"}]
+                [:img.icon {:src "img/square-o.svg"}])]
+            "Hide finished games"]]]
       (if (empty? filtered-games2)
         [:div.no-search-results "No games found."]
         (map (partial SingleDaySchedule teams filtered-games2) tourney-dates))]))

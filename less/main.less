@@ -171,20 +171,48 @@ footer {
     display: block;
     font-size: 18px;
     margin: 10px auto 0 auto;
-    padding: 10px 10px;
+    padding: 10px;
     width: 99%;
   }
 
   .option-container {
+    display: flex;
     padding: 5px 0;
-    text-align: right;
 
-    label {
+    .left {
+      flex: 1;
+      order: 1;
+    }
+
+    .right {
+      flex: 1;
+      order: 2;
+      text-align: right;
+    }
+
+    .clear-search-link {
+      color: #20c;
       cursor: pointer;
       display: inline-block;
+      flex: 1;
+      font-size: 14px;
+      font-style: italic;
+      font-weight: 300;
+      padding: 4px 6px 0 6px;
+      text-align: left;
+      text-decoration: none;
+    }
+
+    .clear-search-link:hover {
+      text-decoration: underline;
+    }
+
+    .hide-finished-games {
+      cursor: pointer;
+      flex: 1;
       font-weight: 300;
       padding: 5px 5px;
-      text-align: left;
+      text-align: right;
     }
 
     .icon-wrapper {
@@ -275,6 +303,11 @@ footer {
       font-size: 16px;
       padding: 6px 10px;
       width: 98%;
+    }
+
+    .option-container .clear-search-link {
+      font-size: 13px;
+      padding-top: 2px;
     }
 
     td {
