@@ -399,6 +399,9 @@
   [state]
   (let [current-tab (:tab state)]
     [:div
+      ;; NOTE: pre-fetch these icons before the user sees the "Schedule" page
+      [:img {:src "img/check-square-o.svg", :style {:display "none"}}]
+      [:img {:src "img/square-o.svg", :style {:display "none"}}]
       [:header
         [:h1 (:title state)]
         (NavTabs current-tab)]
