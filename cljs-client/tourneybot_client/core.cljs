@@ -434,10 +434,10 @@
 ;;------------------------------------------------------------------------------
 
 (def init-page!
-  (once (fn [])
-    (fetch-tourney-state!)
-    (fetch-info-page!)
-    ;; trigger an initial render
-    (swap! page-state identity)))
+  (once (fn []
+          (fetch-tourney-state!)
+          (fetch-info-page!)
+          ;; trigger an initial render
+          (swap! page-state identity))))
 
 (init-page!)
