@@ -334,9 +334,10 @@
       [:div.option-container
         [:label {:on-click toggle-hide-finished-games
                  :on-touch-start toggle-hide-finished-games}
-          (if hide-finished-games?
-            [:i.fa.fa-check-square-o]
-            [:i.fa.fa-square-o])
+          [:span.icon-wrapper
+            (if hide-finished-games?
+              [:img.icon {:src "img/check-square-o.svg"}]
+              [:img.icon {:src "img/square-o.svg"}])]
           "Hide finished games"]]
       (if (empty? filtered-games2)
         [:div.no-search-results "No games found."]
