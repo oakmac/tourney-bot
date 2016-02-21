@@ -3,6 +3,7 @@
     cljsjs.marked
     cljsjs.moment
     [clojure.string :refer [blank? lower-case]]
+    [goog.functions :refer [once]]
     [tourneybot.data :refer [scheduled-status in-progress-status finished-status game-statuses
                              games->results
                              ensure-tournament-state]]
@@ -55,10 +56,22 @@
 (set-validator! page-state valid-page-state?)
 
 ;;------------------------------------------------------------------------------
+;; Title
+;;------------------------------------------------------------------------------
+
+(defn- set-page-title [_kwd _the-atom old-state new-state]
+  (let [old-title (:title old-state)
+        new-title (:title new-state)]
+    (when-not (= old-title new-title)
+      (aset js/document "title" new-title))))
+
+(add-watch page-state :title set-page-title)
+
+;;------------------------------------------------------------------------------
 ;; Save UI-specific app state to localStorage
 ;;------------------------------------------------------------------------------
 
-(def ls-key "index-page-state")
+(def ls-key "client-page-state")
 
 ;; load any existing client state on startup
 (when-let [state-string (js/window.localStorage.getItem ls-key)]
@@ -82,24 +95,14 @@
 ;; Fetch Tournament State
 ;;------------------------------------------------------------------------------
 
-(def js-state-polling-interval nil)
-(def title-set? (atom false))
-
 (defn- fetch-tourney-state-success [new-state]
-  ;; set the title tag on the first state load
-  (when-not @title-set?
-    (aset js/document "title" (:title new-state))
-    (reset! title-set? true))
   ;; merge the tournament state with the page state
   (swap! page-state merge new-state))
 
 (defn- fetch-tourney-state! []
   (fetch-json-as-cljs tournament-state-url fetch-tourney-state-success))
 
-;; kick off the initial state fetch
-(fetch-tourney-state!)
-
-;; begin the polling
+;; begin polling for udpates
 (js/setInterval fetch-tourney-state! refresh-rate-ms)
 
 ;;------------------------------------------------------------------------------
@@ -117,9 +120,6 @@
 
 (defn- fetch-info-page! []
   (fetch-ajax-text info-page-url fetch-info-page-success))
-
-;; fetch the info page markdown on load
-(fetch-info-page!)
 
 ;; poll for updates every 5 minutes
 (js/setInterval fetch-info-page! info-polling-ms)
@@ -427,13 +427,14 @@
 (add-watch page-state :main on-change-page-state)
 
 ;;------------------------------------------------------------------------------
-;; Init
+;; Page Init
 ;;------------------------------------------------------------------------------
 
-(defn- init!
-  "Initialize the Index page."
-  []
-  ;; trigger the initial render
-  (swap! page-state identity))
+(def init-page!
+  (once (fn [])
+    (fetch-tourney-state!)
+    (fetch-info-page!)
+    ;; trigger an initial render
+    (swap! page-state identity)))
 
-(init!)
+(init-page!)

@@ -11,8 +11,9 @@ public/js/admin.min.js
 public/js/client.js
 public/js/client.min.js
 
-# ignore less-generated css file
-public/css/main.min.css
+# ignore LESS-generated CSS files
+public/css/admin.min.css
+public/css/client.min.css
 
 # ignore diff files
 *.diff

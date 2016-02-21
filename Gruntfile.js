@@ -4,97 +4,6 @@ module.exports = function(grunt) {
 'use strict';
 
 //------------------------------------------------------------------------------
-// Snowflake CSS
-// TODO: this should become it's own module and published on npm
-//------------------------------------------------------------------------------
-
-function keys(o) {
-  var a = [];
-  for (var i in o) {
-    if (o.hasOwnProperty(i) !== true) continue;
-    a.push(i);
-  }
-  return a;
-}
-
-function arrToObj(arr) {
-  var o = {};
-  for (var i = 0; i < arr.length; i++) {
-    o[ arr[i] ] = null;
-  }
-  return o;
-}
-
-function difference(arr1, arr2) {
-  var o1 = arrToObj(arr1);
-  var o2 = arrToObj(arr2);
-  var delta = [];
-
-  for (var i in o1) {
-    if (o1.hasOwnProperty(i) !== true) continue;
-
-    if (o2.hasOwnProperty(i) !== true) {
-      delta.push(i)
-    }
-  }
-
-  for (var i in o2) {
-    if (o2.hasOwnProperty(i) !== true) continue;
-
-    if (o1.hasOwnProperty(i) !== true) {
-      delta.push(i)
-    }
-  }
-
-  return delta.sort();
-}
-
-// Snowflake class names must contain at least one letter and one number
-function hasNumbersAndLetters(str) {
-  return str.search(/\d/) !== -1 &&
-         str.search(/[a-z]/) !== -1;
-}
-
-// returns an array of unique Snowflake classes from a file
-function extractSnowflakeClasses(filename, pattern) {
-  if (! pattern) {
-    pattern = /([a-z0-9]+-){1,}([abcdef0-9]){5}/g;
-  }
-
-  const fileContents = grunt.file.read(filename);
-  const matches = fileContents.match(pattern);
-  var classes = {};
-
-  if (matches) {
-    for (var i = 0; i < matches.length; i++) {
-      var className = matches[i];
-      var arr = className.split('-');
-      var hash = arr[arr.length - 1];
-
-      if (hasNumbersAndLetters(hash) === true) {
-        classes[className] = null;
-      }
-    }
-  }
-
-  return keys(classes);
-}
-
-function snowflakeCount() {
-  const cssClasses = extractSnowflakeClasses("public/css/main.min.css");
-  const jsServer = extractSnowflakeClasses("app.js");
-  const jsClient = extractSnowflakeClasses('public/js/cheatsheet.min.js');
-  const docs = extractSnowflakeClasses('public/docs.json');
-  const jsClasses = jsServer.concat(jsClient, docs);
-
-  console.log(cssClasses.length + " class names found in css/main.min.css");
-  console.log(jsClasses.length + " class names found in JS files");
-
-  console.log("Classes found in one file but not the other:");
-  console.log( difference(jsClasses, cssClasses) );
-}
-
-//------------------------------------------------------------------------------
 // Cheatsheet Publish
 //------------------------------------------------------------------------------
 
@@ -110,9 +19,13 @@ function preBuildSanityCheck() {
   grunt.log.writeln('Everything looks ok for a build.');
 }
 
+// TODO: re-write this using a data structure
 function hashAssets() {
-  const cssFile = grunt.file.read('00-publish/css/main.min.css');
-  const cssHash = md5(cssFile).substr(0, 8);
+  const adminCssFile = grunt.file.read('00-publish/css/admin.min.css');
+  const adminCssHash = md5(adminCssFile).substr(0, 8);
+
+  const clientCssFile = grunt.file.read('00-publish/css/client.min.css');
+  const clientCssHash = md5(clientCssFile).substr(0, 8);
 
   const adminJsFile = grunt.file.read('00-publish/js/admin.min.js');
   const adminJsHash = md5(adminJsFile).substr(0, 8);
@@ -120,31 +33,37 @@ function hashAssets() {
   const clientJsFile = grunt.file.read('00-publish/js/client.min.js');
   const clientJsHash = md5(clientJsFile).substr(0, 8);
 
-  const adminHtmlFile = grunt.file.read('00-publish/admin/index.html');
-  const clientHtmlFile = grunt.file.read('00-publish/index.html');
+  const adminHtmlFile = '00-publish/admin/index.html';
+  const adminHtmlFileContents = grunt.file.read(adminHtmlFile);
+  const clientHtmlFile = '00-publish/index.html';
+  const clientHtmlFileContents = grunt.file.read(clientHtmlFile);
 
   // write the new files
-  grunt.file.write('00-publish/css/main.min.' + cssHash + '.css', cssFile);
+  grunt.file.write('00-publish/css/admin.min.' + adminCssHash + '.css', adminCssFile);
+  grunt.file.write('00-publish/css/client.min.' + clientCssHash + '.css', clientCssFile);
   grunt.file.write('00-publish/js/admin.min.' + adminJsHash + '.js', adminJsFile);
   grunt.file.write('00-publish/js/client.min.' + clientJsHash + '.js', clientJsFile);
 
   // delete the old files
-  grunt.file.delete('00-publish/css/main.min.css');
+  grunt.file.delete('00-publish/css/admin.min.css');
+  grunt.file.delete('00-publish/css/client.min.css');
   grunt.file.delete('00-publish/js/admin.min.js');
   grunt.file.delete('00-publish/js/client.min.js');
 
   // update the HTML files
-  grunt.file.write('00-publish/admin/index.html',
-    adminHtmlFile.replace('main.min.css', 'main.min.' + cssHash + '.css')
-    .replace('admin.min.js', 'admin.min.' + adminJsHash + '.js'));
+  grunt.file.write(adminHtmlFile,
+    adminHtmlFileContents.replace('admin.min.css', 'admin.min.' + adminCssHash + '.css')
+                         .replace('admin.min.js', 'admin.min.' + adminJsHash + '.js'));
 
-  grunt.file.write('00-publish/index.html',
-    clientHtmlFile.replace('main.min.css', 'main.min.' + cssHash + '.css')
-    .replace('client.min.js', 'client.min.' + clientJsHash + '.js'));
+  grunt.file.write(clientHtmlFile,
+    clientHtmlFileContents.replace('client.min.css', 'client.min.' + clientCssHash + '.css')
+                          .replace('client.min.js', 'client.min.' + clientJsHash + '.js'));
 
   // show some output
-  grunt.log.writeln('00-publish/css/main.min.css → ' +
-                    '00-publish/css/main.min.' + cssHash + '.css');
+  grunt.log.writeln('00-publish/css/admin.min.css → ' +
+                    '00-publish/css/admin.min.' + adminCssHash + '.css');
+  grunt.log.writeln('00-publish/css/client.min.css → ' +
+                    '00-publish/css/client.min.' + clientCssHash + '.css');
   grunt.log.writeln('00-publish/js/admin.min.js → ' +
                     '00-publish/js/admin.min.' + adminJsHash + '.js');
   grunt.log.writeln('00-publish/js/client.min.js → ' +
@@ -169,8 +88,8 @@ grunt.initConfig({
     post: [
       '00-publish/js/admin.js',
       '00-publish/js/client.js',
-      '00-publish/index-dev.html',
-      '00-publish/admin/index-dev.html'
+      '00-publish/dev.html',
+      '00-publish/admin/dev.html'
     ]
   },
 
@@ -189,7 +108,8 @@ grunt.initConfig({
 
     watch: {
       files: {
-        'public/css/main.min.css': 'less/main.less'
+        'public/css/admin.min.css': 'less/admin.less',
+        'public/css/client.min.css': 'less/client.less'
       }
     }
   },
@@ -226,7 +146,6 @@ grunt.registerTask('build', [
   'clean:post'
 ]);
 
-grunt.registerTask('snowflake', snowflakeCount);
 grunt.registerTask('default', 'watch');
 
 // end module.exports
