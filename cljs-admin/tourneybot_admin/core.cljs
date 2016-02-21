@@ -500,6 +500,97 @@
   (compare (-> a second :start-time)
            (-> b second :start-time)))
 
+; this is the old Gamespage
+; (rum/defc GamesPage < rum/static
+;  [teams games hide-finished-games?]
+;  (let [games (if hide-finished-games?
+;                (remove #(= (:status (second %)) finished-status) games)
+;                games)
+;        sorted-games (sort compare-games games)]
+;    [:article.games-container
+;      [:label.top-option
+;        {:on-click toggle-hide-finished-games
+;         :on-touch-start toggle-hide-finished-games}
+;        (if hide-finished-games?
+;          [:i.fa.fa-check-square-o]
+;          [:i.fa.fa-square-o])
+;        "Hide finished games"]
+;      (map (partial GameRow teams) sorted-games)]))
+;
+
+
+
+
+(defn- on-change-score [game-id score-key js-evt]
+  (let [new-score (int (aget js-evt "currentTarget" "value"))]
+    (swap! page-state assoc-in [:games (keyword game-id) score-key] new-score)))
+
+(defn- on-change-status [game-id status-val js-evt]
+  (prevent-default js-evt)
+  (swap! page-state assoc-in [:games (keyword game-id) :status] status-val))
+
+(rum/defc ScoreInput2 < rum/static
+  [game-id current-score score-key finished?]
+  (if finished?
+    [:span (str current-score)]
+    [:input
+      {:on-change (partial on-change-score game-id score-key)
+       :max "100"
+       :min "0"
+       :type "number"
+       :value current-score}]))
+
+(rum/defc StatusInput < rum/static
+ [game-id status-txt status-val current-status]
+ (let [selected? (= status-val current-status)]
+   [:span
+     {:class (str "status-tab" (when selected? " active"))
+      :on-click (partial on-change-status game-id status-val)
+      :on-touch-start (partial on-change-status game-id status-val)}
+     status-txt]))
+
+(rum/defc SmallGameRow < rum/static
+  [teams [game-id game]]
+  (let [{:keys [scoreA scoreB start-time teamA-id teamB-id]} game
+        status (get game :status scheduled-status)
+        teamA (get teams (keyword teamA-id) false)
+        teamB (get teams (keyword teamB-id) false)
+        game-name (:name game)
+        finished? (= status finished-status)
+        scorable? (or finished?
+                      (= status in-progress-status))]
+    [:div.game-row-container
+      [:h3 (name game-id)]
+      [:table
+        [:tbody
+          [:tr
+            [:td.label-cell "Name"]
+            [:td [:input {:type "text"
+                          :value game-name}]]
+            [:td.label-cell "Start Time"]
+            [:td [:input {:type "text"
+                          :value start-time}]]]
+          [:tr
+            [:td.label-cell "Team A"]
+            [:td (if-not scorable?
+                   (TeamSelect teams game-id game :teamA-id)
+                   (:name teamA))]
+            [:td.label-cell (when scorable? "Score A")]
+            [:td (when scorable? (ScoreInput2 game-id scoreA :scoreA finished?))]]
+          [:tr
+            [:td.label-cell "Team B"]
+            [:td (if-not scorable?
+                   (TeamSelect teams game-id game :teamB-id)
+                   (:name teamB))]
+            [:td.label-cell (when scorable? "Score B")]
+            [:td (when scorable? (ScoreInput2 game-id scoreB :scoreB finished?))]]
+          [:tr
+            [:td.label-cell "Status"]
+            [:td {:col-span "3"}
+              (StatusInput game-id "Scheduled" scheduled-status status)
+              (StatusInput game-id "In Progress" in-progress-status status)
+              (StatusInput game-id "Finished" finished-status status)]]]]]))
+
 (rum/defc GamesPage < rum/static
   [teams games hide-finished-games?]
   (let [games (if hide-finished-games?
@@ -514,7 +605,7 @@
           [:i.fa.fa-check-square-o]
           [:i.fa.fa-square-o])
         "Hide finished games"]
-      (map (partial GameRow teams) sorted-games)]))
+      (map (partial SmallGameRow teams) sorted-games)]))
 
 ;;------------------------------------------------------------------------------
 ;; Teams Page
@@ -581,11 +672,20 @@
          :on-click prevent-default}
       name]])
 
+; (rum/defc NavMenu < rum/static
+;   []
+;   [:div.admin-nav-container
+;     [:div.overlay {:on-click toggle-nav-menu
+;                    :on-touch-start toggle-nav-menu}]
+;     [:ul.links
+;       (PageLink "Info" info-page)
+;       (PageLink "Teams" teams-page)
+;       (PageLink "Games" games-page)
+;       (PageLink "Swiss Rounds" swiss-page)]])
+
 (rum/defc NavMenu < rum/static
-  []
-  [:div.admin-nav-container
-    [:div.overlay {:on-click toggle-nav-menu
-                   :on-touch-start toggle-nav-menu}]
+  [page]
+  [:nav
     [:ul.links
       (PageLink "Info" info-page)
       (PageLink "Teams" teams-page)
@@ -619,13 +719,8 @@
     [:div.admin-container
       [:header
         [:div.top-bar
-          [:div.left (:title state)]
-          [:div.right
-            {:on-click toggle-nav-menu
-             :on-touch-start toggle-nav-menu}
-            [:i.fa.fa-bars]]]]
-      (when nav-menu-showing?
-        (NavMenu))
+          [:div.left (:title state)]]]
+      (NavMenu (:page state))
       (condp = page
         info-page
         (InfoPage state)
