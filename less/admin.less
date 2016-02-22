@@ -7,7 +7,7 @@
 
 @maxWidth: 1200px;
 @minWidth: 300px;
-@minBodyHeight: 400px;
+@minBodyHeight: 500px;
 @primaryActionColor: #38c;
 @smallBreakpoint: 750px;
 
@@ -24,6 +24,79 @@ body {
   max-width: @maxWidth;
   min-width: @minWidth;
 }
+
+nav {
+  ul {
+    display: flex;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    background: #f5f5f5;
+    border-right: 1px solid #e6e6e6;
+    cursor: pointer;
+    flex: 1;
+    font-size: 18px;
+    font-weight:300;
+    list-style: none;
+    padding: 15px 0;
+    text-align: center;
+  }
+
+  li.active {
+    background: #ccc;
+    font-weight: 400;
+  }
+
+  // hide the border on the last tab
+  li:nth-last-of-type(1) {
+    border-right: 0;
+  }
+
+  a {
+    color: #222;
+    text-decoration: none;
+  }
+} // end nav
+
+footer {
+  align-items: center;
+  background: #333;
+  color: #828282;
+  display: flex;
+  font-size: 12px;
+  margin: 0;
+  padding: 20px 10px;
+
+  .left {
+    flex: 1;
+
+    select {
+      color: #222;
+    }
+  }
+
+  .right {
+    flex: 1;
+    text-align: right;
+  }
+
+  p {
+    margin: 0;
+    padding: 0;
+  }
+
+  a {
+    color: #bbb;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+} // end footer
 
 //------------------------------------------------------------------------------
 // Admin
@@ -93,6 +166,7 @@ body {
 
   article {
     min-height: @minBodyHeight;
+    padding: 20px 0;
   }
 
   .top-option {
@@ -282,11 +356,28 @@ body {
     padding-left: 5px;
     padding-right: 5px;
   }
+
+  .vs {
+    display: inline-block;
+    font-size: 12px;
+    margin: 0 5px;
+  }
+
+  .matchup-row {
+    padding: 8px 0;
+  }
+
+  .already-played {
+    background: yellow;
+    display: inline-block;
+    margin-left: 10px;
+  }
+
 } // end .swiss-round-container
 
 .small-results-tbl {
   border-bottom: 1px solid #eee;
-  width: 100%;
+  width: 50%;
 
   thead tr {
     background: #aaa;

@@ -2,7 +2,7 @@
   (:require
     cljsjs.marked
     cljsjs.moment
-    [clojure.string :refer [blank? lower-case]]
+    [clojure.string :refer [blank? lower-case replace]]
     [tourneybot.data :refer [scheduled-status in-progress-status finished-status game-statuses
                              games->results
                              ensure-tournament-state]]
@@ -37,7 +37,7 @@
    :games-filter-tab "all-games"
    :hide-finished-games? true
    :page info-page
-   :nav-menu-showing? false})
+   :swiss-filter-tab "swiss-round-1"})
 
 (def page-state (atom initial-page-state))
 
@@ -130,6 +130,13 @@
 ;;(js/setInterval fetch-tourney-state! polling-rate-ms)
 
 ;;------------------------------------------------------------------------------
+;; Misc
+;;------------------------------------------------------------------------------
+
+(defn- prevent-default [js-evt]
+  (.preventDefault js-evt))
+
+;;------------------------------------------------------------------------------
 ;; Fetch Info Page
 ;;------------------------------------------------------------------------------
 
@@ -205,12 +212,28 @@
     [:tbody
       (map SwissResultsRow results)]])
 
+(rum/defc Matchup < rum/static
+  [games [resultA resultB]]
+  (let [teamA-id (:team-id resultA)
+        teamB-id (:team-id resultB)
+        recordA (str (:games-won resultA) "-" (:games-lost resultA) "-" (:games-tied resultA))
+        recordB (str (:games-won resultB) "-" (:games-lost resultB) "-" (:games-tied resultB))
+        already-played? (teams-already-played? teamA-id teamB-id games)]
+    [:li.matchup-row
+      [:span.team (str (:team-name resultA) " (" recordA ")")]
+      [:span.vs "vs"]
+      [:span.team (str (:team-name resultB) " (" recordB ")")]
+      (when already-played?
+        [:span.already-played (str "Whoops! These two teams already played in " (:name already-played?))])]))
+
 (rum/defc SwissRound < rum/static
   [teams all-games swiss-round]
   (let [;; get all the games for this swiss round and below
         games-to-look-at (filter #(and (is-swiss-game? (second %))
                                        (<= (:swiss-round (second %)) swiss-round))
                                  all-games)
+        ;; calculate the results for this round
+        results (games->results teams games-to-look-at)
         ;; get all the games in just this swiss round
         games-in-this-round (filter #(and (is-swiss-game? (second %))
                                           (= (:swiss-round (second %)) swiss-round))
@@ -235,30 +258,40 @@
       (when-not (zero? num-games-finished)
         (list
           [:h3 (str "Swiss Round #" swiss-round " Results")]
-          (SwissResultsTable (games->results teams games-to-look-at))
-          [:h3 (str "Matchups for Swiss Round #" (inc swiss-round))]))]))
-          ;;[:div (pr-str (teams-already-played? :team12 :team18 all-games))]
-          ;;[:div (pr-str (teams-already-played? :team13 :team19 all-games))]))]))
+          (SwissResultsTable results)
+          (when (and all-finished?
+                     (not (= swiss-round 4))) ;; NOTE: temporary hack
+            (list
+              [:h3 (str "Matchups for Swiss Round #" (inc swiss-round))]
+              (let [matchups (partition 2 results)]
+                [:ul
+                  (map (partial Matchup games-to-look-at) matchups)])))))]))
 
-;; TODO: break out each swiss round into it's own page?
-;; there's a lot happening here
+(defn- click-swiss-filter-tab [tab-id js-evt]
+  (prevent-default js-evt)
+  (swap! page-state assoc :swiss-filter-tab tab-id))
+
+(rum/defc SwissFilterTab < rum/static
+  [txt tab-id current-tab]
+  [:div {:class (str "htab" (when (= tab-id current-tab) " active"))
+         :on-click (partial click-swiss-filter-tab tab-id)
+         :on-touch-start (partial click-swiss-filter-tab tab-id)}
+    txt])
+
+(rum/defc SwissFilters < rum/static
+  [current-tab]
+  [:div.filters-container
+    (SwissFilterTab "Swiss Round 1" "swiss-round-1" current-tab)
+    (SwissFilterTab "Swiss Round 2" "swiss-round-2" current-tab)
+    (SwissFilterTab "Swiss Round 3" "swiss-round-3" current-tab)
+    (SwissFilterTab "Swiss Round 4" "swiss-round-4" current-tab)])
 
 (rum/defc SwissPage < rum/static
-  [teams games]
-  (let [;; create a set of the Swiss Round numbers
-        swiss-rounds (reduce (fn [rounds game]
-                               (if (integer? (:swiss-round game))
-                                 (conj rounds (:swiss-round game))
-                                 rounds))
-                             #{}
-                             (vals games))
-        ;; sort and convert to list
-        swiss-rounds (sort swiss-rounds)]
+  [teams games current-tab]
+  (let [swiss-round (int (replace current-tab "swiss-round-" ""))]
     [:article.swiss-container
-      (if (empty? swiss-rounds)
-        ;; TODO: style this
-        [:div "This tournament does not have any Swiss Rounds."]
-        (map (partial SwissRound teams games) swiss-rounds))]))
+      (SwissFilters current-tab)
+      (SwissRound teams games swiss-round)]))
 
 ;;------------------------------------------------------------------------------
 ;; Scores Input
@@ -266,9 +299,6 @@
 
 ;; TODO: do not allow a game to reach "Finished" state if the scores are equal
 ;;       and ties are not allowed
-
-(defn- prevent-default [js-evt]
-  (.preventDefault js-evt))
 
 (defn- click-add-point [game-id score-key js-evt]
   (prevent-default js-evt)
@@ -626,7 +656,7 @@
 
 (rum/defc GamesFilters < rum/static
   [current-tab]
-  [:div.games-filters-container
+  [:div.filters-container
     (GameFilterTab "All Games" "all-games" current-tab)
     (GameFilterTab "Swiss Round 1" "swiss-round-1" current-tab)
     (GameFilterTab "Swiss Round 2" "swiss-round-2" current-tab)
@@ -696,42 +726,27 @@
 ;; Nav Menu
 ;;------------------------------------------------------------------------------
 
-(defn- toggle-nav-menu [js-evt]
-  (prevent-default js-evt)
-  (swap! page-state update-in [:nav-menu-showing?] not))
-
 (defn- click-page-link [page-id js-evt]
   (.preventDefault js-evt)
-  (swap! page-state assoc :page page-id
-                          :nav-menu-showing? false))
+  (swap! page-state assoc :page page-id))
 
 (rum/defc PageLink < rum/static
-  [name page-id]
-  [:li {:on-click (partial click-page-link page-id)
+  [name page-id current-page-id]
+  [:li {:class (if (= page-id current-page-id) "active" "")
+        :on-click (partial click-page-link page-id)
         :on-touch-start (partial click-page-link page-id)}
     [:a {:href "#"
          :on-click prevent-default}
       name]])
 
-; (rum/defc NavMenu < rum/static
-;   []
-;   [:div.admin-nav-container
-;     [:div.overlay {:on-click toggle-nav-menu
-;                    :on-touch-start toggle-nav-menu}]
-;     [:ul.links
-;       (PageLink "Info" info-page)
-;       (PageLink "Teams" teams-page)
-;       (PageLink "Games" games-page)
-;       (PageLink "Swiss Rounds" swiss-page)]])
-
 (rum/defc NavMenu < rum/static
-  [page]
+  [current-page-id]
   [:nav
     [:ul.links
-      (PageLink "Info" info-page)
-      (PageLink "Teams" teams-page)
-      (PageLink "Games" games-page)
-      (PageLink "Swiss Rounds" swiss-page)]])
+      (PageLink "Info" info-page current-page-id)
+      (PageLink "Teams" teams-page current-page-id)
+      (PageLink "Games" games-page current-page-id)
+      (PageLink "Swiss Rounds" swiss-page current-page-id)]])
 
 ;;------------------------------------------------------------------------------
 ;; Footer
@@ -757,7 +772,7 @@
         games (:games state)
         hide-finished-games? (:hide-finished-games? state)
         games-filter-tab (:games-filter-tab state)
-        nav-menu-showing? (:nav-menu-showing? state)]
+        swiss-filter-tab (:swiss-filter-tab state)]
     [:div.admin-container
       [:header
         [:div.top-bar
@@ -777,7 +792,7 @@
         (EditGamePage teams editing-game-id (get-in state [:games editing-game-id]))
 
         swiss-page
-        (SwissPage teams games)
+        (SwissPage teams games swiss-filter-tab)
 
         ;; NOTE: this should never happen
         [:div "Error: invalid page"])
