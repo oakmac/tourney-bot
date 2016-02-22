@@ -34,6 +34,7 @@
 
 (def initial-page-state
   {:editing-game-id nil
+   :games-filter-tab "all-games"
    :hide-finished-games? true
    :page info-page
    :nav-menu-showing? false})
@@ -554,9 +555,9 @@
  [game-id status-val current-status disabled?]
  (let [selected? (= status-val current-status)]
    (if disabled?
-     [:span.status-tab.disabled (get status-text status-val)]
+     [:span.htab.disabled (get status-text status-val)]
      [:span
-       {:class (str "status-tab" (when selected? " active"))
+       {:class (str "htab" (when selected? " active"))
         :on-click (partial on-change-status game-id status-val)
         :on-touch-start (partial on-change-status game-id status-val)}
        (get status-text status-val)])))
@@ -612,20 +613,39 @@
               (StatusInput game-id in-progress-status status (not both-teams-selected?))
               (StatusInput game-id finished-status status (not both-teams-selected?))]]]]]))
 
+(defn- click-games-filter-tab [tab-id js-evt]
+  (prevent-default js-evt)
+  (swap! page-state assoc :games-filter-tab tab-id))
+
+(rum/defc GameFilterTab < rum/static
+  [txt tab-id current-tab]
+  [:div {:class (str "htab" (when (= tab-id current-tab) " active"))
+         :on-click (partial click-games-filter-tab tab-id)
+         :on-touch-start (partial click-games-filter-tab tab-id)}
+    txt])
+
+(rum/defc GamesFilters < rum/static
+  [current-tab]
+  [:div.games-filters-container
+    (GameFilterTab "All Games" "all-games" current-tab)
+    (GameFilterTab "Swiss Round 1" "swiss-round-1" current-tab)
+    (GameFilterTab "Swiss Round 2" "swiss-round-2" current-tab)
+    (GameFilterTab "Swiss Round 3" "swiss-round-3" current-tab)
+    (GameFilterTab "Swiss Round 4" "swiss-round-4" current-tab)
+    (GameFilterTab "Bracket Play" "bracket-play" current-tab)])
+
+;; TODO: this is a quick hack; move this to a data structure
+(defn- filter-games [all-games filter-val]
+  (if (= filter-val "all-games")
+    all-games
+    (filter #(= (:group (second %)) filter-val) all-games)))
+
 (rum/defc GamesPage < rum/static
-  [teams games hide-finished-games?]
-  (let [games (if hide-finished-games?
-                (remove #(= (:status (second %)) finished-status) games)
-                games)
+  [teams games games-filter-tab hide-finished-games?]
+  (let [games (filter-games games games-filter-tab)
         sorted-games (sort compare-games games)]
     [:article.games-container
-      ; [:label.top-option
-      ;   {:on-click toggle-hide-finished-games
-      ;    :on-touch-start toggle-hide-finished-games}
-      ;   (if hide-finished-games?
-      ;     [:i.fa.fa-check-square-o]
-      ;     [:i.fa.fa-square-o])
-      ;   "Hide finished games"]
+      (GamesFilters games-filter-tab)
       (map (partial GameRow2 teams) sorted-games)]))
 
 ;;------------------------------------------------------------------------------
@@ -736,6 +756,7 @@
         teams (:teams state)
         games (:games state)
         hide-finished-games? (:hide-finished-games? state)
+        games-filter-tab (:games-filter-tab state)
         nav-menu-showing? (:nav-menu-showing? state)]
     [:div.admin-container
       [:header
@@ -750,7 +771,7 @@
         (TeamsPage teams)
 
         games-page
-        (GamesPage teams games hide-finished-games?)
+        (GamesPage teams games games-filter-tab hide-finished-games?)
 
         edit-game-page
         (EditGamePage teams editing-game-id (get-in state [:games editing-game-id]))
