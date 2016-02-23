@@ -776,7 +776,8 @@
     [:div.admin-container
       [:header
         [:div.top-bar
-          [:div.left (:title state)]]]
+          [:div.left (:title state)]
+          [:div.right "Admin"]]]
       (NavMenu (:page state))
       (condp = page
         info-page

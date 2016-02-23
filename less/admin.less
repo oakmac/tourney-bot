@@ -25,6 +25,31 @@ body {
   min-width: @minWidth;
 }
 
+header {
+  .top-bar {
+    align-items: center;
+    background: #333;
+    color: #fff;
+    display: flex;
+    padding: 10px 15px;
+
+    .left {
+      font-size: 18px;
+      font-weight: 300;
+      flex: 90;
+    }
+
+    .right {
+      color: #aaa;
+      flex: 10;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+      text-transform: uppercase;
+    }
+  }
+}
+
 nav {
   ul {
     display: flex;
@@ -143,27 +168,6 @@ footer {
 } // end .admin-nav-container
 
 .admin-container {
-  .top-bar {
-    align-items: center;
-    background: #333;
-    color: #fff;
-    display: flex;
-
-    .left {
-      flex: 1;
-      font-size: 22px;
-      font-weight: 300;
-      padding-left: 10px;
-    }
-
-    .right {
-      cursor: pointer;
-      font-size: 32px;
-      padding: 10px 18px;
-      text-align: right;
-    }
-  }
-
   article {
     min-height: @minBodyHeight;
     padding: 20px 0;
