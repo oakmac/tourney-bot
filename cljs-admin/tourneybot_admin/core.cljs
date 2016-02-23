@@ -8,7 +8,7 @@
                              ensure-tournament-state]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
                              fetch-json-as-cljs tourney-bot-url]]
-    [tourneybot-admin.api :refer [save-tournament-state!]]
+    [tourneybot-admin.api :refer [check-password save-tournament-state!]]
     [rum.core :as rum]))
 
 ;; TODO: set up some logic such that when a quarterfinals game is finished, it
@@ -37,6 +37,10 @@
    :games-filter-tab "all-games"
    :hide-finished-games? true
    :page info-page
+   :password ""
+   :password-error? false
+   :password-valid? false
+   :logging-in? false
    :swiss-filter-tab "swiss-round-1"})
 
 (def page-state (atom initial-page-state))
@@ -88,7 +92,11 @@
   (let [js-state (try (js/JSON.parse state-string)
                    (catch js/Error _error nil))]
     (when (object? js-state)
-      (let [clj-state (js->clj js-state :keywordize-keys true)]
+      (let [clj-state (js->clj js-state :keywordize-keys true)
+            ;; always reset password UI state on page load
+            ;; NOTE: this is a quick hack
+            clj-state (assoc clj-state :logging-in? false
+                                       :password-error? false)]
         (swap! page-state merge clj-state)))))
 
 (def ui-only-page-state-keys (keys initial-page-state))
@@ -761,7 +769,49 @@
       "powered by " [:a {:href tourney-bot-url} "TourneyBot"]]])
 
 ;;------------------------------------------------------------------------------
-;; Top Level Component
+;; Password Page
+;;------------------------------------------------------------------------------
+
+(defn- on-change-password [js-evt]
+  (let [new-password (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc :password new-password)))
+
+(defn- check-password-success []
+  (swap! page-state assoc :logging-in? false
+                          :password-error? false
+                          :password-valid? true))
+
+(defn- check-password-error []
+  (swap! page-state assoc :logging-in? false
+                          :password ""
+                          :password-error? true
+                          :password-valid? false))
+
+(defn- click-login-btn [js-evt]
+  (swap! page-state assoc :logging-in? true
+                          :password-error? false
+                          :password-valid? false)
+  (let [password (:password @page-state)]
+    (check-password password check-password-success check-password-error)))
+
+(rum/defc PasswordPage < rum/static
+  [{:keys [logging-in? password password-error?]}]
+  [:div.password-container
+    (if logging-in?
+      [:div "logging you in..."]
+      [:div
+        [:label "Tournament Password:"]
+        [:input {:on-change on-change-password
+                 :type "password"
+                 :value password}]
+        (when password-error?
+          [:div "invalid password!"])
+        [:button {:on-click click-login-btn
+                  :on-touch-start click-login-btn}
+          "Login"]])])
+
+;;------------------------------------------------------------------------------
+;; Admin App
 ;;------------------------------------------------------------------------------
 
 (rum/defc AdminApp < rum/static
@@ -800,6 +850,16 @@
       (Footer)]))
 
 ;;------------------------------------------------------------------------------
+;; Top Level Component
+;;------------------------------------------------------------------------------
+
+(rum/defc AdminPage < rum/static
+  [state]
+  (if (:password-valid? state)
+    (AdminApp state)
+    (PasswordPage state)))
+
+;;------------------------------------------------------------------------------
 ;; Render Loop
 ;;------------------------------------------------------------------------------
 
@@ -809,7 +869,7 @@
   "Render the page on every state change."
   [_kwd _the-atom _old-state new-state]
   (rum/request-render
-    (rum/mount (AdminApp new-state) app-container-el)))
+    (rum/mount (AdminPage new-state) app-container-el)))
 
 (add-watch page-state :main on-change-page-state)
 
