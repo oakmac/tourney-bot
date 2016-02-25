@@ -30,6 +30,9 @@
 (def tournament-state-url "../tournament.json")
 (def info-page-url "../info.md")
 
+;; NOTE: this is for developer convenience
+(def in-dev-mode? (not= -1 (.indexOf js/document.location.href "dev=true")))
+
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
 ;;------------------------------------------------------------------------------
@@ -771,8 +774,12 @@
   (swap! page-state assoc :logging-in? true
                           :password-error? false
                           :password-valid? false)
-  (let [password (:password @page-state)]
-    (check-password password check-password-success check-password-error)))
+  (if in-dev-mode?
+    ;; simulate the API call
+    (js/setTimeout check-password-success (rand-int 200 400))
+    ;; else make the actual API call
+    (let [password (:password @page-state)]
+      (check-password password check-password-success check-password-error))))
 
 (rum/defc PasswordPage < rum/static
   [{:keys [logging-in? password password-error? title]}]
