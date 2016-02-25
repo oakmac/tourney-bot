@@ -767,6 +767,7 @@
                           :password-valid? false))
 
 (defn- click-login-btn [js-evt]
+  (prevent-default js-evt)
   (swap! page-state assoc :logging-in? true
                           :password-error? false
                           :password-valid? false)
@@ -774,20 +775,26 @@
     (check-password password check-password-success check-password-error)))
 
 (rum/defc PasswordPage < rum/static
-  [{:keys [logging-in? password password-error?]}]
+  [{:keys [logging-in? password password-error? title]}]
   [:div.password-container
-    (if logging-in?
-      [:div "logging you in..."]
-      [:div
-        [:label "Tournament Password:"]
-        [:input {:on-change on-change-password
+    [:div.login-box
+      [:h1 title]
+      [:form.inner
+        [:input {:disabled logging-in?
+                 :on-change on-change-password
+                 :placeholder "Password"
                  :type "password"
                  :value password}]
         (when password-error?
-          [:div "invalid password!"])
-        [:button {:on-click click-login-btn
-                  :on-touch-start click-login-btn}
-          "Login"]])])
+          [:div.wrong "Wrong password"])
+        (if logging-in?
+          [:button.login-btn.disabled {:disabled true}
+            "Logging in..."]
+          [:input.login-btn
+            {:on-click click-login-btn
+             :on-touch-start click-login-btn
+             :type "submit"
+             :value "Login"}])]]])
 
 ;;------------------------------------------------------------------------------
 ;; Admin App
