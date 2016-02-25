@@ -793,6 +793,13 @@
 ;; Admin App
 ;;------------------------------------------------------------------------------
 
+(defn- click-sign-out [js-evt]
+  (prevent-default js-evt)
+  (swap! page-state assoc :logging-in? false
+                          :password ""
+                          :password-valid? false
+                          :password-error? false))
+
 (rum/defc AdminApp < rum/static
   [state]
   (let [page (:page state)
@@ -806,7 +813,10 @@
       [:header
         [:div.top-bar
           [:div.left (:title state)]
-          [:div.right "Admin"]]]
+          [:div.right "Admin"
+            [:i.fa.fa-sign-out
+              {:on-click click-sign-out
+               :on-touch-start click-sign-out}]]]]
       (NavMenu (:page state))
       (condp = page
         info-page
