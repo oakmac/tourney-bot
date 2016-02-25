@@ -2,13 +2,15 @@
   (:require
     cljsjs.marked
     cljsjs.moment
+    [clojure.data :refer [diff]]
     [clojure.string :refer [blank? lower-case replace]]
     [tourneybot.data :refer [scheduled-status in-progress-status finished-status game-statuses
                              games->results
                              ensure-tournament-state]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
-                             fetch-json-as-cljs tourney-bot-url]]
-    [tourneybot-admin.api :refer [check-password save-tournament-state!]]
+                             fetch-json-as-cljs tourney-bot-url
+                             always-nil]]
+    [tourneybot-admin.api :refer [check-password update-game!]]
     [rum.core :as rum]))
 
 ;; TODO: set up some logic such that when a quarterfinals game is finished, it
@@ -37,9 +39,18 @@
    :games-filter-tab "all-games"
    :hide-finished-games? true
    :page info-page
+
    :password ""
    :password-error? false
    :password-valid? false
+
+   ;; DEBUG
+  ;  :password "banana"
+  ;  :password-error? false
+  ;  :password-valid? true
+
+   ;; END DEBUG
+
    :logging-in? false
    :swiss-filter-tab "swiss-round-1"})
 
@@ -55,31 +66,6 @@
        (contains? page-values (:page new-state))))
 
 (set-validator! page-state valid-page-state?)
-
-;;------------------------------------------------------------------------------
-;; Update the tournament state
-;;------------------------------------------------------------------------------
-
-(def tournament-state-keys
-  "These keys represent the tournament state and should always be reflected in
-   tournament.json."
-  #{:title
-    :tiesAllowed
-    :divisions
-    :fields
-    :teams
-    :games})
-
-;; TODO: need to figure out if we want this to happen on every update (ie: add-watch)
-;;       or trigger it manually from a "Save" button or similar
-;;       Another option would be to poll for changes every N seconds and only
-;;       send an update if anything has changed.
-
-(defn- upload-tournament-state!
-  "Update "
-  [_kwd _the-atom _old-state new-state])
-
-;;(add-watch page-state :upload upload-tournament-state!)
 
 ;;------------------------------------------------------------------------------
 ;; Save UI-specific app state to localStorage
@@ -113,14 +99,13 @@
 ;; Fetch Tournament State
 ;;------------------------------------------------------------------------------
 
-(def polling-rate-ms 5000)
-(def title-set? (atom false))
+(def initial-state-loaded? (atom false))
 
 (defn- fetch-tourney-state-success [new-state]
   ;; set the title tag on the first state load
-  (when-not @title-set?
+  (when-not @initial-state-loaded?
     (aset js/document "title" (:title new-state))
-    (reset! title-set? true))
+    (reset! initial-state-loaded? true))
   ;; merge the tournament state with the page state
   (swap! page-state merge new-state))
 
@@ -130,12 +115,28 @@
 ;; kick off the initial state fetch
 (fetch-tourney-state!)
 
-;; TODO: I'm not sure we want to poll for tournament state here
-;;       the admin should always be "sending" the state, not "receiving" it
-;;       maybe once a minute in case somehow they get out of sync?
+;;------------------------------------------------------------------------------
+;; Update games when the state changes
+;;------------------------------------------------------------------------------
 
-;; begin the polling
-;;(js/setInterval fetch-tourney-state! polling-rate-ms)
+(defn- upload-game-state
+  "Update any games that have changed state."
+  [_kwd _the-atom old-state new-state]
+  (let [password (:password new-state)
+        old-games (:games old-state)
+        new-games (:games new-state)]
+    (when (and old-games
+               new-games
+               @initial-state-loaded?
+               (not= old-games new-games))
+      (let [[_ games-that-changed _] (diff old-games new-games)
+            ;; NOTE: if the UI ever supported updating more than one game at a time,
+            ;;       this would have to change
+            game-id (first (keys games-that-changed))
+            game-to-upload (get new-games game-id)]
+        (update-game! password game-id game-to-upload always-nil always-nil)))))
+
+(add-watch page-state :save-games upload-game-state)
 
 ;;------------------------------------------------------------------------------
 ;; Misc
@@ -143,28 +144,6 @@
 
 (defn- prevent-default [js-evt]
   (.preventDefault js-evt))
-
-;;------------------------------------------------------------------------------
-;; Fetch Info Page
-;;------------------------------------------------------------------------------
-
-; (def five-minutes (* 5 60 1000))
-; (def info-polling-ms five-minutes)
-;
-; (defn- fetch-info-page-success [info-markdown]
-;   (let [info-html (js/marked info-markdown)
-;         info-el (by-id "infoContainer")]
-;     (when (and info-html info-el)
-;       (aset info-el "innerHTML" info-html))))
-;
-; (defn- fetch-info-page! []
-;   (fetch-ajax-text info-page-url fetch-info-page-success))
-;
-; ;; fetch the info page markdown on load
-; (fetch-info-page!)
-;
-; ;; poll for updates every 5 minutes
-; (js/setInterval fetch-info-page! info-polling-ms)
 
 ;;------------------------------------------------------------------------------
 ;; Swiss Rounds Page
@@ -424,11 +403,11 @@
 
 (defn- on-change-game-name [game-id js-evt]
   (let [new-name (aget js-evt "currentTarget" "value")]
-    (swap! page-state assoc-in [:games (keyword game-id) :name new-name])))
+    (swap! page-state assoc-in [:games (keyword game-id) :name] new-name)))
 
 (defn- on-change-start-time [game-id js-evt]
   (let [new-time (aget js-evt "currentTarget" "value")]
-    (swap! page-state assoc-in [:games (keyword game-id) :start-time new-time])))
+    (swap! page-state assoc-in [:games (keyword game-id) :start-time] new-time)))
 
 ;; TODO: need an on-blur function to make sure the time is formatted properly
 
