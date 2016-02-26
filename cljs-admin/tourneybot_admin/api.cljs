@@ -31,15 +31,14 @@
                     (error-fn)))
       "url" api-url)))
 
-(defn update-game!
-  "Update a game state to tournament.json"
-  [pwd game-id game success-fn error-fn]
+(defn update-games!
+  "Upload the games to tournament.json"
+  [password games success-fn error-fn]
   (.ajax js/jQuery
     (js-obj
-      "data" (js-obj "method" "update-game"
-                     "game-id" (name game-id)
-                     "game-json" (-> game clj->js json-stringify)
-                     "password" pwd)
+      "data" (js-obj "method" "update-games"
+                     "games-json" (-> games clj->js json-stringify)
+                     "password" password)
       "dataType" "text"
       "error" error-fn
       "method" "post"

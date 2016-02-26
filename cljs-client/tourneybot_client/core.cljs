@@ -30,7 +30,7 @@
 (def info-page-url "info.md")
 
 ;; TODO: allow this to be overriden with a query param
-(def refresh-rate-ms 5000)
+(def refresh-rate-ms 4000)
 
 ;;------------------------------------------------------------------------------
 ;; Page State Atom

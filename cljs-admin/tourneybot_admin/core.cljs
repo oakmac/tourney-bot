@@ -11,7 +11,7 @@
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
                              fetch-json-as-cljs tourney-bot-url
                              always-nil one?]]
-    [tourneybot-admin.api :refer [check-password update-game!]]
+    [tourneybot-admin.api :refer [check-password update-games!]]
     [rum.core :as rum]))
 
 ;; TODO: set up some logic such that when a quarterfinals game is finished, it
@@ -98,35 +98,27 @@
   ;; merge the tournament state with the page state
   (swap! page-state merge new-state))
 
-(defn- fetch-tourney-state! []
-  (fetch-json-as-cljs tournament-state-url fetch-tourney-state-success))
-
-;; kick off the initial state fetch
-(fetch-tourney-state!)
+;; fetch the initial tournament state on load
+(fetch-json-as-cljs tournament-state-url fetch-tourney-state-success)
 
 ;;------------------------------------------------------------------------------
 ;; Update games when the state changes
 ;;------------------------------------------------------------------------------
 
-(defn- upload-game-state
-  "Update any games that have changed state."
-  [_kwd _the-atom old-state new-state]
-  (let [password (:password new-state)
-        old-games (:games old-state)
-        new-games (:games new-state)]
-    (when (and old-games
-               new-games
-               @initial-state-loaded?
-               (not= old-games new-games))
-      (let [[_ games-that-changed _] (diff old-games new-games)
-            ;; NOTE: if the UI ever supported updating more than one game at a time,
-            ;;       this would have to change
-            game-id (first (keys games-that-changed))
-            game-to-upload (get new-games game-id)]
-        (update-game! password game-id game-to-upload always-nil always-nil)))))
+(def upload-rate-ms 4000)
+
+(defn- upload-games!
+  "Upload the games to tournament.json"
+  []
+  (let [{:keys [games password password-valid?]} @page-state]
+    (when (and @initial-state-loaded?
+               password-valid?
+               (not (blank? password))
+               (map? games))
+      (update-games! password games always-nil always-nil))))
 
 (when-not in-dev-mode?
-  (add-watch page-state :save-games upload-game-state))
+  (js/setTimeout upload-games! upload-rate-ms))
 
 ;;------------------------------------------------------------------------------
 ;; Misc
