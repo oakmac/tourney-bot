@@ -430,8 +430,9 @@
 (rum/defc TeamSelect < rum/static
   [teams game-id game team-key]
   (let [sorted-teams (sort compare-team-name teams)]
-    [:select {:on-change (partial on-change-team-dropdown game-id team-key)
-              :value (team-key game)}
+    [:select.team-select
+      {:on-change (partial on-change-team-dropdown game-id team-key)
+       :value (team-key game)}
       [:option {:value ""} "-- Select a Team --"]
       (map TeamOption sorted-teams)]))
 
@@ -598,8 +599,7 @@
         scorable? (or finished?
                       (= status in-progress-status))]
     [:div.game-row-container
-      [:h3 (name game-id)]
-      [:table
+      [:table {:data-game-id (name game-id)}
         [:tbody
           [:tr
             [:td.label-cell "Name"]
@@ -608,10 +608,11 @@
                        :type "text"
                        :value game-name}]]
             [:td.label-cell "Start Time"]
-            [:td [:input {:on-change (partial on-change-start-time game-id)
-                          :placeholder "YYYY-MM-DD HHMM"
-                          :type "text"
-                          :value start-time}]]]
+            [:td [:input.time-input
+                   {:on-change (partial on-change-start-time game-id)
+                    :placeholder "YYYY-MM-DD HHMM"
+                    :type "text"
+                    :value start-time}]]]
           [:tr
             [:td.label-cell "Team A"]
             [:td (if-not scorable?
@@ -661,12 +662,14 @@
     (filter #(= (:group (second %)) filter-val) all-games)))
 
 (rum/defc GamesPage < rum/static
-  [teams games games-filter-tab hide-finished-games?]
+  [{:keys [teams games games-filter-tab hide-finished-games?]}]
   (let [games (filter-games games games-filter-tab)
         sorted-games (sort compare-games games)]
     [:article.games-container
       (GamesFilters games-filter-tab)
-      (map (partial GameRow2 teams) sorted-games)]))
+      [:div.flex-container
+        [:div.left (map (partial GameRow2 teams) sorted-games)]
+        [:div.right "foo"]]]))
 
 ;;------------------------------------------------------------------------------
 ;; Teams Page
@@ -833,25 +836,29 @@
             [:i.fa.fa-sign-out
               {:on-click click-sign-out
                :on-touch-start click-sign-out}]]]]
-      (NavMenu (:page state))
-      (condp = page
-        info-page
-        (InfoPage state)
+      ;; (NavMenu (:page state))
 
-        teams-page
-        (TeamsPage teams)
+      (GamesPage state)
 
-        games-page
-        (GamesPage teams games games-filter-tab hide-finished-games?)
+      ; (condp = page
+      ;   info-page
+      ;   (InfoPage state)
+      ;
+      ;   teams-page
+      ;   (TeamsPage teams)
+      ;
+      ;   games-page
+      ;   (GamesPage teams games games-filter-tab hide-finished-games?)
+      ;
+      ;   edit-game-page
+      ;   (EditGamePage teams editing-game-id (get-in state [:games editing-game-id]))
+      ;
+      ;   swiss-page
+      ;   (SwissPage teams games swiss-filter-tab)
+      ;
+      ;   ;; NOTE: this should never happen
+      ;   [:div "Error: invalid page"])
 
-        edit-game-page
-        (EditGamePage teams editing-game-id (get-in state [:games editing-game-id]))
-
-        swiss-page
-        (SwissPage teams games swiss-filter-tab)
-
-        ;; NOTE: this should never happen
-        [:div "Error: invalid page"])
       (Footer)]))
 
 ;;------------------------------------------------------------------------------

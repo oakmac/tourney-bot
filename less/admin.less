@@ -488,12 +488,30 @@ footer {
 } // end .small-results-tbl
 
 //------------------------------------------------------------------------------
+// Games Page
+//------------------------------------------------------------------------------
+
+.games-container {
+  .flex-container {
+    display: flex;
+
+    .left {
+      flex: 1;
+    }
+
+    .right {
+      flex: 1;
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
 // Game Row
 //------------------------------------------------------------------------------
 
 .game-row-container {
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 20px;
+  border-bottom: 2px solid #ddd;
+  padding: 12px 0;
 
   h3 {
     color: #888;
@@ -509,7 +527,8 @@ footer {
   }
 
   input[type="text"] {
-    padding: 5px;
+    font-size: 14px;
+    padding: 3px;
   }
 
   input[type="number"] {
@@ -517,6 +536,14 @@ footer {
     padding: 2px;
     text-align: right;
     width: 50px;
+  }
+
+  .team-select {
+    padding: 4px;
+  }
+
+  .time-input {
+    width: 110px;
   }
 
   .final-score {
@@ -532,10 +559,15 @@ footer {
 
   .label-cell {
     font-size: 13px;
-    font-style: italic;
     font-weight: 300;
     text-align: right;
   }
+
+  .htab {
+    padding: 4px 0;
+    width: 100px;
+  }
+
 } // end .game-row-container
 
 //------------------------------------------------------------------------------
@@ -577,11 +609,23 @@ footer {
 
 // modify the htabs when being used as tabs at the top of the page
 .filters-container {
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid #ccc;
   margin-bottom: 20px;
 
   .htab {
     border-bottom: 0;
+    border-right: 1px solid #eee;
+    font-size: 16px;
+    font-weight: 300;
+    margin-right: 10px;
+    padding: 12px 0;
+    width: 150px;
+  }
+
+  .htab.active {
+    background: #ccc;
+    color: #000;
+    font-weight: 400;
   }
 
   .htab:first-child {
