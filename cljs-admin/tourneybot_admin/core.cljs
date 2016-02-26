@@ -46,16 +46,12 @@
    :password ""
    :password-error? false
    :password-valid? false
-
-   ;; DEBUG
-  ;  :password "banana"
-  ;  :password-error? false
-  ;  :password-valid? true
-
-   ;; END DEBUG
-
    :logging-in? false
-   :swiss-filter-tab "swiss-round-1"})
+
+   :swiss-filter-tab "swiss-round-1"
+
+   :simulated-scoreA 0
+   :simulated-scoreB 0})
 
 (def page-state (atom initial-page-state))
 
@@ -139,7 +135,8 @@
             game-to-upload (get new-games game-id)]
         (update-game! password game-id game-to-upload always-nil always-nil)))))
 
-(add-watch page-state :save-games upload-game-state)
+(when-not in-dev-mode?
+  (add-watch page-state :save-games upload-game-state))
 
 ;;------------------------------------------------------------------------------
 ;; Misc
@@ -218,71 +215,83 @@
       (when already-played?
         [:span.already-played (str "Whoops! These two teams already played in " (:name already-played?))])]))
 
-
-
-
+(defn- on-change-simulated-input [kwd js-evt]
+  (let [new-score (int (aget js-evt "currentTarget" "value"))]
+    (swap! page-state assoc kwd new-score)))
 
 (rum/defc NextRoundSimulator < rum/static
-  []
-  [:div
-    ;;[:h2 "Simulate the Results of X vs Y"]
-    [:p "todo: next round simulator"]])
-
+  [teams games-for-this-round [final-game-id final-game]
+   simulated-scoreA simulated-scoreB]
+  (let [teamA-id (keyword (:teamA-id final-game))
+        teamB-id (keyword (:teamB-id final-game))
+        teamA-name (get-in teams [teamA-id :name])
+        teamB-name (get-in teams [teamB-id :name])
+        simulated-game [:simulated-game (merge final-game {:status finished-status
+                                                           :scoreA simulated-scoreA
+                                                           :scoreB simulated-scoreB})]
+        simulated-games (conj games-for-this-round simulated-game)
+        simulated-results (games->results teams simulated-games)]
+    [:div.simulated-container
+      [:h3 "Last Game Simulated Results"]
+      [:div.input-row
+        [:input {:on-change (partial on-change-simulated-input :simulated-scoreA)
+                 :min "0"
+                 :max "100"
+                 :type "number"
+                 :value simulated-scoreA}]
+        [:span.team-name teamA-name]]
+      [:div.input-row
+        [:input {:on-change (partial on-change-simulated-input :simulated-scoreB)
+                 :min "0"
+                 :max "100"
+                 :type "number"
+                 :value simulated-scoreB}]
+        [:span.team-name teamB-name]]
+      (SwissResultsTable simulated-results)]))
 
 (defn- game-finished? [game]
   (= finished-status (:status game)))
 
+;; TODO: calculate this from the games data instead of hard-coding
+(def last-swiss-round-num 4)
 
 (rum/defc SwissRound < rum/static
-  [teams all-games swiss-round]
-  (let [last-swiss-round (dec swiss-round)
+  [teams all-games swiss-round simulated-scoreA simulated-scoreB]
+  (let [prev-swiss-round (dec swiss-round)
         next-swiss-round (inc swiss-round)
+        all-swiss-games (filter #(is-swiss-game? (second %)) all-games)
         ;; get all the games from the previous round and below
         ;; NOT including this current round
-        last-round-games (filter #(and (is-swiss-game? (second %))
-                                       (<= (:swiss-round (second %)) last-swiss-round))
-                                 all-games)
-        ;; is the last round finished?
-        last-round-finished? (and (not (empty? last-round-games))
-                                  (every? game-finished? (vals last-round-games)))
-        ;; calculate results for the last round
-        last-round-results (games->results teams last-round-games)
-
+        prev-round-games (filter #(<= (:swiss-round (second %)) prev-swiss-round)
+                                 all-swiss-games)
+        ;; is the previous round finished?
+        prev-round-finished? (and (not (empty? prev-round-games))
+                                  (every? game-finished? (vals prev-round-games)))
+        ;; calculate results for the previous round
+        prev-round-results (games->results teams prev-round-games)
         ;; get all the games for this swiss round and below
-        games-to-look-at (filter #(and (is-swiss-game? (second %))
-                                       (<= (:swiss-round (second %)) swiss-round))
-                                 all-games)
+        games-for-this-round (filter #(<= (:swiss-round (second %)) swiss-round)
+                                     all-swiss-games)
         ;; calculate the results for this round
-        results (games->results teams games-to-look-at)
-        ;; get all the games in just this swiss round
-        games-in-this-round (filter #(and (is-swiss-game? (second %))
-                                          (= (:swiss-round (second %)) swiss-round))
-                                    games-to-look-at)
-        num-games-in-this-round (count games-in-this-round)
+        results (games->results teams games-for-this-round)
+        ;; get all the games in only this swiss round
+        games-only-in-this-round (filter #(= (:swiss-round (second %)) swiss-round)
+                                         games-for-this-round)
+        num-games-in-this-round (count games-only-in-this-round)
         ;; are all the games in this swiss round finished?
         num-games-finished (count (filter #(= (:status (second %)) finished-status)
-                                          games-in-this-round))
+                                          games-only-in-this-round))
         all-finished? (= num-games-in-this-round num-games-finished)
-        one-game-left? (= num-games-in-this-round (inc num-games-finished))]
+        one-game-left? (= num-games-in-this-round (inc num-games-finished))
+        final-game-in-this-round (when one-game-left?
+                                   (first (filter #(not= (:status (second %)) finished-status)
+                                                  games-only-in-this-round)))]
     [:div.swiss-round-container
-
-      ; [:h2 (str "Swiss Round #" swiss-round)]
-      ; [:p.info
-      ;   (cond
-      ;     all-finished?
-      ;     (str "All " num-games-in-this-round " games in Swiss Round #" swiss-round " have been played.")
-      ;
-      ;     (zero? num-games-finished)
-      ;     (str "Swiss Round #" swiss-round " has not started yet.")
-      ;
-      ;     :else
-      ;     (str num-games-finished " out of " num-games-in-this-round " rounds have been played in Swiss Round #" swiss-round))]
-
-      (when last-round-finished?
+      (when prev-round-finished?
         (list
           [:h3 (str "Swiss Round #" swiss-round " Matchups")]
           [:ul.matchups
-            (map (partial Matchup last-round-games) (partition 2 last-round-results))]))
+            (map (partial Matchup prev-round-games) (partition 2 prev-round-results))]))
 
       (when-not (zero? num-games-finished)
         (list
@@ -292,23 +301,16 @@
 
           (when-not all-finished?
             (if one-game-left?
-              (NextRoundSimulator)
+              (NextRoundSimulator teams games-for-this-round final-game-in-this-round simulated-scoreA simulated-scoreB)
               [:p.msg
                 (str "When there is one game left in this round, you will be able to simulate "
                      "the result of the last game in the table above.")]))
 
-          (when all-finished?
+          (when (and all-finished?
+                     (not= swiss-round last-swiss-round-num))
             [:p.msg
               (str "This round is over. Match-ups for the next round can be "
                    "found on the \"Swiss Round " next-swiss-round "\" tab.")])))]))
-
-          ; (when (and all-finished?
-          ;            (not (= swiss-round 4))) ;; NOTE: temporary hack
-          ;   (list
-          ;     [:h3 (str "Matchups for Swiss Round #" (inc swiss-round))]
-          ;     (let [matchups (partition 2 results)]
-          ;       [:ul
-          ;         (map (partial Matchup games-to-look-at) matchups)])))))]))
 
 (defn- click-swiss-filter-tab [tab-id js-evt]
   (prevent-default js-evt)
@@ -600,14 +602,17 @@
   (let [new-score (int (aget js-evt "currentTarget" "value"))
         game-id (keyword game-id)]
     (swap! page-state assoc-in [:games game-id score-key] new-score)
-
     ;; games with any points cannot have status "scheduled"
     (when (= scheduled-status (get-in @page-state [:games game-id :status] scheduled-status))
       (swap! page-state assoc-in [:games game-id :status] in-progress-status))))
 
 (defn- on-change-status [game-id status-val js-evt]
   (prevent-default js-evt)
-  (swap! page-state assoc-in [:games (keyword game-id) :status] status-val))
+  (swap! page-state assoc-in [:games (keyword game-id) :status] status-val)
+  ;; reset the simulated scores anytime a game is marked as Finished
+  (when (= status-val finished-status)
+    (swap! page-state assoc :simulated-scoreA 0
+                            :simulated-scoreB 0)))
 
 (rum/defc ScoreInput2 < rum/static
   [game-id current-score score-key finished?]
@@ -717,7 +722,8 @@
     (filter #(= (:group (second %)) filter-val) all-games)))
 
 (rum/defc GamesPage < rum/static
-  [{:keys [teams games games-filter-tab hide-finished-games?]}]
+  [{:keys [teams games games-filter-tab hide-finished-games?
+           simulated-scoreA simulated-scoreB]}]
   (let [filtered-games (filter-games games games-filter-tab)
         sorted-games (sort compare-games filtered-games)
         swiss-round (condp = games-filter-tab
@@ -730,7 +736,7 @@
       (GamesFilters games-filter-tab)
       [:div.flex-container
         [:div.left (map (partial GameRow2 teams) sorted-games)]
-        [:div.right (when swiss-round (SwissRound teams games swiss-round))]]]))
+        [:div.right (when swiss-round (SwissRound teams games swiss-round simulated-scoreA simulated-scoreB))]]]))
 
 ;;------------------------------------------------------------------------------
 ;; Teams Page

@@ -144,13 +144,19 @@
       "name": "Swiss Round 2, Game 3",
       "start-time": "2016-02-28 1100",
       "swiss-round": 2,
-      "group": "swiss-round-2"
+      "group": "swiss-round-2",
+      "teamA-id": "team13",
+      "teamB-id": "team14",
+      "status": "scheduled"
     },
     "game23": {
       "name": "Swiss Round 2, Game 4",
       "start-time": "2016-02-28 1115",
       "swiss-round": 2,
-      "group": "swiss-round-2"
+      "group": "swiss-round-2",
+      "teamA-id": "team15",
+      "teamB-id": "team16",
+      "status": "scheduled"      
     },
     "game24": {
       "name": "Swiss Round 2, Game 5",
