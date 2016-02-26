@@ -53,7 +53,7 @@ if ($_POST['method'] === 'update-game' && $_POST['game-id'] !== '' && $_POST['ga
     $tournamentState['games'][$gameId] = $game;
 
     // save tournament state
-    file_put_contents(TOURNAMENT_JSON_FILE, json_encode($tournamentState));
+    file_put_contents(TOURNAMENT_JSON_FILE, json_encode($tournamentState, JSON_PRETTY_PRINT));
 
     // return success
     exit('true');
