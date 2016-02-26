@@ -188,7 +188,7 @@
       [:th.name {:style {:width "45%"}} "Name"]
       [:th "Record"]
       [:th "Points"]
-      [:th "Victory Pnts"]]])
+      [:th "Score"]]])
 
 (rum/defc SwissResultsTable < rum/static
   [results]
