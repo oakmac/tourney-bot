@@ -20,15 +20,7 @@
 ;; Constants
 ;;------------------------------------------------------------------------------
 
-(def info-page "INFO-PAGE")
-(def teams-page "TEAMS-PAGE")
-(def games-page "GAMES-PAGE")
-(def edit-game-page "EDIT-GAME-PAGE")
-(def swiss-page "SWISS-PAGE")
-(def page-values #{info-page teams-page games-page edit-game-page swiss-page})
-
 (def tournament-state-url "../tournament.json")
-(def info-page-url "../info.md")
 
 ;; NOTE: this is for developer convenience
 (def in-dev-mode? (not= -1 (.indexOf js/document.location.href "dev=true")))
@@ -38,17 +30,14 @@
 ;;------------------------------------------------------------------------------
 
 (def initial-page-state
-  {:editing-game-id nil
-   :games-filter-tab "all-games"
-   :hide-finished-games? true
-   :page games-page
-
+  {;; login related
    :password ""
    :password-error? false
    :password-valid? false
    :logging-in? false
 
-   :swiss-filter-tab "swiss-round-1"
+   ;; GameTabs across the top
+   :tab-id "swiss-round-1"
 
    :simulated-scoreA 0
    :simulated-scoreB 0})
@@ -61,8 +50,8 @@
 (defn- valid-page-state?
   "Some simple predicates to make sure the state is valid."
   [new-state]
-  (and (map? new-state)
-       (contains? page-values (:page new-state))))
+  (and (map? new-state)))
+  ;; TODO: write some more predicates for this
 
 (set-validator! page-state valid-page-state?)
 
@@ -146,7 +135,7 @@
   (.preventDefault js-evt))
 
 ;;------------------------------------------------------------------------------
-;; Swiss Rounds Page
+;; Predicates
 ;;------------------------------------------------------------------------------
 
 ;; TODO: this can be replaced using a set of sets:
@@ -167,6 +156,13 @@
 
 (defn- is-swiss-game? [g]
   (integer? (:swiss-round g)))
+
+(defn- game-finished? [game]
+  (= finished-status (:status game)))
+
+;;------------------------------------------------------------------------------
+;; Swiss Results Table
+;;------------------------------------------------------------------------------
 
 ;; TODO: take "ties-allowed?" into account here
 (rum/defc SwissResultsRow < rum/static
@@ -201,6 +197,10 @@
     [:tbody
       (map-indexed SwissResultsRow results)]])
 
+;;------------------------------------------------------------------------------
+;; Next Round Matchups
+;;------------------------------------------------------------------------------
+
 (rum/defc Matchup < rum/static
   [games [resultA resultB]]
   (let [teamA-id (:team-id resultA)
@@ -214,6 +214,16 @@
       [:span.team (str (:team-name resultB) " (" recordB ")")]
       (when already-played?
         [:span.already-played (str "Whoops! These two teams already played in " (:name already-played?))])]))
+
+;;------------------------------------------------------------------------------
+;; Next Round Simulator
+;;------------------------------------------------------------------------------
+
+;; TODO: far better than a "next round simulator" would be a
+;;       "guaranteed next round matchup algorithm"
+
+;; TODO: it would be nice if the matchups automatically populated the next round
+;;       games if the teams had not played before
 
 (defn- on-change-simulated-input [kwd js-evt]
   (let [new-score (int (aget js-evt "currentTarget" "value"))]
@@ -249,13 +259,10 @@
         [:span.team-name teamB-name]]
       (SwissResultsTable simulated-results)]))
 
-(defn- game-finished? [game]
-  (= finished-status (:status game)))
-
 ;; TODO: calculate this from the games data instead of hard-coding
 (def last-swiss-round-num 4)
 
-(rum/defc SwissRound < rum/static
+(rum/defc SwissPanel < rum/static
   [teams all-games swiss-round simulated-scoreA simulated-scoreB]
   (let [prev-swiss-round (dec swiss-round)
         next-swiss-round (inc swiss-round)
@@ -286,7 +293,7 @@
         final-game-in-this-round (when one-game-left?
                                    (first (filter #(not= (:status (second %)) finished-status)
                                                   games-only-in-this-round)))]
-    [:div.swiss-round-container
+    [:div.swiss-panel-container
       (when prev-round-finished?
         (list
           [:h3 (str "Swiss Round #" swiss-round " Matchups")]
@@ -312,152 +319,9 @@
               (str "This round is over. Match-ups for the next round can be "
                    "found on the \"Swiss Round " next-swiss-round "\" tab.")])))]))
 
-(defn- click-swiss-filter-tab [tab-id js-evt]
-  (prevent-default js-evt)
-  (swap! page-state assoc :swiss-filter-tab tab-id))
-
-(rum/defc SwissFilterTab < rum/static
-  [txt tab-id current-tab]
-  [:div {:class (str "htab" (when (= tab-id current-tab) " active"))
-         :on-click (partial click-swiss-filter-tab tab-id)
-         :on-touch-start (partial click-swiss-filter-tab tab-id)}
-    txt])
-
-(rum/defc SwissFilters < rum/static
-  [current-tab]
-  [:div.filters-container
-    (SwissFilterTab "Swiss Round 1" "swiss-round-1" current-tab)
-    (SwissFilterTab "Swiss Round 2" "swiss-round-2" current-tab)
-    (SwissFilterTab "Swiss Round 3" "swiss-round-3" current-tab)
-    (SwissFilterTab "Swiss Round 4" "swiss-round-4" current-tab)])
-
-(rum/defc SwissPage < rum/static
-  [teams games current-tab]
-  (let [swiss-round (int (replace current-tab "swiss-round-" ""))]
-    [:article.swiss-container
-      (SwissFilters current-tab)
-      (SwissRound teams games swiss-round)]))
-
 ;;------------------------------------------------------------------------------
-;; Scores Input
+;; Single Game Row
 ;;------------------------------------------------------------------------------
-
-;; TODO: do not allow a game to reach "Finished" state if the scores are equal
-;;       and ties are not allowed
-
-(defn- click-add-point [game-id score-key js-evt]
-  (prevent-default js-evt)
-  (swap! page-state update-in [:games game-id score-key] inc)
-
-  ;; games with any points cannot have status "scheduled"
-  (when (= scheduled-status (get-in @page-state [:games game-id :status] scheduled-status))
-    (swap! page-state assoc-in [:games game-id :status] "in_progress")))
-
-(defn- click-remove-point [game-id score-key js-evt]
-  (prevent-default js-evt)
-  (swap! page-state update-in [:games game-id score-key] dec))
-
-(rum/defc InvisibleBtn < rum/static
-  []
-  [:div.button.up {:style {:visibility "hidden"}} "+1"])
-
-(rum/defc UpBtn < rum/static
-  [game-id score-key]
-  [:div.button.up
-    {:on-click (partial click-add-point game-id score-key)
-     :on-touch-start (partial click-add-point game-id score-key)}
-    "+1"])
-
-(rum/defc DownBtn < rum/static
-  [game-id score-key]
-  [:div.button.down
-    {:on-click (partial click-remove-point game-id score-key)
-     :on-touch-start (partial click-remove-point game-id score-key)}
-    "-1"])
-
-(rum/defc DisabledDownBtn < rum/static
-  []
-  [:div.button.down.disabled
-    {:on-click prevent-default
-     :on-touch-start prevent-default}
-    "-1"])
-
-(defn- click-status-tab [game-id new-status js-evt]
-  (prevent-default js-evt)
-  (swap! page-state assoc-in [:games game-id :status] new-status))
-
-(rum/defc StatusTab < rum/static
-  [txt status current-status game-id]
-  [:div {:class (str "tab" (when (= current-status status) " active"))
-         :on-click (partial click-status-tab game-id status)
-         :on-touch-start (partial click-status-tab game-id status)}
-    txt])
-
-(rum/defc DisabledStatusTab < rum/static
-  [txt]
-  [:div.tab.disabled
-    {:on-click prevent-default
-     :on-touch-start prevent-default}
-    txt])
-
-(defn- click-back-btn [js-evt]
-  (prevent-default js-evt)
-  (swap! page-state assoc :page games-page))
-
-;; TODO: highlight the winning team in yellow
-;;       and include a "final score" note
-
-(rum/defc ScoreInput < rum/static
-  [game-id game score-key finished?]
-  (let [current-score (get game score-key 0)]
-    [:div.score
-      (if finished?
-        (InvisibleBtn)
-        (UpBtn game-id score-key))
-      [:div.big-score current-score]
-      (if finished?
-        (InvisibleBtn)
-        (if (zero? current-score)
-          (DisabledDownBtn)
-          (DownBtn game-id score-key)))]))
-
-(rum/defc EditGamePage < rum/static
-  [teams game-id game]
-  (let [teamA-id (keyword (:teamA-id game))
-        teamB-id (keyword (:teamB-id game))
-        teamA (get teams teamA-id)
-        teamB (get teams teamB-id)
-        current-status (:status game scheduled-status)
-        finished? (= current-status finished-status)]
-    [:article.game-input-container
-      [:div.teams
-        [:div.team-name (:name teamA)]
-        [:div.vs "vs"]
-        [:div.team-name (:name teamB)]]
-      [:div.scores
-        (ScoreInput game-id game :scoreA finished?)
-        [:div.vs ""] ;; NOTE: this empty element just used as a spacer
-        (ScoreInput game-id game :scoreB finished?)]
-      [:div.status
-        (if (or (> (:scoreA game) 0)
-                (> (:scoreB game) 0))
-          (DisabledStatusTab "Scheduled")
-          (StatusTab "Scheduled" scheduled-status current-status game-id))
-        (StatusTab "In Progress" in-progress-status current-status game-id)
-        (StatusTab "Finished" finished-status current-status game-id)]
-      [:div.back-btn
-        {:on-click click-back-btn
-         :on-touch-start click-back-btn}
-        [:i.fa.fa-arrow-left] " Go Back"]]))
-
-;;------------------------------------------------------------------------------
-;; Games Page
-;;------------------------------------------------------------------------------
-
-(defn- click-edit-game [game-id js-evt]
-  (prevent-default js-evt)
-  (swap! page-state assoc :page edit-game-page
-                          :editing-game-id game-id))
 
 (defn- on-change-game-name [game-id js-evt]
   (let [new-name (aget js-evt "currentTarget" "value")]
@@ -493,110 +357,18 @@
 
 ;; TODO: prevent them from picking the same team for teamA and teamB
 
-(rum/defc ScheduledGameRow < rum/static
-  [teams game-id game]
-  (let [start-time (:start-time game)]
-    [:div.admin-input-row.games
-      [:div.small-id (name game-id)]
-      [:div.row
-        [:label "Name"]
-        [:input {:on-change (partial on-change-game-name game-id)
-                 :type "text"
-                 :value (:name game)}]]
-      [:div.row
-        [:label "Start Time"]
-        [:input {:on-change (partial on-change-start-time game-id)
-                 :placeholder "YYYY-MM-DD HHMM"
-                 :type "text"
-                 :value start-time}]]
-      [:div.row
-        [:label "Team A"]
-        (TeamSelect teams game-id game :teamA-id)]
-      [:div.row
-        [:label "Team B"]
-        (TeamSelect teams game-id game :teamB-id)]
-      ;; only show the "Edit Scores" button when both teams have been selected
-      (when (and (get teams (keyword (:teamA-id game)) false)
-                 (get teams (keyword (:teamB-id game)) false))
-        [:div.edit-scores-btn
-          {:on-click (partial click-edit-game game-id)
-           :on-touch-start (partial click-edit-game game-id)}
-          "Edit Scores"])]))
-
 (def date-format "YYYY-MM-DD HHmm")
 
 (defn- format-start-time [start-time]
   (let [js-moment (js/moment start-time date-format)]
     (.format js-moment "ddd, DD MMM YYYY, h:mma")))
 
-(rum/defc NonScheduledGameRow < rum/static
-  [teams game-id game]
-  (let [teamA (get teams (keyword (:teamA-id game)))
-        teamB (get teams (keyword (:teamB-id game)))
-        scoreA (:scoreA game)
-        scoreB (:scoreB game)
-        start-time (:start-time game)
-        status (:status game)]
-    [:div {:class (str "admin-input-row" (when (= status in-progress-status) " in-progress"))}
-      [:div.small-id (name game-id)]
-      [:div.row
-        [:label.muted "Name"]
-        [:input {:on-change (partial on-change-game-name game-id)
-                 :type "text"
-                 :value (:name game)}]]
-      [:div.row
-        [:label.muted "Time"]
-        [:span (format-start-time start-time)]]
-      [:div.row
-        [:label.muted "Team A"]
-        [:span (str (:name teamA) " (" scoreA ")")]]
-      [:div.row
-        [:label.muted "Team B"]
-        [:span (str (:name teamB) " (" scoreB ")")]]
-      [:div.row
-        [:label.muted "Status"]
-        [:span (if (= status in-progress-status)
-                 "In Progress"
-                 "Finished")]]
-      [:div.edit-scores-btn
-        {:on-click (partial click-edit-game game-id)
-         :on-touch-start (partial click-edit-game game-id)}
-        "Edit Scores"]]))
-
-(rum/defc GameRow < rum/static
-  [teams [game-id game]]
-  (if (= (:status game scheduled-status) scheduled-status)
-    (ScheduledGameRow teams game-id game)
-    (NonScheduledGameRow teams game-id game)))
-
-(defn- toggle-hide-finished-games [js-evt]
-  (prevent-default js-evt)
-  (swap! page-state update-in [:hide-finished-games?] not))
-
 (defn- compare-games [a b]
   (compare (-> a second :start-time)
            (-> b second :start-time)))
 
-; this is the old Gamespage
-; (rum/defc GamesPage < rum/static
-;  [teams games hide-finished-games?]
-;  (let [games (if hide-finished-games?
-;                (remove #(= (:status (second %)) finished-status) games)
-;                games)
-;        sorted-games (sort compare-games games)]
-;    [:article.games-container
-;      [:label.top-option
-;        {:on-click toggle-hide-finished-games
-;         :on-touch-start toggle-hide-finished-games}
-;        (if hide-finished-games?
-;          [:i.fa.fa-check-square-o]
-;          [:i.fa.fa-square-o])
-;        "Hide finished games"]
-;      (map (partial GameRow teams) sorted-games)]))
-;
-
-
-
+;; TODO: do not allow a game to reach "Finished" state if the scores are equal
+;;       and ties are not allowed
 
 (defn- on-change-score [game-id score-key js-evt]
   (let [new-score (int (aget js-evt "currentTarget" "value"))
@@ -614,7 +386,7 @@
     (swap! page-state assoc :simulated-scoreA 0
                             :simulated-scoreB 0)))
 
-(rum/defc ScoreInput2 < rum/static
+(rum/defc ScoreInput < rum/static
   [game-id current-score score-key finished?]
   (if finished?
     [:span.final-score (str current-score)]
@@ -642,7 +414,7 @@
        (get status-text status-val)])))
 
 ;; TODO: do not allow teamA and teamB to be the same in a single game
-(rum/defc GameRow2 < rum/static
+(rum/defc GameRow < rum/static
   [teams [game-id game]]
   (let [{:keys [start-time teamA-id teamB-id]} game
         status (get game :status scheduled-status)
@@ -677,14 +449,14 @@
                    (TeamSelect teams game-id game :teamA-id)
                    (:name teamA))]
             [:td.label-cell (when both-teams-selected? "Score A")]
-            [:td.score-cell (when both-teams-selected? (ScoreInput2 game-id scoreA :scoreA finished?))]]
+            [:td.score-cell (when both-teams-selected? (ScoreInput game-id scoreA :scoreA finished?))]]
           [:tr
             [:td.label-cell "Team B"]
             [:td (if-not scorable?
                    (TeamSelect teams game-id game :teamB-id)
                    (:name teamB))]
             [:td.label-cell (when both-teams-selected? "Score B")]
-            [:td.score-cell (when both-teams-selected? (ScoreInput2 game-id scoreB :scoreB finished?))]]
+            [:td.score-cell (when both-teams-selected? (ScoreInput game-id scoreB :scoreB finished?))]]
           [:tr
             [:td.label-cell "Status"]
             [:td {:col-span "3"}
@@ -692,123 +464,51 @@
               (StatusInput game-id in-progress-status status (not both-teams-selected?))
               (StatusInput game-id finished-status status (not both-teams-selected?))]]]]]))
 
-(defn- click-games-filter-tab [tab-id js-evt]
-  (prevent-default js-evt)
-  (swap! page-state assoc :games-filter-tab tab-id))
+;;------------------------------------------------------------------------------
+;; Game Groups Tabs
+;;------------------------------------------------------------------------------
 
-(rum/defc GameFilterTab < rum/static
+(defn- click-game-tab [tab-id js-evt]
+  (prevent-default js-evt)
+  (swap! page-state assoc :tab-id tab-id))
+
+(rum/defc GamesTab < rum/static
   [txt tab-id current-tab]
   [:div {:class (str "htab" (when (= tab-id current-tab) " active"))
-         :on-click (partial click-games-filter-tab tab-id)
-         :on-touch-start (partial click-games-filter-tab tab-id)}
+         :on-click (partial click-game-tab tab-id)
+         :on-touch-start (partial click-game-tab tab-id)}
     txt])
 
-(rum/defc GamesFilters < rum/static
+(rum/defc GamesTabs < rum/static
   [current-tab]
   [:div.filters-container
-    ;; (GameFilterTab "All Games" "all-games" current-tab)
-    (GameFilterTab "Swiss Round 1" "swiss-round-1" current-tab)
-    (GameFilterTab "Swiss Round 2" "swiss-round-2" current-tab)
-    (GameFilterTab "Swiss Round 3" "swiss-round-3" current-tab)
-    (GameFilterTab "Swiss Round 4" "swiss-round-4" current-tab)
-    (GameFilterTab "Bracket Play" "bracket-play" current-tab)])
+    (GamesTab "Swiss Round 1" "swiss-round-1" current-tab)
+    (GamesTab "Swiss Round 2" "swiss-round-2" current-tab)
+    (GamesTab "Swiss Round 3" "swiss-round-3" current-tab)
+    (GamesTab "Swiss Round 4" "swiss-round-4" current-tab)
+    (GamesTab "Bracket Play" "bracket-play" current-tab)])
     ;; TODO: split up bracket play from 9th / 11th games?
     ;; TODO: add a Results tab here
 
 ;; TODO: this is a quick hack; move this to a data structure
 (defn- filter-games [all-games filter-val]
-  (if (= filter-val "all-games")
-    all-games
-    (filter #(= (:group (second %)) filter-val) all-games)))
+  (filter #(= (:group (second %)) filter-val) all-games))
 
 (rum/defc GamesPage < rum/static
-  [{:keys [teams games games-filter-tab hide-finished-games?
-           simulated-scoreA simulated-scoreB]}]
-  (let [filtered-games (filter-games games games-filter-tab)
+  [{:keys [teams games tab-id simulated-scoreA simulated-scoreB]}]
+  (let [filtered-games (filter-games games tab-id)
         sorted-games (sort compare-games filtered-games)
-        swiss-round (condp = games-filter-tab
+        swiss-round (condp = tab-id
                       "swiss-round-1" 1
                       "swiss-round-2" 2
                       "swiss-round-3" 3
                       "swiss-round-4" 4
                       false)]
     [:article.games-container
-      (GamesFilters games-filter-tab)
+      (GamesTabs tab-id)
       [:div.flex-container
-        [:div.left (map (partial GameRow2 teams) sorted-games)]
-        [:div.right (when swiss-round (SwissRound teams games swiss-round simulated-scoreA simulated-scoreB))]]]))
-
-;;------------------------------------------------------------------------------
-;; Teams Page
-;;------------------------------------------------------------------------------
-
-(defn- on-change-team-name [team-id js-evt]
-  (let [new-name (aget js-evt "currentTarget" "value")]
-    (swap! page-state assoc-in [:teams team-id :name] new-name)))
-
-(defn- on-change-team-captain [team-id js-evt]
-  (let [new-name (aget js-evt "currentTarget" "value")]
-    (swap! page-state assoc-in [:teams team-id :captain] new-name)))
-
-(rum/defc TeamInput < rum/static
-  [[team-id team]]
-  [:div.admin-input-row
-    [:div.small-id (name team-id)]
-    [:div.row
-      [:label "Name"]
-      [:input {:on-change (partial on-change-team-name team-id)
-               :type "text"
-               :value (:name team)}]]
-    [:div.row
-      [:label "Captain"]
-      [:input {:on-change (partial on-change-team-captain team-id)
-               :type "text"
-               :value (:captain team)}]]])
-
-;; TODO: allow them to create a team here
-
-(rum/defc TeamsPage < rum/static
-  [teams]
-  (let [sorted-teams (sort #(compare (first %1) (first %2)) teams)]
-    [:article.teams-container
-      (map TeamInput sorted-teams)]))
-
-;;------------------------------------------------------------------------------
-;; Info Page
-;;------------------------------------------------------------------------------
-
-(rum/defc InfoPage < rum/static
-  [state]
-  [:article.info-container
-    "TODO: info page"])
-
-;;------------------------------------------------------------------------------
-;; Nav Menu
-;;------------------------------------------------------------------------------
-
-(defn- click-page-link [page-id js-evt]
-  (.preventDefault js-evt)
-  (swap! page-state assoc :page page-id))
-
-(rum/defc PageLink < rum/static
-  [name page-id current-page-id]
-  [:li {:class (if (= page-id current-page-id) "active" "")
-        :on-click (partial click-page-link page-id)
-        :on-touch-start (partial click-page-link page-id)}
-    [:a {:href "#"
-         :on-click prevent-default}
-      name]])
-
-(rum/defc NavMenu < rum/static
-  [current-page-id]
-  [:nav
-    [:ul.links
-      ;; NOTE: leaving these tabs out for now; they're not really ready or needed
-      ;;       for the indoor tournament
-      ; (PageLink "Info" info-page current-page-id)
-      ; (PageLink "Teams" teams-page current-page-id)
-      (PageLink "Games" games-page current-page-id)
-      (PageLink "Swiss Rounds" swiss-page current-page-id)]])
+        [:div.left (map (partial GameRow teams) sorted-games)]
+        [:div.right (when swiss-round (SwissPanel teams games swiss-round simulated-scoreA simulated-scoreB))]]]))
 
 ;;------------------------------------------------------------------------------
 ;; Footer
@@ -876,7 +576,7 @@
              :value "Login"}])]]])
 
 ;;------------------------------------------------------------------------------
-;; Admin App
+;; Header
 ;;------------------------------------------------------------------------------
 
 (defn- click-sign-out [js-evt]
@@ -886,47 +586,26 @@
                           :password-valid? false
                           :password-error? false))
 
+(rum/defc Header < rum/static
+  [title]
+  [:header
+    [:div.top-bar
+      [:div.left title]
+      [:div.right "Admin"
+        [:i.fa.fa-sign-out
+          {:on-click click-sign-out
+           :on-touch-start click-sign-out}]]]])
+
+;;------------------------------------------------------------------------------
+;; Admin App
+;;------------------------------------------------------------------------------
+
 (rum/defc AdminApp < rum/static
   [state]
-  (let [page (:page state)
-        editing-game-id (keyword (:editing-game-id state))
-        teams (:teams state)
-        games (:games state)
-        hide-finished-games? (:hide-finished-games? state)
-        games-filter-tab (:games-filter-tab state)
-        swiss-filter-tab (:swiss-filter-tab state)]
-    [:div.admin-container
-      [:header
-        [:div.top-bar
-          [:div.left (:title state)]
-          [:div.right "Admin"
-            [:i.fa.fa-sign-out
-              {:on-click click-sign-out
-               :on-touch-start click-sign-out}]]]]
-      ;; (NavMenu (:page state))
-
-      (GamesPage state)
-
-      ; (condp = page
-      ;   info-page
-      ;   (InfoPage state)
-      ;
-      ;   teams-page
-      ;   (TeamsPage teams)
-      ;
-      ;   games-page
-      ;   (GamesPage teams games games-filter-tab hide-finished-games?)
-      ;
-      ;   edit-game-page
-      ;   (EditGamePage teams editing-game-id (get-in state [:games editing-game-id]))
-      ;
-      ;   swiss-page
-      ;   (SwissPage teams games swiss-filter-tab)
-      ;
-      ;   ;; NOTE: this should never happen
-      ;   [:div "Error: invalid page"])
-
-      (Footer)]))
+  [:div.admin-container
+    (Header (:title state))
+    (GamesPage state)
+    (Footer)])
 
 ;;------------------------------------------------------------------------------
 ;; Top Level Component
