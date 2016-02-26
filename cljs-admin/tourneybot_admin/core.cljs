@@ -4,6 +4,7 @@
     cljsjs.moment
     [clojure.data :refer [diff]]
     [clojure.string :refer [blank? lower-case replace]]
+    [goog.functions :refer [once]]
     [tourneybot.data :refer [scheduled-status in-progress-status finished-status game-statuses
                              games->results
                              ensure-tournament-state
@@ -32,10 +33,10 @@
 
 (def initial-page-state
   {;; login related
+   :logging-in? false
    :password ""
    :password-error? false
    :password-valid? false
-   :logging-in? false
 
    ;; GameTabs across the top
    :tab-id "swiss-round-1"
@@ -304,6 +305,7 @@
   (let [team-id (aget js-evt "currentTarget" "value")]
     (swap! page-state assoc-in [:games game-id team-key] team-id)))
 
+;; TODO: put the team record in here
 (rum/defc TeamOption < rum/static
   [[team-id team]]
   [:option {:value (name team-id)}
@@ -312,7 +314,7 @@
 (defn- compare-team-name [[teamA-id teamA] [teamB-id teamB]]
   (compare (:name teamA) (:name teamB)))
 
-;; TODO: use a faster component for team selection than a <select>
+;; TODO: consider using a better team input method than <select>
 (rum/defc TeamSelect < rum/static
   [teams game-id game team-key]
   (let [sorted-teams (sort compare-team-name teams)]
@@ -509,7 +511,8 @@
                           :password-valid? false))
 
 (defn- click-login-btn [js-evt]
-  (prevent-default js-evt)
+  (when js-evt
+    (prevent-default js-evt))
   (swap! page-state assoc :logging-in? true
                           :password-error? false
                           :password-valid? false)
@@ -602,10 +605,16 @@
 ;; Init
 ;;------------------------------------------------------------------------------
 
-(defn- init!
-  "Initialize the Admin page."
-  []
-  ;; trigger the initial render
-  (swap! page-state identity))
+(def init!
+  "Initialize the Admin page.
+   NOTE: this function may only be called one time."
+  (once
+    (fn []
+      ;; do they have the password in localStorage?
+      (if-not (blank? (:password @page-state))
+        ;; attempt to login
+        (click-login-btn nil)
+        ;; else trigger an initial render
+        (swap! page-state identity)))))
 
 (init!)
