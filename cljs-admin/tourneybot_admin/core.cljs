@@ -128,6 +128,11 @@
 (defn- prevent-default [js-evt]
   (.preventDefault js-evt))
 
+(defn- add-sign-to-num [n]
+  (if (neg? n)
+    (str n)
+    (str "+" n)))
+
 ;;------------------------------------------------------------------------------
 ;; Swiss Results Table
 ;;------------------------------------------------------------------------------
@@ -143,10 +148,8 @@
     [:td (str games-won "-" games-lost "-" games-tied)]
     [:td (str "+" points-won ","
               "-" (js/Math.abs points-lost) ","
-              (if (neg? points-diff)
-                points-diff
-                (str "+" points-diff)))]
-    [:td victory-points]])
+              (add-sign-to-num points-diff))]
+    [:td (add-sign-to-num victory-points)]])
 
 (rum/defc SwissResultsTHead < rum/static
   []
@@ -173,15 +176,22 @@
   [games [resultA resultB]]
   (let [teamA-id (:team-id resultA)
         teamB-id (:team-id resultB)
-        recordA (str (:games-won resultA) "-" (:games-lost resultA) "-" (:games-tied resultA))
-        recordB (str (:games-won resultB) "-" (:games-lost resultB) "-" (:games-tied resultB))
+        teamA-name (:team-name resultA)
+        teamB-name (:team-name resultB)
+        vpointsA (:victory-points resultA)
+        vpointsB (:victory-points resultB)
         already-played? (teams-already-played? teamA-id teamB-id games)]
     [:li
-      [:span.team (str (:team-name resultA) " (" recordA ")")]
+      (str teamA-name " (")
+      [:span.score (add-sign-to-num vpointsA)]
+      ")"
       [:span.vs "vs"]
-      [:span.team (str (:team-name resultB) " (" recordB ")")]
+      (str teamB-name " (")
+      [:span.score (add-sign-to-num vpointsB)]
+      ")"
       (when already-played?
-        [:span.already-played (str "Whoops! These two teams already played in " (:name already-played?))])]))
+        [:span.already-played
+          (str "Whoops! These two teams already played in " (:name already-played?))])]))
 
 ;;------------------------------------------------------------------------------
 ;; Next Round Simulator
@@ -200,10 +210,10 @@
 (rum/defc NextRoundSimulator < rum/static
   [teams games-for-this-round [final-game-id final-game]
    simulated-scoreA simulated-scoreB]
-  (let [teamA-id (keyword (:teamA-id final-game))
-        teamB-id (keyword (:teamB-id final-game))
-        teamA-name (get-in teams [teamA-id :name])
-        teamB-name (get-in teams [teamB-id :name])
+  (let [teamA-id (keyword (:teamA-id final-game ""))
+        teamB-id (keyword (:teamB-id final-game ""))
+        teamA-name (get-in teams [teamA-id :name] "")
+        teamB-name (get-in teams [teamB-id :name] "")
         simulated-game [:simulated-game (merge final-game {:status finished-status
                                                            :scoreA simulated-scoreA
                                                            :scoreB simulated-scoreB})]
