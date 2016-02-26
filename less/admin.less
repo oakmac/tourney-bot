@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 
 @maxWidth: 1200px;
-@minWidth: 300px;
+@minWidth: 960px;
 @minBodyHeight: 500px;
 @primaryActionColor: #38c;
 @smallBreakpoint: 750px;
@@ -418,11 +418,10 @@ footer {
 
 .swiss-round-container {
   h2 {
-    border-bottom: 1px solid #ddd;
     font-size: 18px;
     font-weight: 300;
-    margin: 10px 0;
-    padding: 10px 0 10px 5px;
+    margin: 25px 0;
+    padding: 0;
   }
 
   h3 {
@@ -430,6 +429,14 @@ footer {
     font-size: 14px;
     font-weight: 700;
     text-transform: uppercase;
+
+    .game-count {
+      color: #222;
+      display: inline-block;
+      font-weight: 300;
+      margin-left: 8px;
+      text-transform: none;
+    }
   }
 
   .info {
@@ -453,11 +460,17 @@ footer {
     margin-left: 10px;
   }
 
+  .msg {
+    color: #888;
+    font-family: "Georgia", serif;
+    font-style: italic;
+  }
+
 } // end .swiss-round-container
 
 .small-results-tbl {
-  border-bottom: 1px solid #eee;
-  width: 50%;
+  border-bottom: 2px solid #eee;
+  width: 100%;
 
   thead tr {
     background: #aaa;
@@ -476,12 +489,19 @@ footer {
   }
 
   td {
+    font-family: monospace;
     font-size: 14px;
-    padding: 5px;
+    padding: 6px;
     text-align: right;
   }
 
+  .place {
+    color: #999;
+    font-weight: 700;
+  }
+
   .name {
+    font-family: "Roboto", sans-serif;
     text-align: left;
   }
 
@@ -494,13 +514,14 @@ footer {
 .games-container {
   .flex-container {
     display: flex;
+    justify-content: space-between;
 
     .left {
-      flex: 1;
+      width: 49%;
     }
 
     .right {
-      flex: 1;
+      width: 49%;
     }
   }
 }

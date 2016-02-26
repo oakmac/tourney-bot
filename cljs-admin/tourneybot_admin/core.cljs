@@ -173,14 +173,15 @@
 
 ;; TODO: take "ties-allowed?" into account here
 (rum/defc SwissResultsRow < rum/static
-  [{:keys [team-name games-won games-lost games-tied
-           points-won points-lost points-diff
-           victory-points]}]
+  [idx {:keys [team-name games-won games-lost games-tied
+               points-won points-lost points-diff
+               victory-points]}]
   [:tr
+    [:td.place (str "#" (inc idx))]
     [:td.name team-name]
     [:td (str games-won "-" games-lost "-" games-tied)]
-    [:td (str "+" points-won ",  "
-              "-" (js/Math.abs points-lost) ", "
+    [:td (str "+" points-won ","
+              "-" (js/Math.abs points-lost) ","
               (if (neg? points-diff)
                 points-diff
                 (str "+" points-diff)))]
@@ -190,17 +191,18 @@
   []
   [:thead
     [:tr
-      [:th.name {:style {:width "40%"}} "Name"]
+      [:th.place {:style {:width "5%"}}]
+      [:th.name {:style {:width "45%"}} "Name"]
       [:th "Record"]
       [:th "Points"]
-      [:th "Victory" [:br] "Points"]]])
+      [:th "Victory Pnts"]]])
 
 (rum/defc SwissResultsTable < rum/static
   [results]
   [:table.small-results-tbl
     (SwissResultsTHead)
     [:tbody
-      (map SwissResultsRow results)]])
+      (map-indexed SwissResultsRow results)]])
 
 (rum/defc Matchup < rum/static
   [games [resultA resultB]]
@@ -215,6 +217,20 @@
       [:span.team (str (:team-name resultB) " (" recordB ")")]
       (when already-played?
         [:span.already-played (str "Whoops! These two teams already played in " (:name already-played?))])]))
+
+
+
+
+
+(rum/defc NextRoundSimulator < rum/static
+  []
+  [:div
+    ;;[:h2 "Simulate the Results of X vs Y"]
+    [:p "todo: next round simulator"]])
+
+
+
+
 
 (rum/defc SwissRound < rum/static
   [teams all-games swiss-round]
@@ -232,30 +248,48 @@
         ;; are all the games in this swiss round finished?
         num-games-finished (count (filter #(= (:status (second %)) finished-status)
                                           games-in-this-round))
-        all-finished? (= num-games-in-this-round num-games-finished)]
+        all-finished? (= num-games-in-this-round num-games-finished)
+        one-game-left? (= num-games-in-this-round (inc num-games-finished))]
     [:div.swiss-round-container
-      [:h2 (str "Swiss Round #" swiss-round)]
-      [:p.info
-        (cond
-          all-finished?
-          (str "All " num-games-in-this-round " games in Swiss Round #" swiss-round " have been played.")
 
-          (zero? num-games-finished)
-          (str "Swiss Round #" swiss-round " has not started yet.")
+      ; [:h2 (str "Swiss Round #" swiss-round)]
+      ; [:p.info
+      ;   (cond
+      ;     all-finished?
+      ;     (str "All " num-games-in-this-round " games in Swiss Round #" swiss-round " have been played.")
+      ;
+      ;     (zero? num-games-finished)
+      ;     (str "Swiss Round #" swiss-round " has not started yet.")
+      ;
+      ;     :else
+      ;     (str num-games-finished " out of " num-games-in-this-round " rounds have been played in Swiss Round #" swiss-round))]
 
-          :else
-          (str num-games-finished " out of " num-games-in-this-round " rounds have been played in Swiss Round #" swiss-round))]
+
       (when-not (zero? num-games-finished)
         (list
-          [:h3 (str "Swiss Round #" swiss-round " Results")]
+          [:h3 (str "Swiss Round #" swiss-round " Results")
+            [:span.game-count (str "(" num-games-finished "/" num-games-in-this-round " games played)")]]
           (SwissResultsTable results)
-          (when (and all-finished?
-                     (not (= swiss-round 4))) ;; NOTE: temporary hack
-            (list
-              [:h3 (str "Matchups for Swiss Round #" (inc swiss-round))]
-              (let [matchups (partition 2 results)]
-                [:ul
-                  (map (partial Matchup games-to-look-at) matchups)])))))]))
+
+          (when-not all-finished?
+            (if one-game-left?
+              (NextRoundSimulator)
+              [:p.msg
+                (str "When there is one game left in this round, you will be able to simulate "
+                     "the result of the last game in the table above.")]))
+
+          (when all-finished?
+            [:p.msg
+              (str "This round is over. Match-ups for the next round can be "
+                   "found on the \"Swiss Round " (inc swiss-round) "\" tab.")])))]))
+
+          ; (when (and all-finished?
+          ;            (not (= swiss-round 4))) ;; NOTE: temporary hack
+          ;   (list
+          ;     [:h3 (str "Matchups for Swiss Round #" (inc swiss-round))]
+          ;     (let [matchups (partition 2 results)]
+          ;       [:ul
+          ;         (map (partial Matchup games-to-look-at) matchups)])))))]))
 
 (defn- click-swiss-filter-tab [tab-id js-evt]
   (prevent-default js-evt)
@@ -648,12 +682,14 @@
 (rum/defc GamesFilters < rum/static
   [current-tab]
   [:div.filters-container
-    (GameFilterTab "All Games" "all-games" current-tab)
+    ;; (GameFilterTab "All Games" "all-games" current-tab)
     (GameFilterTab "Swiss Round 1" "swiss-round-1" current-tab)
     (GameFilterTab "Swiss Round 2" "swiss-round-2" current-tab)
     (GameFilterTab "Swiss Round 3" "swiss-round-3" current-tab)
     (GameFilterTab "Swiss Round 4" "swiss-round-4" current-tab)
     (GameFilterTab "Bracket Play" "bracket-play" current-tab)])
+    ;; TODO: split up bracket play from 9th / 11th games?
+    ;; TODO: add a Results tab here
 
 ;; TODO: this is a quick hack; move this to a data structure
 (defn- filter-games [all-games filter-val]
@@ -663,13 +699,19 @@
 
 (rum/defc GamesPage < rum/static
   [{:keys [teams games games-filter-tab hide-finished-games?]}]
-  (let [games (filter-games games games-filter-tab)
-        sorted-games (sort compare-games games)]
+  (let [filtered-games (filter-games games games-filter-tab)
+        sorted-games (sort compare-games filtered-games)
+        swiss-round (condp = games-filter-tab
+                      "swiss-round-1" 1
+                      "swiss-round-2" 2
+                      "swiss-round-3" 3
+                      "swiss-round-4" 4
+                      false)]
     [:article.games-container
       (GamesFilters games-filter-tab)
       [:div.flex-container
         [:div.left (map (partial GameRow2 teams) sorted-games)]
-        [:div.right "foo"]]]))
+        [:div.right (when swiss-round (SwissRound teams games swiss-round))]]]))
 
 ;;------------------------------------------------------------------------------
 ;; Teams Page
