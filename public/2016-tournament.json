@@ -1,102 +1,293 @@
 {
   "title": "2016 Houston Indoor",
   "tiesAllowed": true,
-  "maxScore": 14,
-  "divisions": {
-    "open": {"name": "Open"}
-  },
-  "fields": {
-    "indoor": {"name": "Indoor Field"}
-  },
   "teams": {
-    "team1": {"name": "Team 1", "captain": ""},
-    "team2": {"name": "Team 2", "captain": ""},
-    "team3": {"name": "Team 3", "captain": ""},
-    "team4": {"name": "Team 4", "captain": ""},
-    "team5": {"name": "Team 5", "captain": ""},
-    "team6": {"name": "Team 6", "captain": ""},
-    "team7": {"name": "Team 7", "captain": ""},
-    "team8": {"name": "Team 8", "captain": ""},
-    "team9": {"name": "Team 9", "captain": ""},
-    "team10": {"name": "Team 10", "captain": ""},
-    "team11": {"name": "Team 11", "captain": ""},
-    "team12": {"name": "Team 12", "captain": ""}
+    "team1": {
+      "name": "Leave the Gun. Take the Cannoli",
+      "captain": "Mary Fuzat"
+    },
+    "team2": {
+      "name": "LBD",
+      "captain": "Nick Carranza"
+    },
+    "team3": {
+      "name": "High Flyin Hawaiians",
+      "captain": "Jake Rhinehart"
+    },
+    "team4": {
+      "name": "Eat Pizza Everyday",
+      "captain": "Naomi Trang"
+    },
+    "team5": {
+      "name": "Eggpants Parmesan",
+      "captain": "Ryan Levins"
+    },
+    "team6": {
+      "name": "No Tsu Oh",
+      "captain": "Sean McCall"
+    },
+    "team7": {
+      "name": "Early Retirement",
+      "captain": "Mimi Phan"
+    },
+    "team8": {
+      "name": "Ol St Nick",
+      "captain": "Eric Mills"
+    },
+    "team9": {
+      "name": "Deadpull",
+      "captain": "Eric Rees"
+    },
+    "team10": {
+      "name": "Zoo",
+      "captain": "Nathan Scott"
+    },
+    "team11": {
+      "name": "Sloppy Second Scoobers",
+      "captain": "Blake Grundy"
+    },
+    "team12": {
+      "name": "Alpaca Seagulls",
+      "captain": "Mikayla Slimmer"
+    }
   },
   "games": {
-    "game10": {"name": "Swiss Round 1, Game 1", "start-time": "2016-02-28 0900",
-               "status": "scheduled",
-               "teamA-id": "team1",
-               "teamB-id": "team12",
-               "scoreA": 0,
-               "scoreB": 0,
-               "swiss-round": 1},
-    "game11": {"name": "Swiss Round 1, Game 2", "start-time": "2016-02-28 0915",
-              "status": "scheduled",
-              "teamA-id": "team2",
-              "teamB-id": "team11",
-              "scoreA": 0,
-              "scoreB": 0,
-              "swiss-round": 1},
-    "game12": {"name": "Swiss Round 1, Game 3", "start-time": "2016-02-28 0930",
-               "status": "scheduled",
-               "teamA-id": "team3",
-               "teamB-id": "team10",
-               "scoreA": 0,
-               "scoreB": 0,
-               "swiss-round": 1},
-    "game13": {"name": "Swiss Round 1, Game 4", "start-time": "2016-02-28 0945",
-              "status": "scheduled",
-              "teamA-id": "team4",
-              "teamB-id": "team9",
-              "scoreA": 2,
-              "scoreB": 4,
-              "swiss-round": 1},
-    "game14": {"name": "Swiss Round 1, Game 5", "start-time": "2016-02-28 1000",
-              "status": "scheduled",
-              "teamA-id": "team5",
-              "teamB-id": "team8",
-              "scoreA": 0,
-              "scoreB": 0,
-              "swiss-round": 1},
-    "game15": {"name": "Swiss Round 1, Game 6", "start-time": "2016-02-28 1015",
-              "status": "scheduled",
-              "teamA-id": "team6",
-              "teamB-id": "team7",
-              "scoreA": 0,
-              "scoreB": 0,
-              "swiss-round": 1},
-
-    "game20": {"name": "Swiss Round 2, Game 1", "start-time": "2016-02-28 1030", "swiss-round": 2},
-    "game21": {"name": "Swiss Round 2, Game 2", "start-time": "2016-02-28 1045", "swiss-round": 2},
-    "game22": {"name": "Swiss Round 2, Game 3", "start-time": "2016-02-28 1100", "swiss-round": 2},
-    "game23": {"name": "Swiss Round 2, Game 4", "start-time": "2016-02-28 1115", "swiss-round": 2},
-    "game24": {"name": "Swiss Round 2, Game 5", "start-time": "2016-02-28 1130", "swiss-round": 2},
-    "game25": {"name": "Swiss Round 2, Game 6", "start-time": "2016-02-28 1145", "swiss-round": 2},
-
-    "game30": {"name": "Swiss Round 3, Game 1", "start-time": "2016-02-28 1200", "swiss-round": 3},
-    "game31": {"name": "Swiss Round 3, Game 2", "start-time": "2016-02-28 1215", "swiss-round": 3},
-    "game32": {"name": "Swiss Round 3, Game 3", "start-time": "2016-02-28 1230", "swiss-round": 3},
-    "game33": {"name": "Swiss Round 3, Game 4", "start-time": "2016-02-28 1245", "swiss-round": 3},
-    "game34": {"name": "Swiss Round 3, Game 5", "start-time": "2016-02-28 1300", "swiss-round": 3},
-    "game35": {"name": "Swiss Round 3, Game 6", "start-time": "2016-02-28 1315", "swiss-round": 3},
-
-    "game40": {"name": "Swiss Round 4, Game 1", "start-time": "2016-02-28 1330", "swiss-round": 4},
-    "game41": {"name": "Swiss Round 4, Game 2", "start-time": "2016-02-28 1345", "swiss-round": 4},
-    "game42": {"name": "Swiss Round 4, Game 3", "start-time": "2016-02-28 1400", "swiss-round": 4},
-    "game43": {"name": "Swiss Round 4, Game 4", "start-time": "2016-02-28 1415", "swiss-round": 4},
-    "game44": {"name": "Swiss Round 4, Game 5", "start-time": "2016-02-28 1430", "swiss-round": 4},
-    "game45": {"name": "Swiss Round 4, Game 6", "start-time": "2016-02-28 1445", "swiss-round": 4},
-
-    "game100": {"name": "Quarterfinals 4 vs 5", "start-time": "2016-02-28 1500"},
-    "game101": {"name": "Quarterfinals 3 vs 6", "start-time": "2016-02-28 1520"},
-    "game102": {"name": "Quarterfinals 2 vs 7", "start-time": "2016-02-28 1540"},
-    "game103": {"name": "Quarterfinals 1 vs 8", "start-time": "2016-02-28 1600"},
-
-    "game104": {"name": "Semifinals 2v3", "start-time": "2016-02-28 1620"},
-    "game105": {"name": "Semifinals 1v4", "start-time": "2016-02-28 1640"},
-
-    "game106": {"name": "9th Place", "start-time": "2016-02-28 1700"},
-
-    "game107": {"name": "Finals", "start-time": "2016-02-28 1720"}
+    "game10": {
+      "group": "swiss-round-1",
+      "name": "Swiss Round 1, Game 1",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2016-02-28 0900",
+      "status": "scheduled",
+      "swiss-round": 1,
+      "teamA-id": "team1",
+      "teamB-id": "team2"
+    },
+    "game11": {
+      "name": "Swiss Round 1, Game 2",
+      "start-time": "2016-02-28 0915",
+      "status": "scheduled",
+      "teamA-id": "team3",
+      "teamB-id": "team4",
+      "scoreA": 0,
+      "scoreB": 0,
+      "swiss-round": 1,
+      "group": "swiss-round-1"
+    },
+    "game12": {
+      "name": "Swiss Round 1, Game 3",
+      "start-time": "2016-02-28 0930",
+      "status": "scheduled",
+      "teamA-id": "team5",
+      "teamB-id": "team6",
+      "scoreA": 0,
+      "scoreB": 0,
+      "swiss-round": 1,
+      "group": "swiss-round-1"
+    },
+    "game13": {
+      "name": "Swiss Round 1, Game 4",
+      "start-time": "2016-02-28 0945",
+      "status": "scheduled",
+      "teamA-id": "team7",
+      "teamB-id": "team8",
+      "scoreA": 0,
+      "scoreB": 0,
+      "swiss-round": 1,
+      "group": "swiss-round-1"
+    },
+    "game14": {
+      "name": "Swiss Round 1, Game 5",
+      "start-time": "2016-02-28 1000",
+      "status": "scheduled",
+      "teamA-id": "team9",
+      "teamB-id": "team10",
+      "scoreA": 0,
+      "scoreB": 0,
+      "swiss-round": 1,
+      "group": "swiss-round-1"
+    },
+    "game15": {
+      "name": "Swiss Round 1, Game 6",
+      "start-time": "2016-02-28 1015",
+      "status": "scheduled",
+      "teamA-id": "team11",
+      "teamB-id": "team12",
+      "scoreA": 0,
+      "scoreB": 0,
+      "swiss-round": 1,
+      "group": "swiss-round-1"
+    },
+    "game20": {
+      "group": "swiss-round-2",
+      "name": "Swiss Round 2, Game 1",
+      "swiss-round": 2,
+      "start-time": "2016-02-28 1030",
+      "scoreB": 0,
+      "scoreA": 0,
+      "status": "scheduled"
+    },
+    "game21": {
+      "name": "Swiss Round 2, Game 2",
+      "start-time": "2016-02-28 1045",
+      "swiss-round": 2,
+      "status": "scheduled",
+      "scoreA": 0,
+      "scoreB": 0,
+      "group": "swiss-round-2"
+    },
+    "game22": {
+      "name": "Swiss Round 2, Game 3",
+      "start-time": "2016-02-28 1100",
+      "swiss-round": 2,
+      "group": "swiss-round-2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "status": "scheduled"
+    },
+    "game23": {
+      "name": "Swiss Round 2, Game 4",
+      "start-time": "2016-02-28 1115",
+      "swiss-round": 2,
+      "group": "swiss-round-2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "status": "scheduled"
+    },
+    "game24": {
+      "name": "Swiss Round 2, Game 5",
+      "start-time": "2016-02-28 1130",
+      "swiss-round": 2,
+      "group": "swiss-round-2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "status": "scheduled"
+    },
+    "game25": {
+      "name": "Swiss Round 2, Game 6",
+      "start-time": "2016-02-28 1145",
+      "swiss-round": 2,
+      "group": "swiss-round-2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "status": "scheduled"
+    },
+    "game30": {
+      "name": "Swiss Round 3, Game 1",
+      "start-time": "2016-02-28 1200",
+      "swiss-round": 3,
+      "group": "swiss-round-3"
+    },
+    "game31": {
+      "name": "Swiss Round 3, Game 2",
+      "start-time": "2016-02-28 1215",
+      "swiss-round": 3,
+      "group": "swiss-round-3"
+    },
+    "game32": {
+      "name": "Swiss Round 3, Game 3",
+      "start-time": "2016-02-28 1230",
+      "swiss-round": 3,
+      "group": "swiss-round-3"
+    },
+    "game33": {
+      "name": "Swiss Round 3, Game 4",
+      "start-time": "2016-02-28 1245",
+      "swiss-round": 3,
+      "group": "swiss-round-3"
+    },
+    "game34": {
+      "name": "Swiss Round 3, Game 5",
+      "start-time": "2016-02-28 1300",
+      "swiss-round": 3,
+      "group": "swiss-round-3"
+    },
+    "game35": {
+      "name": "Swiss Round 3, Game 6",
+      "start-time": "2016-02-28 1315",
+      "swiss-round": 3,
+      "group": "swiss-round-3"
+    },
+    "game40": {
+      "name": "Swiss Round 4, Game 1",
+      "start-time": "2016-02-28 1330",
+      "swiss-round": 4,
+      "group": "swiss-round-4"
+    },
+    "game41": {
+      "name": "Swiss Round 4, Game 2",
+      "start-time": "2016-02-28 1345",
+      "swiss-round": 4,
+      "group": "swiss-round-4"
+    },
+    "game42": {
+      "name": "Swiss Round 4, Game 3",
+      "start-time": "2016-02-28 1400",
+      "swiss-round": 4,
+      "group": "swiss-round-4"
+    },
+    "game43": {
+      "name": "Swiss Round 4, Game 4",
+      "start-time": "2016-02-28 1415",
+      "swiss-round": 4,
+      "group": "swiss-round-4"
+    },
+    "game44": {
+      "name": "Swiss Round 4, Game 5",
+      "start-time": "2016-02-28 1430",
+      "swiss-round": 4,
+      "group": "swiss-round-4"
+    },
+    "game45": {
+      "name": "Swiss Round 4, Game 6",
+      "start-time": "2016-02-28 1445",
+      "swiss-round": 4,
+      "group": "swiss-round-4"
+    },
+    "game100": {
+      "name": "Quarterfinals 4 vs 5",
+      "start-time": "2016-02-28 1500",
+      "group": "bracket-play"
+    },
+    "game101": {
+      "name": "Quarterfinals 3 vs 6",
+      "start-time": "2016-02-28 1520",
+      "group": "bracket-play"
+    },
+    "game102": {
+      "name": "Quarterfinals 2 vs 7",
+      "start-time": "2016-02-28 1540",
+      "group": "bracket-play"
+    },
+    "game103": {
+      "name": "Quarterfinals 1 vs 8",
+      "start-time": "2016-02-28 1600",
+      "group": "bracket-play"
+    },
+    "game150": {
+      "name": "11th Place",
+      "start-time": "2016-02-28 1620",
+      "group": "bracket-play"
+    },
+    "game104": {
+      "name": "Semifinals 2v3",
+      "start-time": "2016-02-28 1635",
+      "group": "bracket-play"
+    },
+    "game105": {
+      "name": "Semifinals 1v4",
+      "start-time": "2016-02-28 1655",
+      "group": "bracket-play"
+    },
+    "game151": {
+      "name": "9th Place",
+      "start-time": "2016-02-28 1715",
+      "group": "bracket-play"
+    },
+    "game200": {
+      "name": "Finals",
+      "start-time": "2016-02-28 1730",
+      "group": "bracket-play"
+    }
   }
 }
