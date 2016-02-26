@@ -41,7 +41,7 @@
   {:editing-game-id nil
    :games-filter-tab "all-games"
    :hide-finished-games? true
-   :page info-page
+   :page games-page
 
    :password ""
    :password-error? false
@@ -733,8 +733,10 @@
   [current-page-id]
   [:nav
     [:ul.links
-      (PageLink "Info" info-page current-page-id)
-      (PageLink "Teams" teams-page current-page-id)
+      ;; NOTE: leaving these tabs out for now; they're not really ready or needed
+      ;;       for the indoor tournament
+      ; (PageLink "Info" info-page current-page-id)
+      ; (PageLink "Teams" teams-page current-page-id)
       (PageLink "Games" games-page current-page-id)
       (PageLink "Swiss Rounds" swiss-page current-page-id)]])
 
