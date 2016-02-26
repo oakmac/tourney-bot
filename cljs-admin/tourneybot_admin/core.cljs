@@ -778,7 +778,7 @@
                           :password-valid? false)
   (if in-dev-mode?
     ;; simulate the API call
-    (js/setTimeout check-password-success (rand-int 200 400))
+    (js/setTimeout check-password-success (+ 200 (rand-int 200)))
     ;; else make the actual API call
     (let [password (:password @page-state)]
       (check-password password check-password-success check-password-error))))
