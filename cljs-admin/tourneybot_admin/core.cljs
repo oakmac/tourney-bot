@@ -9,7 +9,7 @@
                              ensure-tournament-state]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
                              fetch-json-as-cljs tourney-bot-url
-                             always-nil]]
+                             always-nil one?]]
     [tourneybot-admin.api :refer [check-password update-game!]]
     [rum.core :as rum]))
 
@@ -211,7 +211,7 @@
         recordA (str (:games-won resultA) "-" (:games-lost resultA) "-" (:games-tied resultA))
         recordB (str (:games-won resultB) "-" (:games-lost resultB) "-" (:games-tied resultB))
         already-played? (teams-already-played? teamA-id teamB-id games)]
-    [:li.matchup-row
+    [:li
       [:span.team (str (:team-name resultA) " (" recordA ")")]
       [:span.vs "vs"]
       [:span.team (str (:team-name resultB) " (" recordB ")")]
@@ -229,12 +229,26 @@
     [:p "todo: next round simulator"]])
 
 
-
+(defn- game-finished? [game]
+  (= finished-status (:status game)))
 
 
 (rum/defc SwissRound < rum/static
   [teams all-games swiss-round]
-  (let [;; get all the games for this swiss round and below
+  (let [last-swiss-round (dec swiss-round)
+        next-swiss-round (inc swiss-round)
+        ;; get all the games from the previous round and below
+        ;; NOT including this current round
+        last-round-games (filter #(and (is-swiss-game? (second %))
+                                       (<= (:swiss-round (second %)) last-swiss-round))
+                                 all-games)
+        ;; is the last round finished?
+        last-round-finished? (and (not (empty? last-round-games))
+                                  (every? game-finished? (vals last-round-games)))
+        ;; calculate results for the last round
+        last-round-results (games->results teams last-round-games)
+
+        ;; get all the games for this swiss round and below
         games-to-look-at (filter #(and (is-swiss-game? (second %))
                                        (<= (:swiss-round (second %)) swiss-round))
                                  all-games)
@@ -264,6 +278,11 @@
       ;     :else
       ;     (str num-games-finished " out of " num-games-in-this-round " rounds have been played in Swiss Round #" swiss-round))]
 
+      (when last-round-finished?
+        (list
+          [:h3 (str "Swiss Round #" swiss-round " Matchups")]
+          [:ul.matchups
+            (map (partial Matchup last-round-games) (partition 2 last-round-results))]))
 
       (when-not (zero? num-games-finished)
         (list
@@ -281,7 +300,7 @@
           (when all-finished?
             [:p.msg
               (str "This round is over. Match-ups for the next round can be "
-                   "found on the \"Swiss Round " (inc swiss-round) "\" tab.")])))]))
+                   "found on the \"Swiss Round " next-swiss-round "\" tab.")])))]))
 
           ; (when (and all-finished?
           ;            (not (= swiss-round 4))) ;; NOTE: temporary hack
