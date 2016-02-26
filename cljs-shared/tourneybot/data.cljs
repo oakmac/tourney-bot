@@ -11,29 +11,66 @@
 (def game-statuses #{scheduled-status in-progress-status finished-status})
 
 ;;------------------------------------------------------------------------------
+;; Predicates
+;;------------------------------------------------------------------------------
+
+;; TODO: this can be replaced using a set of sets:
+;; #{ #{teamA teamB}
+;;    #{teamA teamB}
+;;    ...}
+(defn teams-already-played? [teamA-id teamB-id all-games]
+  (let [teamA-id (name teamA-id)
+        teamB-id (name teamB-id)
+        games-list (vals all-games)
+        games-where-teams-played-each-other
+          (filter #(or (and (= teamA-id (:teamA-id %)) (= teamB-id (:teamB-id %)))
+                       (and (= teamB-id (:teamA-id %)) (= teamA-id (:teamB-id %))))
+                  games-list)]
+    (if (empty? games-where-teams-played-each-other)
+      false
+      (first games-where-teams-played-each-other))))
+
+(defn is-swiss-game? [g]
+  (integer? (:swiss-round g)))
+
+(defn game-finished? [game]
+  (= finished-status (:status game)))
+
+(defn valid-score? [score]
+  (and (integer? score)
+       (>= score 0)))
+
+;;------------------------------------------------------------------------------
 ;; Ensure tournament.json integrity
 ;;------------------------------------------------------------------------------
 
-;; TODO: write these functions
-
 (defn- ensure-game-status
   "Game status must be valid."
-  [state]
-  state)
+  [game]
+  (if-not (contains? game-statuses (:status game))
+    (assoc game :status scheduled-status)
+    game))
 
 (defn- ensure-scores
   "Game scores must be integers."
-  [state]
-  state)
+  [game]
+  (let [game2 (if-not (valid-score? (:scoreA game))
+                (assoc game :scoreA 0)
+                game)]
+    (if-not (valid-score? (:scoreB game2))
+      (assoc game2 :scoreB 0)
+      game2)))
 
 (defn- ensure-games
   "Games must have scores, status, and ids"
   [state]
+  ;; TODO: write this
   state)
 
 (defn- ensure-teams
   "Teams must have..."
   [state]
+  ;; TODO: write this
   state)
 
 (defn ensure-tournament-state [state]
@@ -44,6 +81,9 @@
 ;;------------------------------------------------------------------------------
 ;; Calculate Results
 ;;------------------------------------------------------------------------------
+
+(def victory-points-for-a-win 2000)
+(def victory-points-for-a-tie 1000)
 
 (def empty-result
   {:team-id nil
@@ -87,8 +127,8 @@
       :points-played (+ points-played scoreA scoreB)
       :points-diff (+ points-diff scored-for (* -1 scored-against))
       :victory-points (+ victory-points
-                         (if won? 2000 0)
-                         (if tied? 1000 0)
+                         (if won? victory-points-for-a-win 0)
+                         (if tied? victory-points-for-a-tie 0)
                          scored-for
                          (* -1 scored-against)))))
 
@@ -96,7 +136,7 @@
   "Creates a result map for a single team."
   [teams games team-id]
   (let [team (get teams (keyword team-id))
-        games-this-team-has-played (filter #(and (= (:status %) finished-status)
+        games-this-team-has-played (filter #(and (game-finished? %)
                                                  (or (= (:teamA-id %) (name team-id))
                                                      (= (:teamB-id %) (name team-id))))
                                            (vals games))]

@@ -6,7 +6,8 @@
     [clojure.string :refer [blank? lower-case replace]]
     [tourneybot.data :refer [scheduled-status in-progress-status finished-status game-statuses
                              games->results
-                             ensure-tournament-state]]
+                             ensure-tournament-state
+                             teams-already-played? is-swiss-game? game-finished?]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
                              fetch-json-as-cljs tourney-bot-url
                              always-nil one?]]
@@ -133,32 +134,6 @@
 
 (defn- prevent-default [js-evt]
   (.preventDefault js-evt))
-
-;;------------------------------------------------------------------------------
-;; Predicates
-;;------------------------------------------------------------------------------
-
-;; TODO: this can be replaced using a set of sets:
-;; #{ #{teamA teamB}
-;;    #{teamA teamB}
-;;    ...}
-(defn- teams-already-played? [teamA-id teamB-id all-games]
-  (let [teamA-id (name teamA-id)
-        teamB-id (name teamB-id)
-        games-list (vals all-games)
-        games-where-teams-played-each-other
-          (filter #(or (and (= teamA-id (:teamA-id %)) (= teamB-id (:teamB-id %)))
-                       (and (= teamB-id (:teamA-id %)) (= teamA-id (:teamB-id %))))
-                  games-list)]
-    (if (empty? games-where-teams-played-each-other)
-      false
-      (first games-where-teams-played-each-other))))
-
-(defn- is-swiss-game? [g]
-  (integer? (:swiss-round g)))
-
-(defn- game-finished? [game]
-  (= finished-status (:status game)))
 
 ;;------------------------------------------------------------------------------
 ;; Swiss Results Table

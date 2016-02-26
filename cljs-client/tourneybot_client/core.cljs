@@ -6,7 +6,8 @@
     [goog.functions :refer [once]]
     [tourneybot.data :refer [scheduled-status in-progress-status finished-status game-statuses
                              games->results
-                             ensure-tournament-state]]
+                             ensure-tournament-state
+                             game-finished?]]
     [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
                              fetch-json-as-cljs tourney-bot-url
                              game->date]]
@@ -168,13 +169,14 @@
 
 (rum/defc ResultRow < rum/static
   [ties-allowed? result]
-  [:tr
-    [:td.place (str "#" (:place result))]
-    [:td.team-name (TeamNameCell (:team-name result) (:team-captain result))]
-    (if (and (zero? (:games-won result))
-             (zero? (:games-lost result)))
-      [:td.record-cell.no-games "-"]
-      (RecordCell ties-allowed? result))])
+  (let [no-games-played? (zero? (:games-played result))]
+    [:tr
+      [:td.place (when-not no-games-played? (str "#" (:place result)))]
+      [:td.team-name (TeamNameCell (:team-name result) (:team-captain result))]
+      (if (and (zero? (:games-won result))
+               (zero? (:games-lost result)))
+        [:td.record-cell.no-games "-"]
+        (RecordCell ties-allowed? result))]))
 
 (defn- click-sort-results-link [mode js-evt]
   (.preventDefault js-evt)
@@ -326,7 +328,7 @@
                          (filter (partial match-game? teams search-txt) games-vec)
                          games-vec)
         filtered-games2 (if hide-finished-games?
-                          (remove #(= finished-status (:status %)) filtered-games1)
+                          (remove game-finished? filtered-games1)
                           filtered-games1)
         tourney-dates (games->dates filtered-games2)]
     [:article.schedule-container
