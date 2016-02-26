@@ -118,7 +118,7 @@
       (update-games! password games always-nil always-nil))))
 
 (when-not in-dev-mode?
-  (js/setTimeout upload-games! upload-rate-ms))
+  (js/setInterval upload-games! upload-rate-ms))
 
 ;;------------------------------------------------------------------------------
 ;; Misc
