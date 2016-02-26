@@ -287,9 +287,8 @@
           (when-not all-finished?
             (if one-game-left?
               (NextRoundSimulator teams games-for-this-round final-game-in-this-round simulated-scoreA simulated-scoreB)
-              [:p.msg
-                (str "When there is one game left in this round, you will be able to simulate "
-                     "the result of the last game in the table above.")]))
+              [:p.msg (str "When there is one game left in this round, you will be "
+                           "able to simulate the results of the last game here.")]))
 
           (when (and all-finished?
                      (not= swiss-round last-swiss-round-num))
