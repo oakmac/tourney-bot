@@ -106,7 +106,7 @@
 ;; Update games when the state changes
 ;;------------------------------------------------------------------------------
 
-(def upload-rate-ms 4000)
+(def upload-rate-ms 2500)
 
 (defn- upload-games!
   "Upload the games to tournament.json"
