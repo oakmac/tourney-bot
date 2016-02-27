@@ -82,7 +82,7 @@
 ;; Calculate Results
 ;;------------------------------------------------------------------------------
 
-(def victory-points-for-a-win 2000)
+(def victory-points-for-a-win 3000)
 (def victory-points-for-a-tie 1000)
 
 (def empty-result
