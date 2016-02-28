@@ -8,9 +8,11 @@
   <meta content="width=device-width, initial-scale=1" name="viewport" />
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
   <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
-  <link href="../css/admin.min.css" rel="stylesheet" />
   <style type="text/css">
-  .warning {
+  body {
+    font-family: "Roboto", sans-serif;
+  }
+  .reminder {
     color: #888;
     font-family: "Georgia", serif;
     font-size: 18px;
@@ -27,15 +29,15 @@
   #saveBtn {
     display: block;
     margin-top: 20px;
-    padding: 10px 0;
+    padding: 8px 0;
     text-align: center;
-    width: 130px;
+    width: 120px;
   }
   </style>
 </head>
 <body>
 <h1>Raw Tournament State Edit</h1>
-<p class="warning">With great power comes great responsibility</p>
+<p class="reminder">With great power comes great responsibility</p>
 <textarea id="jsonInputField"></textarea>
 <label>Password:
   <input id="passwordInput" type="password" /></label>
@@ -80,7 +82,7 @@ function clickSaveBtn() {
     data: {
       method: 'update-state',
       password: password,
-      'tournament-state': newState
+      'tournament-state': JSON.stringify(newState)
     },
     method: 'post',
     success: saveSuccess,
