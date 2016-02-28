@@ -176,8 +176,7 @@
     [:tr
       [:td.place (when-not no-games-played? (str "#" (:place result)))]
       [:td.team-name (TeamNameCell (:team-name result) (:team-captain result))]
-      (if (and (zero? (:games-won result))
-               (zero? (:games-lost result)))
+      (if no-games-played?
         [:td.record-cell.no-games "-"]
         (RecordCell ties-allowed? result))]))
 
