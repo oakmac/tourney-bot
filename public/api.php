@@ -56,6 +56,22 @@ if ($_POST['method'] === 'update-games' && $_POST['games-json'] !== '') {
     exit('true');
 }
 
+// update the tournament state
+if ($_POST['method'] === 'update-state' && $_POST['tournament-state'] !== '') {
+    $tournamentState = json_decode($_POST['tournament-state'], true);
+
+    // make sure the tournament state is valid
+    if (! validTournamentState($tournamentState)) {
+        exit('false');
+    }
+
+    // save tournament state
+    file_put_contents(TOURNAMENT_JSON_FILE, json_encode($tournamentState, JSON_PRETTY_PRINT));
+
+    // return success
+    exit('true');
+}
+
 // do nothing if they did not pass a valid method
 exit('invalid method');
 

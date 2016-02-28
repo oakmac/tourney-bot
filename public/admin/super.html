@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta content="ie=edge" http-equiv="x-ua-compatible" />
+  <title>TourneyBot - Raw JSON Edit</title>
+  <meta content="" name="description" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+  <link href="../css/admin.min.css" rel="stylesheet" />
+  <style type="text/css">
+  .warning {
+    color: #888;
+    font-family: "Georgia", serif;
+    font-size: 18px;
+    font-style: italic;
+  }
+  #jsonInputField {
+    display: block;
+    font-family: "Roboto Mono", monospace;
+    font-size: 14px;
+    height: 700px;
+    margin-bottom: 20px;
+    width: 600px;
+  }
+  #saveBtn {
+    display: block;
+    margin-top: 20px;
+    padding: 10px 0;
+    text-align: center;
+    width: 130px;
+  }
+  </style>
+</head>
+<body>
+<h1>Raw Tournament State Edit</h1>
+<p class="warning">With great power comes great responsibility</p>
+<textarea id="jsonInputField"></textarea>
+<label>Password:
+  <input id="passwordInput" type="password" /></label>
+<button id="saveBtn">Save State</button>
+<script src="../js/jquery-2.2.1.min.js"></script>
+<script>
+function fetchState() {
+  $.getJSON('../tournament.json', function(freshState) {
+    $('#jsonInputField').val(JSON.stringify(freshState, null, 4));
+  });
+}
+
+function saveSuccess() {
+  window.location.href = window.location.href;
+}
+
+function clickSaveBtn() {
+  // grab the password
+  var password = $('#passwordInput').val();
+  if (password === '') {
+    return;
+  }
+
+  // make sure the input is valid JSON
+  var newJSON = $('#jsonInputField').val();
+  try {
+    var newState = JSON.parse(newJSON);
+  }
+  catch (e) {
+    alert("INVALID JSON");
+    return;
+  }
+
+  // set save button state
+  $('#saveBtn')
+    .attr('disabled', true)
+    .css('opacity', 0.5)
+    .html('Saving...');
+
+  // upload the new state
+  $.ajax({
+    data: {
+      method: 'update-state',
+      password: password,
+      'tournament-state': newState
+    },
+    method: 'post',
+    success: saveSuccess,
+    url: '../api.php'
+  });
+}
+
+function addEvents() {
+  $('#saveBtn').on('click', clickSaveBtn);
+}
+
+function init() {
+  addEvents();
+  fetchState();
+}
+
+init();
+</script>
+</body>
+</html>
