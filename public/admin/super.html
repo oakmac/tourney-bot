@@ -12,19 +12,30 @@
   body {
     font-family: "Roboto", sans-serif;
   }
+  h1 {
+    font-weight: 400;
+    margin: 0;
+    padding: 0;
+    font-size: 24px;
+  }
   .reminder {
     color: #888;
     font-family: "Georgia", serif;
-    font-size: 18px;
+    font-size: 16px;
     font-style: italic;
+    margin: 0 0 10px 0;
   }
   #jsonInputField {
+    box-sizing: border-box;
     display: block;
     font-family: "Roboto Mono", monospace;
-    font-size: 14px;
-    height: 700px;
+    font-size: 12px;
+    height: 400px;
     margin-bottom: 20px;
-    width: 600px;
+    width: 100%;
+  }
+  #passwordInput {
+    padding: 5px;
   }
   #saveBtn {
     display: block;
@@ -46,7 +57,7 @@
 <script>
 function fetchState() {
   $.getJSON('../tournament.json', function(freshState) {
-    $('#jsonInputField').val(JSON.stringify(freshState, null, 4));
+    $('#jsonInputField').val(JSON.stringify(freshState, null, 2));
   });
 }
 
