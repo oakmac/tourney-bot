@@ -76,13 +76,12 @@
 
 ;; load any existing client state on startup
 (try
-  (when-let [state-string (js/window.localStorage.getItem ls-key)]
-    (let [js-state (try (js/JSON.parse state-string)
-                     (catch js/Error _error nil))]
-      (when (object? js-state)
-        (let [clj-state (js->clj js-state :keywordize-keys true)]
-          (swap! page-state merge clj-state)))))
-  (catch js/Error e nil))
+  (let [state-string (js/window.localStorage.getItem ls-key)
+        js-state (js/JSON.parse state-string)]
+    (when (object? js-state)
+      (let [clj-state (js->clj js-state :keywordize-keys true)]
+        (swap! page-state merge clj-state))))
+  (catch js/Error err nil))
 
 (def ui-only-page-state-keys (keys initial-page-state))
 
@@ -92,7 +91,7 @@
         js-state-string (js/JSON.stringify js-state)]
     (try
       (js/window.localStorage.setItem ls-key js-state-string)
-      (catch js/Error e nil))))
+      (catch js/Error err nil))))
 
 (add-watch page-state :client-state save-client-state)
 
