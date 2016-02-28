@@ -50,7 +50,7 @@ if ($_POST['method'] === 'update-games' && $_POST['games-json'] !== '') {
     $tournamentState['games'] = $games;
 
     // save tournament state
-    file_put_contents(TOURNAMENT_JSON_FILE, json_encode($tournamentState, JSON_PRETTY_PRINT));
+    file_put_contents(TOURNAMENT_JSON_FILE, json_encode($tournamentState));
 
     // return success
     exit('true');
@@ -66,7 +66,7 @@ if ($_POST['method'] === 'update-state' && $_POST['tournament-state'] !== '') {
     }
 
     // save tournament state
-    file_put_contents(TOURNAMENT_JSON_FILE, json_encode($tournamentState, JSON_PRETTY_PRINT));
+    file_put_contents(TOURNAMENT_JSON_FILE, json_encode($tournamentState));
 
     // return success
     exit('true');
