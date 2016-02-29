@@ -23,7 +23,7 @@ this feature.
 
 ## Screenshots
 
-[Screenshots](screenshots/)
+Here are some [screenshots](screenshots/) of TourneyBot.
 
 ## Development Setup
 
@@ -33,6 +33,8 @@ Install [Leiningen] and [Node.js]
 # install node_modules (one-time)
 npm install
 
+# you may wish the run the following commands in separate console tabs / windows
+
 # build CLJS files
 lein clean && lein cljsbuild auto
 
@@ -41,15 +43,30 @@ grunt watch
 
 # run a local web server out of public/ on port 9955
 node server.js 9955
+
+# produce a build in the 00-publish/ folder
+grunt build
 ```
 
 ## Installation
 
-TODO: write this
+The steps for starting a new tournament are roughly as follows:
+
+1. Make sure the CLJS-generated files exist by running `lein clean && lein cljsbuild once`
+1. Create a build in the `00-publish` folder with the command `grunt build`
+1. Copy the `00-publish/` folder to a public web server that has PHP installed.
+1. Edit the `info.md` file as appropriate for your tournament.
+1. Edit the `tournament.json` file as appropriate for your tournament.
+1. Set a password in `api.php`
 
 ## Architecture
 
-TODO: write this
+TODO: write this section
+
+* client side `tournament.json` polling
+* admin side state management
+* the role of PHP
+* info.md
 
 ## License
 
