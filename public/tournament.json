@@ -31,7 +31,7 @@
       "captain": "Mack Smith"
     },
     "team17": {
-      "name": "Fried Chicken",
+      "name": "Fried Alligator",
       "captain": "Alford Sanford"
     },
     "team18": {
@@ -156,7 +156,7 @@
       "group": "swiss-round-2",
       "teamA-id": "team15",
       "teamB-id": "team16",
-      "status": "scheduled"      
+      "status": "scheduled"
     },
     "game24": {
       "name": "Swiss Round 2, Game 5",
