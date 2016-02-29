@@ -1,23 +1,23 @@
 # TourneyBot Screenshots
 
-![Client Schedule](client-schedule.png "Client Schedule")
+<img src="client-schedule.png" style="width:400px" />
 
 ---------------------
 
-![Client Schedule Search](client-schedule-search.png "Client Schedule Search")
+<img src="client-schedule-search.png" style="width:400px" />
 
 ---------------------
 
-![Client Results](client-results.png "Client Results")
+<img src="client-results.png" style="width:400px" />
 
 ---------------------
 
-![Admin Score Recording](admin-score-reporting.png "Admin Score Reporting")
+<img src="admin-score-reporting.png" style="width:400px" />
 
 ---------------------
 
-![Admin Next Round Simulator](admin-next-round-simulator.png "Admin Next Round Simulator")
+<img src="admin-next-round-simulator.png" />
 
 ---------------------
 
-![Admin Matchup Warning](admin-matchup-warning.png "Admin Matchup Warning")
+<img src="admin-matchup-warning.png" />
