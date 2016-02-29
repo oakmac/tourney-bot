@@ -1,18 +1,18 @@
 # TourneyBot Screenshots
 
-<img src="client-schedule.png" style="width:400px" />
+<img src="client-schedule.png" width="400px" />
 
 ---------------------
 
-<img src="client-schedule-search.png" style="width:400px" />
+<img src="client-schedule-search.png" width="400px" />
 
 ---------------------
 
-<img src="client-results.png" style="width:400px" />
+<img src="client-results.png" width="400px" />
 
 ---------------------
 
-<img src="admin-score-reporting.png" style="width:400px" />
+<img src="admin-score-reporting.png" width="400px" />
 
 ---------------------
 
