@@ -61,12 +61,37 @@ The steps for starting a new tournament are roughly as follows:
 
 ## Architecture
 
-TODO: write this section
+TourneyBot can be thought of as two separate applications that are designed to
+work together: the client side and the admin side.
 
-* client side `tournament.json` polling
-* admin side state management
-* the role of PHP
-* info.md
+The entire tournament state is held in the `tournament.json` file. The client
+side polls for that file every few seconds and updates the UI accordingly. The
+admin side contains functions that modify `tournament.json` and save it to the
+server. You could, for example, run an entire tournament by editing the
+`tournament.json` file directly.
+
+The Info page is held in `info.md` and requested on initial load, then again
+every 5 minutes. It is expected that the info page will not change very much
+while the tournament is happening.
+
+The role of PHP in TourneyBot is minimal and could be swapped out for something
+else easily. It was just the most convenient hosting option for me for the 2016
+tournament.
+
+Currently, the admin side architecture is such that only **one instance** of it
+is allowed at a time. If you have more than one instance running at a time,
+there is a dangerous race condition that will occur where each instance will
+silently overwrite edits made in the other. This is obviously bad and fixing it
+is tracked at [Issue #10].
+
+## Future Development
+
+TourneyBot was primarily created for the 2016 Houston Indoor Ultimate Tournament
+and has a lot of code to deal with the unique constraints of that tournament.
+
+It would be great to extend this project and make it more flexible for other
+Ultimate tournament formats. Please reach out or post in the [issues] if you are
+interested in helping with that.
 
 ## License
 
@@ -77,4 +102,6 @@ TODO: write this section
 [Swiss system]:https://en.wikipedia.org/wiki/Swiss-system_tournament
 [Leiningen]:http://leiningen.org
 [Node.js]:http://nodejs.org
+[Issue #10]:https://github.com/oakmac/tourney-bot/issues/10
+[issues]:https://github.com/oakmac/tourney-bot/issues
 [ISC License]:LICENSE.md
