@@ -1,5 +1,7 @@
 (ns tourneybot.data
-  "Functions that operate on the tournament data structure.")
+  "Functions that operate on the tournament data structure."
+  (:require
+    [tourneybot.util :refer [js-log log half]]))
 
 ;;------------------------------------------------------------------------------
 ;; Constants
@@ -18,7 +20,9 @@
 ;; #{ #{teamA teamB}
 ;;    #{teamA teamB}
 ;;    ...}
-(defn teams-already-played? [teamA-id teamB-id all-games]
+(defn teams-already-played?
+  "Returns false or a game where the two teams have previously played."
+  [teamA-id teamB-id all-games]
   (let [teamA-id (name teamA-id)
         teamB-id (name teamB-id)
         games-list (vals all-games)
@@ -173,3 +177,55 @@
   (let [results (map (partial team->results teams games) (keys teams))
         sorted-results (sort compare-victory-points results)]
     (map-indexed #(assoc %2 :place (inc %1)) sorted-results)))
+
+;;------------------------------------------------------------------------------
+;; Determine Next Swiss Round Matchups
+;;------------------------------------------------------------------------------
+
+(defn create-matchups
+  "Calculates the next Swiss round matchups.
+   Returns a set of sets, with the inner set being #{teamA-id teamB-id}"
+  [teams games swiss-round]
+  (let [;; find games below the target swiss round
+        games-to-look-at (filter #(and (is-swiss-game? (second %))
+                                       (< (:swiss-round (second %)) swiss-round))
+                                 games)
+        ;; create a set of all the matchups that have occurred so far
+        prior-matchups (reduce (fn [matchups game]
+                                 (let [teamA-id (-> game :teamA-id name)
+                                       teamB-id (-> game :teamB-id name)]
+                                   (conj matchups #{teamA-id teamB-id})))
+                               #{}
+                               (vals games-to-look-at))
+        ;; score the teams
+        results (games->results teams games-to-look-at)
+        ;; list to pull team-ids from
+        sorted-team-ids (atom (vec (map :team-id results)))
+        num-matchups-to-create (half (count @sorted-team-ids))
+        new-matchups (atom #{})]
+    ;; create the matchups for this swiss round
+    (dotimes [i num-matchups-to-create]
+      (let [;; take the first team in the list
+            teamA-id (first @sorted-team-ids)
+            ;; remove that team from the teams list
+            _ (swap! sorted-team-ids subvec 1)
+            ;; find the next closest team that has not already played teamA
+            match-found? (atom false)
+            j (atom 0)
+            _ (while (and (not @match-found?)
+                          (< @j (count @sorted-team-ids)))
+                (let [team-id (nth @sorted-team-ids @j)
+                      possible-matchup #{teamA-id team-id}
+                      teams-already-played? (contains? prior-matchups possible-matchup)]
+                  (if teams-already-played?
+                    (swap! j inc)
+                    (do
+                      ;; we found a match; exit this loop
+                      (reset! match-found? true)
+                      ;; add this matchup to the set
+                      (swap! new-matchups conj possible-matchup)
+                      ;; remove this team-id from the possible teams
+                      ;; NOTE: this would faster using subvec
+                      (swap! sorted-team-ids (fn [ids]
+                                               (vec (remove #(= % team-id) ids))))))))]))
+    @new-matchups))
