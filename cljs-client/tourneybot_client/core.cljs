@@ -106,7 +106,7 @@
 (defn- fetch-tourney-state! []
   (fetch-json-as-cljs tournament-state-url fetch-tourney-state-success))
 
-;; begin polling for udpates
+;; begin polling for updates
 (js/setInterval fetch-tourney-state! refresh-rate-ms)
 
 ;;------------------------------------------------------------------------------
