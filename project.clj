@@ -8,13 +8,13 @@
             :distribution :repo}
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.7.228"]
-                 [cljsjs/jquery "2.1.4-0"]
+                 [org.clojure/clojurescript "1.9.293"]
+                 [cljsjs/jquery "2.2.4-0"]
                  [cljsjs/marked "0.3.5-0"]
-                 [cljsjs/moment "2.10.6-2"]
-                 [rum "0.6.0"]]
+                 [cljsjs/moment "2.15.2-3"]
+                 [rum "0.10.7"]]
 
-  :plugins [[lein-cljsbuild "1.1.2"]]
+  :plugins [[lein-cljsbuild "1.1.5"]]
 
   :source-paths ["src"]
 
@@ -26,23 +26,23 @@
   :cljsbuild
     {:builds
       [{:id "admin-dev"
-        :source-paths ["cljs-admin" "cljs-shared"]
+        :source-paths ["cljs-admin" "cljs-common"]
         :compiler {:output-to "public/js/admin.js"
                    :optimizations :whitespace}}
 
        {:id "admin-prod"
-        :source-paths ["cljs-admin" "cljs-shared"]
+        :source-paths ["cljs-admin" "cljs-common"]
         :compiler {:output-to "public/js/admin.min.js"
                    :optimizations :advanced
                    :pretty-print false}}
 
        {:id "client-dev"
-        :source-paths ["cljs-client" "cljs-shared"]
+        :source-paths ["cljs-client" "cljs-common"]
         :compiler {:output-to "public/js/client.js"
                    :optimizations :whitespace}}
 
        {:id "client-prod"
-        :source-paths ["cljs-client" "cljs-shared"]
+        :source-paths ["cljs-client" "cljs-common"]
         :compiler {:output-to "public/js/client.min.js"
                    :optimizations :advanced
                    :pretty-print false}}]})
