@@ -8,12 +8,28 @@
 // https://github.com/oakmac/tourney-bot/blob/master/LICENSE.md
 //------------------------------------------------------------------------------
 
-// This file exposes a small, simple API for saving the tournament state to
-// tournament.json
+// This file exposes a simple API for saving and retrieving tournament state
+// from a local database.
 
-// IMPORTANT: update this password for your tournament!
+// NOTE: update these values for your tournament and database
 define('PASSWORD', 'SUPER_SECRET_PASSWORD_GOES_HERE');
-define('TOURNAMENT_JSON_FILE', 'tournament.json');
+define('DB_HOST', 'localhost');
+define('DB_USER', 'DBUSER_GOES_HERE');
+define('DB_PASS', 'DBPASS_GOES_HERE');
+define('DB_NAME', 'DBNAME_GOES_HERE');
+
+// connect to the database
+$db_conn = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+if (mysqli_connect_errno()) {
+    // echo "Failed to connect to MySQL: " . mysqli_connect_error();
+    exit('Could not connect to the database :(');
+}
+
+// get the latest tournament state
+if ($_GET['method'] === 'get-latest') {
+    echo 'the latest tournament state!';
+    die;
+}
 
 // check the password
 if ($_POST['method'] === 'check-password') {
@@ -85,6 +101,22 @@ function validTournamentState($state) {
            is_string($state['title']) &&
            is_array($state['teams']) &&
            is_array($state['games']);
+}
+
+function getTournamentState($slug) {
+    $query = '';
+
+    $sql = 'SELECT data, version, ctime '.
+           'FROM events '.
+           'ORDER BY Lastname';
+    $result = mysqli_query($db_conn, $sql);
+
+    // Fetch all
+    mysqli_fetch_all($result, MYSQLI_ASSOC);
+
+    // Free result set
+    mysqli_free_result($result);
+    mysqli_close($conn);
 }
 
 ?>
