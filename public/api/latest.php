@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 
 // This file returns the latest tournament state from the database.
+
 define('PUBLIC_SCRIPT', true);
 require('tourneybot.php');
 $latest = \TourneyBot\getEvent(EVENT_SLUG);
