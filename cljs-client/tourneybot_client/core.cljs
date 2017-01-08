@@ -129,6 +129,17 @@
 (js/setInterval fetch-info-page! info-polling-ms)
 
 ;;------------------------------------------------------------------------------
+;; SVG Icon
+;;------------------------------------------------------------------------------
+
+(rum/defc SVGIcon < rum/static
+  [svg-class icon-id]
+  [:svg
+    {:class svg-class
+     :dangerouslySetInnerHTML
+       {:__html (str "<use xlink:href='img/icons.svg#" icon-id "' />")}}])
+
+;;------------------------------------------------------------------------------
 ;; Results Page
 ;;------------------------------------------------------------------------------
 
@@ -350,11 +361,10 @@
           [:label.hide-finished-games
             {:on-click toggle-hide-finished-games
              :on-touch-start toggle-hide-finished-games}
-            [:span.icon-wrapper
-              (if hide-finished-games?
-                [:img.icon {:src "img/check-square-o.svg"}]
-                [:img.icon {:src "img/square-o.svg"}])]
-            "Hide finished games"]]]
+            (if hide-finished-games?
+              (SVGIcon "checked-17a35" "checkedBox")
+              (SVGIcon "unchecked-09cdc" "uncheckedBox"))
+            [:span.label-text "Hide finished games"]]]]
       (if (empty? filtered-games2)
         [:div.no-search-results "No games found."]
         (map (partial SingleDaySchedule teams filtered-games2) tourney-dates))]))
@@ -403,14 +413,12 @@
   [state]
   (let [current-tab (:tab state)]
     [:div
-      ;; NOTE: pre-fetch these icons before the user sees the "Schedule" page
-      [:img {:src "img/check-square-o.svg", :style {:display "none"}}]
-      [:img {:src "img/square-o.svg", :style {:display "none"}}]
       [:header
         [:h1 (:title state)]
         (NavTabs current-tab)]
       ;; NOTE: we fill this <div> with raw HTML content so it's important that
       ;;       react.js never touches it
+      ;; TODO: change this to work as a Rum component
       [:article#infoContainer
         {:style {:display (if (= info-tab current-tab) "block" "none")}}]
       (when (= current-tab schedule-tab)

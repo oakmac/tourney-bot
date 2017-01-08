@@ -1,4 +1,4 @@
-@import "normalize-3.0.3.less";
+@import "normalize-5.0.0.less";
 
 //------------------------------------------------------------------------------
 // Variables
@@ -22,6 +22,11 @@ body {
   margin: 0 auto;
   max-width: @maxWidth;
   min-width: @minWidth;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
 }
 
 header {
@@ -212,12 +217,6 @@ footer {
       font-weight: 300;
       padding: 5px 5px;
       text-align: right;
-    }
-
-    .icon-wrapper {
-      display: inline-block;
-      text-align: left;
-      width: 16px;
     }
 
     .icon {
@@ -502,4 +501,22 @@ footer {
     border-color: @primaryActionColor;
     color: #fff
   }
+}
+
+//------------------------------------------------------------------------------
+// Snowflake Classes
+//------------------------------------------------------------------------------
+
+.checked-17a35 {
+  color: #222;
+  height: 14px;
+  vertical-align: middle;
+  width: 18px;
+}
+
+.unchecked-09cdc {
+  color: #222;
+  height: 14px;
+  vertical-align: middle;
+  width: 20px;
 }
