@@ -13,6 +13,12 @@
 define('PUBLIC_SCRIPT', true);
 require('tourneybot.php');
 
+// check their password
+if ($_POST['password'] !== EVENT_PASSWORD) {
+    http_response_code(403);
+    exit('wrong password');
+}
+
 // get the new state JSON
 $newState = json_decode($_POST['data'], true);
 
