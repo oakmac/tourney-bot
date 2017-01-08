@@ -1,17 +1,25 @@
 (ns tourneybot-client.core
   (:require
-    cljsjs.marked
-    cljsjs.moment
+    [cljsjs.marked]
+    [cljsjs.moment]
     [clojure.string :refer [blank? lower-case]]
     [goog.functions :refer [once]]
-    [tourneybot.data :refer [scheduled-status in-progress-status finished-status game-statuses
+    [rum.core :as rum]
+    [tourneybot.data :refer [ensure-tournament-state
+                             finished-status
+                             game-finished?
+                             game-statuses
                              games->results
-                             ensure-tournament-state
-                             game-finished?]]
-    [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
-                             fetch-json-as-cljs tourney-bot-url
-                             game->date]]
-    [rum.core :as rum]))
+                             in-progress-status
+                             scheduled-status]]
+    [tourneybot.util :refer [atom-logger
+                             by-id
+                             fetch-ajax-text
+                             fetch-json-as-cljs
+                             game->date
+                             js-log
+                             log
+                             tourney-bot-url]]))
 
 ;;------------------------------------------------------------------------------
 ;; Constants
@@ -26,11 +34,16 @@
 (def sort-on-record "SORT-BY-RECORD")
 (def sort-on-values #{sort-on-name sort-on-record})
 
-(def tournament-state-url "tournament.json")
+(def in-dev-mode? (not= -1 (.indexOf js/document.location.href "devmode")))
+
 (def info-page-url "info.md")
+(def tournament-state-url
+  (if in-dev-mode?
+    "tournament.json"
+    "api/latest.php"))
 
 ;; TODO: allow this to be overriden with a query param
-(def refresh-rate-ms 4000)
+(def refresh-rate-ms 5000)
 
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
@@ -436,8 +449,7 @@
 (defn- on-change-page-state
   "Render the page on every state change."
   [_kwd _the-atom _old-state new-state]
-  (rum/request-render
-    (rum/mount (IndexApp new-state) app-container-el)))
+  (rum/mount (IndexApp new-state) app-container-el))
 
 (add-watch page-state :main on-change-page-state)
 
@@ -446,10 +458,11 @@
 ;;------------------------------------------------------------------------------
 
 (def init-page!
-  (once (fn []
-          (fetch-tourney-state!)
-          (fetch-info-page!)
-          ;; trigger an initial render
-          (swap! page-state identity))))
+  (once
+    (fn []
+      (fetch-tourney-state!)
+      (fetch-info-page!)
+      ;; trigger an initial render
+      (swap! page-state identity))))
 
 (init-page!)
