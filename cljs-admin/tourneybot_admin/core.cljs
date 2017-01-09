@@ -1,19 +1,31 @@
 (ns tourneybot-admin.core
   (:require
-    cljsjs.marked
-    cljsjs.moment
+    [cljsjs.marked]
+    [cljsjs.moment]
     [clojure.data :refer [diff]]
     [clojure.string :refer [blank? lower-case replace]]
     [goog.functions :refer [once]]
-    [tourneybot.data :refer [scheduled-status in-progress-status finished-status game-statuses
+    [rum.core :as rum]
+    [tourneybot.data :refer [ensure-tournament-state
+                             finished-status
+                             game-finished?
+                             game-statuses
                              games->results
-                             ensure-tournament-state
-                             teams-already-played? is-swiss-game? game-finished?]]
-    [tourneybot.util :refer [atom-logger by-id js-log log fetch-ajax-text
-                             fetch-json-as-cljs tourney-bot-url
-                             always-nil one?]]
-    [tourneybot-admin.api :refer [check-password update-games!]]
-    [rum.core :as rum]))
+                             in-progress-status
+                             is-swiss-game?
+                             scheduled-status
+                             teams-already-played?]]
+    [tourneybot.util :refer [always-nil
+                             atom-logger
+                             by-id
+                             fetch-ajax-text
+                             fetch-json-as-cljs
+                             js-log
+                             log
+                             one?
+                             tourney-bot-url]]
+    [tourneybot-admin.api :refer [check-password
+                                  update-games!]]))
 
 ;; TODO: set up some logic such that when a quarterfinals game is finished, it
 ;;       automatically seeds the team into the next bracket game
@@ -24,8 +36,7 @@
 
 (def tournament-state-url "../tournament.json")
 
-;; NOTE: this is for developer convenience
-(def in-dev-mode? (not= -1 (.indexOf js/document.location.href "dev=true")))
+(def in-dev-mode? (not= -1 (.indexOf js/document.location.href "devmode")))
 
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
@@ -136,6 +147,17 @@
   (if (neg? n)
     (str n)
     (str "+" n)))
+
+;;------------------------------------------------------------------------------
+;; SVG Icon
+;;------------------------------------------------------------------------------
+
+(rum/defc SVGIcon < rum/static
+  [svg-class icon-id]
+  [:svg
+    {:class svg-class
+     :dangerouslySetInnerHTML
+       {:__html (str "<use xlink:href='../img/icons.svg#" icon-id "' />")}}])
 
 ;;------------------------------------------------------------------------------
 ;; Swiss Results Table
@@ -574,10 +596,11 @@
   [:header
     [:div.top-bar
       [:div.left title]
-      [:div.right "Admin"
-        [:i.fa.fa-sign-out
-          {:on-click click-sign-out
-           :on-touch-start click-sign-out}]]]])
+      [:div.right
+        {:on-click click-sign-out
+         :on-touch-start click-sign-out}
+        [:span "Sign Out"]
+        (SVGIcon "signout-7f21d" "signOut")]]])
 
 ;;------------------------------------------------------------------------------
 ;; Admin App
@@ -609,8 +632,7 @@
 (defn- on-change-page-state
   "Render the page on every state change."
   [_kwd _the-atom _old-state new-state]
-  (rum/request-render
-    (rum/mount (AdminPage new-state) app-container-el)))
+  (rum/mount (AdminPage new-state) app-container-el))
 
 (add-watch page-state :main on-change-page-state)
 
@@ -619,8 +641,7 @@
 ;;------------------------------------------------------------------------------
 
 (def init!
-  "Initialize the Admin page.
-   NOTE: this function may only be called one time."
+  "Initialize the Admin page."
   (once
     (fn []
       ;; do they have the password in localStorage?

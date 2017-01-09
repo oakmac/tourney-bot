@@ -202,6 +202,7 @@
         ;; list to pull team-ids from
         sorted-team-ids (atom (vec (map :team-id results)))
         num-matchups-to-create (half (count @sorted-team-ids))
+        ;; we will fill the new-matchups set until the sorted-team-ids list is empty
         new-matchups (atom #{})]
     ;; create the matchups for this swiss round
     (dotimes [i num-matchups-to-create]
@@ -218,7 +219,7 @@
                       possible-matchup #{teamA-id team-id}
                       teams-already-played? (contains? prior-matchups possible-matchup)]
                   (if teams-already-played?
-                    (swap! j inc)
+                    (swap! j inc) ;; try the next team in the list
                     (do
                       ;; we found a match; exit this loop
                       (reset! match-found? true)

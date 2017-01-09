@@ -24,6 +24,11 @@ body {
   min-width: @minWidth;
 }
 
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
 header {
   .top-bar {
     align-items: center;
@@ -40,21 +45,12 @@ header {
 
     .right {
       color: #aaa;
+      cursor: pointer;
       flex: 10;
       font-size: 14px;
       font-weight: 700;
       text-align: right;
       text-transform: uppercase;
-
-      .fa {
-        cursor: pointer;
-        font-size: 18px;
-        margin-left: 8px;
-      }
-
-      .fa:hover {
-        color: #fff;
-      }
     }
   }
 }
@@ -686,4 +682,16 @@ footer {
     text-align: right;
     width: 50px;
   }
+}
+
+//------------------------------------------------------------------------------
+// Snowflake Classes
+//------------------------------------------------------------------------------
+
+.signout-7f21d {
+  fill: #aaa;
+  height: 16px;
+  margin-left: 5px;
+  vertical-align: bottom;
+  width: 16px;
 }

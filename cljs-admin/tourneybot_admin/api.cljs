@@ -1,7 +1,7 @@
 (ns tourneybot-admin.api
   "Function wrapper around API calls."
   (:require
-    cljsjs.jquery
+    [cljsjs.jquery]
     [tourneybot.util :refer [js-log log]]))
 
 ;;------------------------------------------------------------------------------
