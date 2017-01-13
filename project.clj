@@ -18,16 +18,16 @@
 
   :source-paths ["src"]
 
-  :clean-targets ["public/js/admin.js"
-                  "public/js/admin.js"
-                  "public/js/client.js"
+  :clean-targets ["public/js/admin-dev.js"
+                  "public/js/admin.min.js"
+                  "public/js/client-dev.js"
                   "public/js/client.min.js"]
 
   :cljsbuild
     {:builds
       [{:id "admin-dev"
         :source-paths ["cljs-admin" "cljs-common"]
-        :compiler {:output-to "public/js/admin.js"
+        :compiler {:output-to "public/js/admin-dev.js"
                    :optimizations :whitespace}}
 
        {:id "admin-prod"
@@ -38,7 +38,7 @@
 
        {:id "client-dev"
         :source-paths ["cljs-client" "cljs-common"]
-        :compiler {:output-to "public/js/client.js"
+        :compiler {:output-to "public/js/client-dev.js"
                    :optimizations :whitespace}}
 
        {:id "client-prod"

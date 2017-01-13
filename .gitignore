@@ -6,9 +6,9 @@ node_modules/
 
 # ignore CLJS-generated files
 target/
-public/js/admin.js
+public/js/admin-dev.js
 public/js/admin.min.js
-public/js/client.js
+public/js/client-dev.js
 public/js/client.min.js
 
 # ignore LESS-generated CSS files

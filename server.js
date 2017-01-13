@@ -5,12 +5,12 @@
 // ie: node server.js 9224
 //
 // append the ?_slow=true query parameter to files to simulate slow loading times
-// ie: http://127.0.0.1:8888/api/data.json?_slow=true
+// ie: http://127.0.0.1:4455/api/data.json?_slow=true
 
 var express = require('express'),
     app = express();
 
-const defaultPort = 8888;
+const defaultPort = 4455;
 const port = process.argv[2] ? parseInt(process.argv[2], 10) : defaultPort;
 
 app.use(slowItDown);

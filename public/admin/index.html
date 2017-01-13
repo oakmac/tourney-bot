@@ -11,6 +11,16 @@
 </head>
 <body>
 <div id="adminContainer"></div>
-<script src="../js/admin.min.js"></script>
+<script>
+(function() {
+  var useDevScript = (document.location.search.indexOf('usedevscript') !== -1);
+  var src = useDevScript ? '../js/admin-dev.js' : '../js/admin.min.js';
+  var scriptEl = document.createElement('script');
+  scriptEl.type = 'text/javascript';
+  scriptEl.src = src;
+  var s = document.getElementsByTagName('script')[0];
+  s.parentNode.insertBefore(scriptEl, s);
+})();
+</script>
 </body>
 </html>
