@@ -21,11 +21,12 @@
                              fetch-ajax-text
                              fetch-json-as-cljs
                              js-log
+                             neutralize-event
                              log
                              one?
                              tourney-bot-url]]
     [tourneybot-admin.api :refer [check-password
-                                  update-games!]]))
+                                  update-event!]]))
 
 ;; TODO: set up some logic such that when a quarterfinals game is finished, it
 ;;       automatically seeds the team into the next bracket game
@@ -37,6 +38,9 @@
 (def tournament-state-url "../tournament.json")
 
 (def in-dev-mode? (not= -1 (.indexOf js/document.location.href "devmode")))
+
+(when in-dev-mode?
+  (js-log "TourneyBot dev mode started."))
 
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
@@ -123,6 +127,7 @@
 
 (def upload-rate-ms 2500)
 
+;; FIXME: change this to be "update event", not just games
 (defn- upload-games!
   "Upload the games to tournament.json"
   []
@@ -131,7 +136,7 @@
                password-valid?
                (not (blank? password))
                (map? games))
-      (update-games! password games always-nil always-nil))))
+      (update-event! password games always-nil always-nil))))
 
 (when-not in-dev-mode?
   (js/setInterval upload-games! upload-rate-ms))
@@ -547,7 +552,7 @@
 
 (defn- click-login-btn [js-evt]
   (when js-evt
-    (prevent-default js-evt))
+    (neutralize-event js-evt))
   (swap! page-state assoc :logging-in? true
                           :password-error? false
                           :password-valid? false)
@@ -558,6 +563,8 @@
     (let [password (:password @page-state)]
       (check-password password check-password-success check-password-error))))
 
+(def password-input-id (random-uuid))
+
 (rum/defc PasswordPage < rum/static
   [{:keys [logging-in? password password-error? title]}]
   [:div.password-container
@@ -565,6 +572,7 @@
       [:h1 title]
       [:form.inner
         [:input {:disabled logging-in?
+                 :id password-input-id
                  :on-change on-change-password
                  :placeholder "Password"
                  :type "password"
@@ -648,7 +656,8 @@
       (if-not (blank? (:password @page-state))
         ;; attempt to login
         (click-login-btn nil)
-        ;; else trigger an initial render
-        (swap! page-state identity)))))
+        ;; else trigger an initial render and put the focus in the password field
+        (do (swap! page-state identity)
+            (.focus (by-id password-input-id)))))))
 
 (init!)

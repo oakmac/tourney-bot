@@ -230,3 +230,14 @@
                       (swap! sorted-team-ids (fn [ids]
                                                (vec (remove #(= % team-id) ids))))))))]))
     @new-matchups))
+
+;;------------------------------------------------------------------------------
+;; Tournament Advancer
+;;------------------------------------------------------------------------------
+
+(defn advance-tournament
+  "Given a tournament state, tries to advance it.
+   ie: calculates Swiss Round matchups, fills brackets, scores pools, etc"
+  [state]
+  ;; TODO: write me :)
+  nil)

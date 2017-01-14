@@ -14,7 +14,7 @@ namespace TourneyBot;
 // require database and other constants
 require('config.php');
 
-// no direct script access to this file
+// do not allow direct script access to this file
 if (! defined('PUBLIC_SCRIPT')) {
     header('HTTP/1.0 404 Not Found');
     die();

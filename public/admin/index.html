@@ -5,7 +5,7 @@
   <meta content="ie=edge" http-equiv="x-ua-compatible" />
   <title>TourneyBot Admin</title>
   <meta content="" name="description" />
-  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" name="viewport" />
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
   <link href="../css/admin.min.css" rel="stylesheet" />
 </head>
@@ -13,7 +13,7 @@
 <div id="adminContainer"></div>
 <script>
 (function() {
-  var useDevScript = (document.location.search.indexOf('usedevscript') !== -1);
+  var useDevScript = (document.location.search.indexOf('devscript') !== -1);
   var src = useDevScript ? '../js/admin-dev.js' : '../js/admin.min.js';
   var scriptEl = document.createElement('script');
   scriptEl.type = 'text/javascript';

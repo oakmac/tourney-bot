@@ -13,7 +13,7 @@
 <div id="indexContainer"></div>
 <script>
 (function() {
-  var useDevScript = (document.location.search.indexOf('usedevscript') !== -1);
+  var useDevScript = (document.location.search.indexOf('devscript') !== -1);
   var src = useDevScript ? 'js/client-dev.js' : 'js/client.min.js';
   var scriptEl = document.createElement('script');
   scriptEl.type = 'text/javascript';

@@ -20,8 +20,7 @@
   [pwd success-fn error-fn]
   (.ajax js/jQuery
     (js-obj
-      "data" (js-obj "method" "check-password"
-                     "password" pwd)
+      "data" (js-obj "password" pwd)
       "dataType" "text"
       "error" error-fn
       "method" "post"
@@ -29,15 +28,14 @@
                   (if (= response-txt "true")
                     (success-fn)
                     (error-fn)))
-      "url" api-url)))
+      "url" "../api/check-password.php")))
 
-(defn update-games!
-  "Upload the games to tournament.json"
-  [password games success-fn error-fn]
+(defn update-event!
+  "Upload the new tournament state."
+  [password state success-fn error-fn]
   (.ajax js/jQuery
     (js-obj
-      "data" (js-obj "method" "update-games"
-                     "games-json" (-> games clj->js json-stringify)
+      "data" (js-obj "data" (-> state clj->js json-stringify)
                      "password" password)
       "dataType" "text"
       "error" error-fn
@@ -46,4 +44,4 @@
                   (if (= response-txt "true")
                     (success-fn)
                     (error-fn)))
-      "url" api-url)))
+      "url" "../api/update.php")))
