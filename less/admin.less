@@ -9,6 +9,7 @@
 @minBodyHeight: 500px;
 @primaryActionColor: #38c;
 @smallBreakpoint: 750px;
+@modalZ: 100;
 
 //------------------------------------------------------------------------------
 // Tag Selectors
@@ -52,6 +53,13 @@ header {
       text-align: right;
       text-transform: uppercase;
     }
+  }
+}
+
+// hide "sign out" text on a smaller screen
+@media all and (max-width: @smallBreakpoint) {
+  header .sign-out-txt {
+    display: none;
   }
 }
 
@@ -520,18 +528,31 @@ footer {
 // Games Page
 //------------------------------------------------------------------------------
 
-.games-container {
-  .flex-container {
-    display: flex;
-    justify-content: space-between;
+.title-eef62 {
+  border-bottom: 1px solid #ddd;
+  font-size: 20px;
+  font-weight: 300;
+  margin: 0;
+  padding: 10px 15px;
+}
 
-    .left {
-      width: 49%;
-    }
+.flex-052ba {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
 
-    .right {
-      width: 49%;
-    }
+.col-beeb5 {
+  width: 49%;
+}
+
+@media all and (max-width: @smallBreakpoint) {
+  .flex-052ba {
+    flex-direction: column;
+  }
+
+  .col-beeb5 {
+    width: 100%;
   }
 }
 
@@ -694,4 +715,40 @@ footer {
   margin-left: 5px;
   vertical-align: bottom;
   width: 16px;
+}
+
+.modal-layer-20e76 {
+  background: #000;
+  bottom: 0;
+  left: 0;
+  opacity: .6;
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: @modalZ;
+}
+
+.modal-body-41add {
+  background: #fff;
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 45%;
+  z-index: @modalZ + 1;
+}
+
+.menu-link-14aa1 {
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 300;
+  padding: 15px;
+}
+
+.saving-modal-58ebc {
+  background: #fff;
+  width: 75%;
+  left: 0;
+  top: 0;
 }

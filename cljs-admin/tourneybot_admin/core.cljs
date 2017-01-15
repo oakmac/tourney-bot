@@ -35,12 +35,38 @@
 ;; Constants
 ;;------------------------------------------------------------------------------
 
-(def tournament-state-url "../tournament.json")
+;; TODO: allow this to be overriden with a query param
+(def refresh-rate-ms 5000)
 
 (def in-dev-mode? (not= -1 (.indexOf js/document.location.href "devmode")))
 
 (when in-dev-mode?
   (js-log "TourneyBot dev mode started."))
+
+;;------------------------------------------------------------------------------
+;; Misc
+;;------------------------------------------------------------------------------
+
+(defn tournament-state-url []
+  (if in-dev-mode?
+    "../tournament.json"
+    (str "../api/latest.php?_c=" (random-uuid))))
+
+(defn- add-sign-to-num [n]
+  (if (neg? n)
+    (str n)
+    (str "+" n)))
+
+(defn- get-games-in-group
+  "Returns all the games in a given group-id.
+   NOTE: this function should probably be moved to the common namespace."
+  [all-games group-id]
+  (let [games-coll (map (fn [[game-id game]] (assoc game :game-id game-id))
+                        all-games)]
+    (filter
+      (fn [game]
+        (= group-id (:group game)))
+      games-coll)))
 
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
@@ -53,11 +79,16 @@
    :password-error? false
    :password-valid? false
 
-   ;; GameTabs across the top
-   :tab-id "swiss-round-1"
+   ;; modals
+   :loading-modal-showing? false
+   :loading-modal-txt ""
+   :menu-showing? false
 
-   :simulated-scoreA 0
-   :simulated-scoreB 0})
+   ;; active page / group-id
+   :active-page "swiss-round-1"})
+
+   ; :simulated-scoreA 0
+   ; :simulated-scoreB 0})
 
 (def page-state (atom initial-page-state))
 
@@ -75,6 +106,8 @@
 ;;------------------------------------------------------------------------------
 ;; Save UI-specific app state to localStorage
 ;;------------------------------------------------------------------------------
+
+;; TODO: change this to just be their password or session key
 
 (def ls-key "admin-page-state")
 
@@ -108,50 +141,43 @@
 ;; Fetch Tournament State
 ;;------------------------------------------------------------------------------
 
-(def initial-state-loaded? (atom false))
-
 (defn- fetch-tourney-state-success [new-state]
-  ;; set the title tag on the first state load
-  (when-not @initial-state-loaded?
-    (aset js/document "title" (:title new-state))
-    (reset! initial-state-loaded? true))
+  ;; TODO: make sure the version is the latest here
   ;; merge the tournament state with the page state
-  (swap! page-state merge new-state))
+  (swap! page-state merge new-state)
+  ;; set the title tag
+  (aset js/document "title" (str (:title new-state) " - Admin")))
 
-;; fetch the initial tournament state on load
-(fetch-json-as-cljs tournament-state-url fetch-tourney-state-success)
+(defn- fetch-tourney-state! []
+  (fetch-json-as-cljs (tournament-state-url) fetch-tourney-state-success))
+
+;; Continually fetch the latest tournament state and merge it with the page
+;; state atom.
+(when-not in-dev-mode?
+  (js/setInterval fetch-tourney-state! refresh-rate-ms))
+
+;; kick off the first fetch
+(fetch-tourney-state!)
 
 ;;------------------------------------------------------------------------------
 ;; Update games when the state changes
 ;;------------------------------------------------------------------------------
 
-(def upload-rate-ms 2500)
+; (def upload-rate-ms 2500)
 
-;; FIXME: change this to be "update event", not just games
-(defn- upload-games!
-  "Upload the games to tournament.json"
-  []
-  (let [{:keys [games password password-valid?]} @page-state]
-    (when (and @initial-state-loaded?
-               password-valid?
-               (not (blank? password))
-               (map? games))
-      (update-event! password games always-nil always-nil))))
+; ;; FIXME: change this to be "update event", not just games
+; (defn- upload-games!
+;   "Upload the games to tournament.json"
+;   []
+;   (let [{:keys [games password password-valid?]} @page-state]
+;     (when (and @initial-state-loaded?
+;                password-valid?
+;                (not (blank? password))
+;                (map? games))
+;       (update-event! password games always-nil always-nil))))
 
-(when-not in-dev-mode?
-  (js/setInterval upload-games! upload-rate-ms))
-
-;;------------------------------------------------------------------------------
-;; Misc
-;;------------------------------------------------------------------------------
-
-(defn- prevent-default [js-evt]
-  (.preventDefault js-evt))
-
-(defn- add-sign-to-num [n]
-  (if (neg? n)
-    (str n)
-    (str "+" n)))
+; (when-not in-dev-mode?
+;   (js/setInterval upload-games! upload-rate-ms))
 
 ;;------------------------------------------------------------------------------
 ;; SVG Icon
@@ -388,7 +414,7 @@
       (swap! page-state assoc-in [:games game-id :status] in-progress-status))))
 
 (defn- on-change-status [game-id status-val js-evt]
-  (prevent-default js-evt)
+  (neutralize-event js-evt)
   (swap! page-state assoc-in [:games (keyword game-id) :status] status-val)
   ;; reset the simulated scores anytime a game is marked as Finished
   (when (= status-val finished-status)
@@ -478,7 +504,7 @@
 ;;------------------------------------------------------------------------------
 
 (defn- click-game-tab [tab-id js-evt]
-  (prevent-default js-evt)
+  (neutralize-event js-evt)
   (swap! page-state assoc :tab-id tab-id))
 
 (rum/defc GamesTab < rum/static
@@ -518,6 +544,24 @@
       [:div.flex-container
         [:div.left (map (partial GameRow teams) sorted-games)]
         [:div.right (when swiss-round (SwissPanel teams games swiss-round simulated-scoreA simulated-scoreB))]]]))
+
+;;------------------------------------------------------------------------------
+;; Games Body
+;;------------------------------------------------------------------------------
+
+(rum/defc GameRow2 < rum/static
+  [{:keys [name start-time]}]
+  [:div (str start-time " - " name)])
+
+(rum/defc GamesList < rum/static
+  [title games]
+  [:section
+    [:h2.title-eef62 title]
+    [:div.flex-052ba
+      [:div.col-beeb5
+        (map GameRow2 (sort-by :start-time games))]
+      [:div.col-beeb5
+        "TODO: swiss results table here"]]])
 
 ;;------------------------------------------------------------------------------
 ;; Footer
@@ -589,12 +633,56 @@
              :value "Login"}])]]])
 
 ;;------------------------------------------------------------------------------
+;; Loading Modal
+;;------------------------------------------------------------------------------
+
+(rum/defc LoadingModal < rum/static
+  [txt]
+  [:div
+    [:div.modal-layer-20e76]
+    [:div.saving-modal-58ebc
+      "TODO: spinny icon here"
+      txt]])
+
+;;------------------------------------------------------------------------------
+;; Menu
+;;------------------------------------------------------------------------------
+
+(defn- close-modal [js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state assoc :menu-showing? false))
+
+(defn- click-menu-link [page-id js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state assoc :active-page page-id
+                          :menu-showing? false))
+
+(declare click-sign-out)
+
+(rum/defc Menu < rum/static
+  []
+  [:div
+    [:div.modal-layer-20e76 {:on-click close-modal}]
+    [:div.modal-body-41add
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-1")} "Swiss Round 1"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-2")} "Swiss Round 2"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-3")} "Swiss Round 3"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-4")} "Swiss Round 4"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "bracket-play")} "Bracket Play"]
+      [:div.menu-link-14aa1 {:on-click click-sign-out} "Sign out"]]])
+
+;;------------------------------------------------------------------------------
 ;; Header
 ;;------------------------------------------------------------------------------
 
+(defn- click-menu-btn [js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state assoc :menu-showing? true))
+
 (defn- click-sign-out [js-evt]
-  (prevent-default js-evt)
+  (neutralize-event js-evt)
   (swap! page-state assoc :logging-in? false
+                          :menu-showing? false
                           :password ""
                           :password-valid? false
                           :password-error? false))
@@ -605,21 +693,42 @@
     [:div.top-bar
       [:div.left title]
       [:div.right
-        {:on-click click-sign-out
-         :on-touch-start click-sign-out}
-        [:span "Sign Out"]
-        (SVGIcon "signout-7f21d" "signOut")]]])
+        [:button
+          {:on-click click-menu-btn}
+          "Menu"]]]])
+      ; [:div.right
+      ;   {:on-click click-sign-out
+      ;    :on-touch-start click-sign-out}
+      ;   [:span.sign-out-txt "Sign Out"]
+      ;   (SVGIcon "signout-7f21d" "signOut")]]])
 
 ;;------------------------------------------------------------------------------
 ;; Admin App
 ;;------------------------------------------------------------------------------
 
+(def group-id->group-name
+  {"swiss-round-1" "Swiss Round 1"
+   "swiss-round-2" "Swiss Round 2"
+   "swiss-round-3" "Swiss Round 3"
+   "swiss-round-4" "Swiss Round 4"
+   "bracket-play" "Bracket Play"})
+
 (rum/defc AdminApp < rum/static
-  [state]
-  [:div.admin-container
-    (Header (:title state))
-    (GamesPage state)
-    (Footer)])
+  [{:keys [active-page
+           games
+           loading-modal-showing?
+           loading-modal-txt
+           menu-showing?
+           title]}]
+  (let [active-games (get-games-in-group games active-page)]
+    [:div.admin-container
+      (Header title)
+      (GamesList (get group-id->group-name active-page) active-games)
+      (Footer)
+      (when menu-showing?
+        (Menu))
+      (when loading-modal-showing?
+        (LoadingModal loading-modal-txt))]))
 
 ;;------------------------------------------------------------------------------
 ;; Top Level Component
@@ -658,6 +767,7 @@
         (click-login-btn nil)
         ;; else trigger an initial render and put the focus in the password field
         (do (swap! page-state identity)
-            (.focus (by-id password-input-id)))))))
+            (when-let [input-el (by-id password-input-id)]
+              (.focus input-el)))))))
 
 (init!)
