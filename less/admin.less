@@ -694,6 +694,17 @@ footer {
   z-index: @modalZ;
 }
 
+.modal-layer2-667e1 {
+  background: #000;
+  bottom: 0;
+  left: 0;
+  opacity: .6;
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: @modalZ + 100;
+}
+
 .modal-body-41add {
   background: #fff;
   bottom: 0;
@@ -720,7 +731,7 @@ footer {
   z-index: @modalZ + 1;
 }
 
-@editGameModalMargin: 5px;
+@editGameModalMargin: 2.5px;
 
 .fullscreen-modal-6d79e {
   background: #fff;
@@ -746,9 +757,11 @@ footer {
 }
 
 .bottom-5fd4c {
+  background: #ececec;
   border-top: 1px solid #ddd;
   display: flex;
-  padding: 15px;
+  //padding: 15px;
+  padding: 10px 15px;
 }
 
 .btn-215d7 {
@@ -781,15 +794,23 @@ footer {
   width: 10px;
 }
 
+.loading-modal-0a203 {
+  background: #fff;
+  border-radius: 3px;
+  left: 50%;
+  position: fixed;
+  top: 25%;
+  transform: translate(-50%, 0);
+  width: 60%;
+  z-index: @modalZ + 101;
+}
+
 .wrapper-d214e {
   color: #222;
   font-size: 28px;
   font-weight: 300;
-  left: 0;
-  position: absolute;
-  right: 0;
+  margin: 30px 0;
   text-align: center;
-  top: 20%;
 }
 
 .spinny-846e4 {
@@ -836,7 +857,7 @@ footer {
   flex: 1;
   font-size: 14px;
   font-weight: 300;
-  margin: 8px 0;
+  margin: 8px 5px;
   padding: 8px 12px;
   text-align: center;
   text-transform: uppercase;
@@ -936,5 +957,35 @@ footer {
 .time-cell-717e2 {
   color: #999;
   font-size: 13px;
+  padding-right: 5px;
   text-align: right;
+}
+
+.scheduled-c1f27 {
+  font-style: italic;
+}
+
+.game-row-02b81 {
+  .team-name {
+    font-size: 14px;
+  }
+
+  .vs {
+    display: inline-block;
+    font-size: 11px;
+    margin: 0 4px;
+  }
+
+  .status {
+    color: #777;
+    display: inline-block;
+    font-family: 'Georgia',serif;
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  .game-name {
+    color: #666;
+    font-size: 11px;
+  }
 }

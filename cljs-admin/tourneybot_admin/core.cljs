@@ -555,13 +555,13 @@
 
 (defn- click-edit-game-save-btn [js-evt]
   (neutralize-event js-evt)
-  (swap! page-state assoc :edit-game-modal-showing? false
-                          :edit-game-modal-game nil
-                          :loading-modal-showing? true
+  (swap! page-state assoc :loading-modal-showing? true
                           :loading-modal-txt "Saving…")
   ;; TODO: update the version and send the new state object
   (js/setTimeout
-    (fn [] (swap! page-state assoc :loading-modal-showing? false))
+    (fn [] (swap! page-state assoc :loading-modal-showing? false
+                                   :edit-game-modal-showing? false
+                                   :edit-game-modal-game nil))
     1500))
 
 (defn- click-score-up [scoreX js-evt]
@@ -588,7 +588,10 @@
            teamA-id
            teamB-id]}]
   (let [teamA-name (get-in @page-state [:teams (keyword teamA-id) :name])
-        teamB-name (get-in @page-state [:teams (keyword teamB-id) :name])]
+        teamB-name (get-in @page-state [:teams (keyword teamB-id) :name])
+        ;; make sure score is a number
+        scoreA (if-not (number? scoreA) 0 scoreA)
+        scoreB (if-not (number? scoreB) 0 scoreB)]
     [:div.fullscreen-modal-6d79e
       [:div.wrapper-50f2f
         [:div.top-d8bc3
@@ -655,15 +658,47 @@
     (swap! page-state assoc :edit-game-modal-showing? true
                             :edit-game-modal-game game-to-edit)))
 
+(rum/defc NoTeamsName < rum/static
+  [name]
+  [:span.scheduled-c1f27 name])
+
+(defn- status-name [s]
+  (if (= s "in_progress")
+    "in progress"
+    s))
+
+(rum/defc GameName < rum/static
+  [{:keys [name teamA-id teamB-id scoreA scoreB status]}]
+  (let [teams (:teams @page-state)
+        teamA-name (get-in teams [(keyword teamA-id) :name])
+        teamB-name (get-in teams [(keyword teamB-id) :name])]
+    [:div.game-row-02b81
+      [:div
+        [:span.team-name (str teamA-name
+                              (when (or (= status "in_progress") (= status "finished"))
+                                (str " (" scoreA ")")))]
+        [:span.vs "vs"]
+        [:span.team-name (str (when (or (= status "in_progress") (= status "finished"))
+                                (str "(" scoreB ") "))
+                              teamB-name)]]
+      [:div
+        [:span.status (status-name status)]
+        [:span.game-name (str " - " name)]]]))
+
 (rum/defc GameRow2 < rum/static
-  [idx {:keys [game-id name start-time]}]
-  [:tr {:class (if (even? idx) "even-fa3d0" "odd-fd05d")}
-    [:td.time-cell-717e2 (format-time start-time)]
-    [:td name]
-    [:td
-      [:button.edit-btn-7da0b
-        {:on-click (partial click-edit-game game-id)}
-        "Edit"]]])
+  [idx game]
+  (let [{:keys [game-id name start-time status teamA-id teamB-id]} game]
+    [:tr {:class (if (even? idx) "even-fa3d0" "odd-fd05d")}
+      [:td.time-cell-717e2 (format-time start-time)]
+      [:td
+        (if (or (not teamA-id) (not teamB-id))
+          (NoTeamsName name)
+          (GameName game))]
+      [:td
+        [:button.edit-btn-7da0b
+          {:on-click (partial click-edit-game game-id)
+           :on-touch-start (partial click-edit-game game-id)}
+          "Edit"]]]))
 
 (rum/defc GamesList < rum/static
   [title games]
@@ -753,8 +788,8 @@
 (rum/defc LoadingModal < rum/static
   [txt]
   [:div
-    [:div.modal-layer-20e76]
-    [:div.fullscreen-modal-6d79e
+    [:div.modal-layer2-667e1]
+    [:div.loading-modal-0a203
       [:div.wrapper-d214e
         (SVGIcon "spinny-846e4" "cog")
         txt]]])
@@ -807,7 +842,8 @@
   [title]
   [:header
     [:button.menu-btn-6a131
-      {:on-click click-menu-btn}
+      {:on-click click-menu-btn
+       :on-touch-start click-menu-btn}
       "Menu"]
     [:h1.page-title-0fbc4 title]])
 
