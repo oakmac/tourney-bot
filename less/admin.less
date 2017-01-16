@@ -36,72 +36,33 @@ table {
 }
 
 header {
-  .top-bar {
-    align-items: center;
-    background: #333;
-    color: #fff;
-    display: flex;
-    padding: 10px 15px;
-
-    .left {
-      font-size: 18px;
-      font-weight: 300;
-      flex: 90;
-    }
-
-    .right {
-      color: #aaa;
-      cursor: pointer;
-      flex: 10;
-      font-size: 14px;
-      font-weight: 700;
-      text-align: right;
-      text-transform: uppercase;
-    }
-  }
+  background: #333;
+  color: #fff;
+  height: 46px;
+  padding: 0 10px;
 }
 
-// hide "sign out" text on a smaller screen
-@media all and (max-width: @smallBreakpoint) {
-  header .sign-out-txt {
-    display: none;
-  }
+.menu-btn-6a131 {
+  background: rgba(0, 0, 0, 0);
+  border-radius: 5px;
+  border: 2px solid #dcdcdc;
+  color: #dcdcdc;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-right: 10px;
+  padding: 5px 8px;
+  text-transform: uppercase;
 }
 
-nav {
-  ul {
-    display: flex;
-    margin: 0;
-    padding: 0;
-  }
-
-  li {
-    background: #f5f5f5;
-    border-right: 1px solid #e6e6e6;
-    cursor: pointer;
-    flex: 1;
-    font-size: 18px;
-    font-weight:300;
-    list-style: none;
-    padding: 15px 0;
-    text-align: center;
-  }
-
-  li.active {
-    background: #ccc;
-    font-weight: 400;
-  }
-
-  // hide the border on the last tab
-  li:nth-last-of-type(1) {
-    border-right: 0;
-  }
-
-  a {
-    color: #222;
-    text-decoration: none;
-  }
-} // end nav
+.page-title-0fbc4 {
+  display: inline-block;
+  font-size: 18px;
+  font-weight: 300;
+  margin: 12px 0 0 0;
+  padding: 0;
+}
 
 footer {
   align-items: center;
@@ -867,6 +828,20 @@ footer {
   padding: 10px 0;
 }
 
+.edit-btn-7da0b {
+  background: #fff;
+  border: 1px solid #b2b2b2;
+  color: #222;
+  cursor: pointer;
+  flex: 1;
+  font-size: 14px;
+  font-weight: 300;
+  margin: 8px 0;
+  padding: 8px 12px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 .flex-container-ac723 {
   display: flex;
 }
@@ -944,4 +919,22 @@ footer {
     border-color: @primaryActionColor;
     color: #fff;
   }
+}
+
+.tbl-988bd {
+  width: 100%;
+}
+
+.even-fa3d0 {
+  background-color: #eee;
+}
+
+.odd-fd05d {
+
+}
+
+.time-cell-717e2 {
+  color: #999;
+  font-size: 13px;
+  text-align: right;
 }

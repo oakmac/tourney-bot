@@ -1,6 +1,5 @@
 (ns tourneybot-admin.core
   (:require
-    [cljsjs.marked]
     [cljsjs.moment]
     [clojure.data :refer [diff]]
     [clojure.string :refer [blank? lower-case replace]]
@@ -67,6 +66,12 @@
       (fn [game]
         (= group-id (:group game)))
       games-coll)))
+
+(def date-format "YYYY-MM-DD HHmm")
+
+(defn- format-time [start-time]
+  (let [js-moment (js/moment start-time date-format)]
+    (.format js-moment "h:mma")))
 
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
@@ -392,12 +397,6 @@
 
 ;; TODO: prevent them from picking the same team for teamA and teamB
 
-(def date-format "YYYY-MM-DD HHmm")
-
-(defn- format-start-time [start-time]
-  (let [js-moment (js/moment start-time date-format)]
-    (.format js-moment "ddd, DD MMM YYYY, h:mma")))
-
 (defn- compare-games [a b]
   (compare (-> a second :start-time)
            (-> b second :start-time)))
@@ -657,12 +656,14 @@
                             :edit-game-modal-game game-to-edit)))
 
 (rum/defc GameRow2 < rum/static
-  [{:keys [game-id
-           name
-           start-time]}]
-  [:div.game-row-d96c7
-    (str start-time " - " name)
-    [:button {:on-click (partial click-edit-game game-id)} "Edit"]])
+  [idx {:keys [game-id name start-time]}]
+  [:tr {:class (if (even? idx) "even-fa3d0" "odd-fd05d")}
+    [:td.time-cell-717e2 (format-time start-time)]
+    [:td name]
+    [:td
+      [:button.edit-btn-7da0b
+        {:on-click (partial click-edit-game game-id)}
+        "Edit"]]])
 
 (rum/defc GamesList < rum/static
   [title games]
@@ -670,7 +671,9 @@
     [:h2.title-eef62 title]
     [:div.flex-052ba
       [:div.col-beeb5
-        (map GameRow2 (sort-by :start-time games))]
+        [:table.tbl-988bd
+          [:tbody
+            (map-indexed GameRow2 (sort-by :start-time games))]]]
       [:div.col-beeb5
         "TODO: swiss results table here"]]])
 
@@ -803,17 +806,10 @@
 (rum/defc Header < rum/static
   [title]
   [:header
-    [:div.top-bar
-      [:div.left title]
-      [:div.right
-        [:button
-          {:on-click click-menu-btn}
-          "Menu"]]]])
-      ; [:div.right
-      ;   {:on-click click-sign-out
-      ;    :on-touch-start click-sign-out}
-      ;   [:span.sign-out-txt "Sign Out"]
-      ;   (SVGIcon "signout-7f21d" "signOut")]]])
+    [:button.menu-btn-6a131
+      {:on-click click-menu-btn}
+      "Menu"]
+    [:h1.page-title-0fbc4 title]])
 
 ;;------------------------------------------------------------------------------
 ;; Admin App
