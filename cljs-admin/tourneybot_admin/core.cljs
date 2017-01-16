@@ -80,9 +80,11 @@
    :password-valid? false
 
    ;; modals
+   :menu-showing? false
    :loading-modal-showing? false
    :loading-modal-txt ""
-   :menu-showing? false
+   :edit-game-modal-showing? false
+   :edit-game-modal-game nil
 
    ;; active page / group-id
    :active-page "swiss-round-1"})
@@ -125,10 +127,8 @@
           (swap! page-state merge clj-state)))))
   (catch js/Error e nil))
 
-(def ui-only-page-state-keys (keys initial-page-state))
-
 (defn- save-client-state [_kwd _the-atom _old-state new-state]
-  (let [ui-only-state (select-keys new-state ui-only-page-state-keys)
+  (let [ui-only-state (select-keys new-state [:password])
         js-state (clj->js ui-only-state)
         js-state-string (js/JSON.stringify js-state)]
     (try
@@ -188,7 +188,7 @@
   [:svg
     {:class svg-class
      :dangerouslySetInnerHTML
-       {:__html (str "<use xlink:href='../img/icons.svg#" icon-id "' />")}}])
+       {:__html (str "<use xlink:href='../img/icons.svg#" icon-id "'></use>")}}])
 
 ;;------------------------------------------------------------------------------
 ;; Swiss Results Table
@@ -546,12 +546,75 @@
         [:div.right (when swiss-round (SwissPanel teams games swiss-round simulated-scoreA simulated-scoreB))]]]))
 
 ;;------------------------------------------------------------------------------
+;; Edit Game Modal
+;;------------------------------------------------------------------------------
+
+(defn- click-edit-game-cancel-btn [js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state assoc :edit-game-modal-showing? false
+                          :edit-game-modal-game nil))
+
+(defn- click-edit-game-save-btn [js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state assoc :edit-game-modal-showing? false
+                          :edit-game-modal-game nil
+                          :loading-modal-showing? true
+                          :loading-modal-txt "Saving…")
+  ;; TODO: update the version and send the new state object
+  (js/setTimeout
+    (fn [] (swap! page-state assoc :loading-modal-showing? false))
+    1500))
+
+(rum/defc EditGameModalBody < rum/static
+  [{:keys [game-id
+           name
+           scoreA
+           scoreB
+           start-time
+           status
+           teamA-id
+           teamB-id]}]
+  (let [teamA-name (get-in @page-state [:teams (keyword teamA-id) :name])
+        teamB-name (get-in @page-state [:teams (keyword teamB-id) :name])]
+    [:div.fullscreen-modal-6d79e
+      [:div.wrapper-50f2f
+        [:div.top-d8bc3
+          [:h3.title-eef62 name]
+          [:div teamA-name]
+          [:div teamB-name]
+          [:div (str scoreA " - " scoreB)]
+          [:div status]]
+        [:div.bottom-5fd4c
+          [:button.btn-215d7 {:on-click click-edit-game-cancel-btn}
+            "Cancel"]
+          [:div.spacer-b3729]
+          [:button.btn-primary-7f246 {:on-click click-edit-game-save-btn}
+            "Save & Close"]]]]))
+
+(rum/defc EditGameModal < rum/static
+  [game]
+  [:div
+    [:div.modal-layer-20e76]
+    (EditGameModalBody game)])
+
+;;------------------------------------------------------------------------------
 ;; Games Body
 ;;------------------------------------------------------------------------------
 
+(defn- click-edit-game [game-id js-evt]
+  (neutralize-event js-evt)
+  ;; NOTE: this should always be true, just being defensive
+  (when-let [game-to-edit (get-in @page-state [:games game-id])]
+    (swap! page-state assoc :edit-game-modal-showing? true
+                            :edit-game-modal-game game-to-edit)))
+
 (rum/defc GameRow2 < rum/static
-  [{:keys [name start-time]}]
-  [:div (str start-time " - " name)])
+  [{:keys [game-id
+           name
+           start-time]}]
+  [:div
+    (str start-time " - " name)
+    [:button {:on-click (partial click-edit-game game-id)} "Edit"]])
 
 (rum/defc GamesList < rum/static
   [title games]
@@ -640,9 +703,10 @@
   [txt]
   [:div
     [:div.modal-layer-20e76]
-    [:div.saving-modal-58ebc
-      "TODO: spinny icon here"
-      txt]])
+    [:div.fullscreen-modal-6d79e
+      [:div.wrapper-d214e
+        (SVGIcon "spinny-846e4" "cog")
+        txt]]])
 
 ;;------------------------------------------------------------------------------
 ;; Menu
@@ -669,7 +733,8 @@
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-3")} "Swiss Round 3"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-4")} "Swiss Round 4"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "bracket-play")} "Bracket Play"]
-      [:div.menu-link-14aa1 {:on-click click-sign-out} "Sign out"]]])
+      [:div.menu-link-14aa1 {:on-click click-sign-out}
+        (SVGIcon "signout-7f21d" "signOut") "Sign out"]]])
 
 ;;------------------------------------------------------------------------------
 ;; Header
@@ -715,6 +780,8 @@
 
 (rum/defc AdminApp < rum/static
   [{:keys [active-page
+           edit-game-modal-game
+           edit-game-modal-showing?
            games
            loading-modal-showing?
            loading-modal-txt
@@ -728,7 +795,9 @@
       (when menu-showing?
         (Menu))
       (when loading-modal-showing?
-        (LoadingModal loading-modal-txt))]))
+        (LoadingModal loading-modal-txt))
+      (when edit-game-modal-showing?
+        (EditGameModal edit-game-modal-game))]))
 
 ;;------------------------------------------------------------------------------
 ;; Top Level Component

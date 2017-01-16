@@ -25,6 +25,10 @@ body {
   min-width: @minWidth;
 }
 
+button {
+  font-family: 'Roboto', sans-serif;
+}
+
 table {
   border-collapse: collapse;
   border-spacing: 0;
@@ -710,9 +714,9 @@ footer {
 //------------------------------------------------------------------------------
 
 .signout-7f21d {
-  fill: #aaa;
-  height: 16px;
-  margin-left: 5px;
+  fill: #222;
+  height: 18px;
+  margin-right: 5px;
   vertical-align: bottom;
   width: 16px;
 }
@@ -751,4 +755,108 @@ footer {
   width: 75%;
   left: 0;
   top: 0;
+  z-index: @modalZ + 1;
+}
+
+@editGameModalMargin: 5px;
+
+.fullscreen-modal-6d79e {
+  background: #fff;
+  border-radius: 3px;
+  bottom: @editGameModalMargin;
+  left: @editGameModalMargin;
+  position: fixed;
+  right: @editGameModalMargin;
+  top: @editGameModalMargin;
+  z-index: @modalZ + 1;
+}
+
+.wrapper-50f2f {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.top-d8bc3 {
+  flex: 1;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bottom-5fd4c {
+  display: flex;
+  padding: 15px;
+}
+
+.btn-215d7 {
+  background: #fff;
+  border: 1px solid #b2b2b2;
+  color: #222;
+  cursor: pointer;
+  flex: 1;
+  font-size: 14px;
+  font-weight: 300;
+  padding: 15px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.btn-primary-7f246 {
+  background: @primaryActionColor;
+  border: 1px solid @primaryActionColor;
+  color: #fff;
+  cursor: pointer;
+  flex: 1;
+  font-size: 14px;
+  font-weight: 300;
+  padding: 15px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.spacer-b3729 {
+  width: 10px;
+}
+
+.wrapper-d214e {
+  color: #222;
+  font-size: 28px;
+  font-weight: 300;
+  left: 0;
+  position: absolute;
+  right: 0;
+  text-align: center;
+  top: 20%;
+}
+
+.spinny-846e4 {
+  -webkit-animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
+  display: inline-block;
+  fill: #222;
+  height: 24px;
+  margin: 0 6px -2px 0;
+  width: 24px;
+}
+
+@-webkit-keyframes fa-spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+
+@keyframes fa-spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
 }
