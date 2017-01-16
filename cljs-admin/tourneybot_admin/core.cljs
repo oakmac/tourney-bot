@@ -565,6 +565,20 @@
     (fn [] (swap! page-state assoc :loading-modal-showing? false))
     1500))
 
+(defn- click-score-up [scoreX js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state update-in [:edit-game-modal-game scoreX] inc))
+
+(defn- click-score-down [scoreX js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state update-in [:edit-game-modal-game scoreX] dec))
+
+(defn- click-status-tab [new-status js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state assoc-in [:edit-game-modal-game :status] new-status))
+
+;; TODO: come up with a visual "disabled" state for the "-1" buttons when
+;;       score == 0
 (rum/defc EditGameModalBody < rum/static
   [{:keys [game-id
            name
@@ -580,10 +594,44 @@
       [:div.wrapper-50f2f
         [:div.top-d8bc3
           [:h3.title-eef62 name]
-          [:div teamA-name]
-          [:div teamB-name]
-          [:div (str scoreA " - " scoreB)]
-          [:div status]]
+          [:div.flex-container-ac723
+            [:div.left-02b94
+              [:div.big-name-c7484 [:span teamA-name]]
+              [:button.score-btn-261c4
+                {:on-click (partial click-score-up :scoreA)
+                 :on-touch-start (partial click-score-up :scoreA)}
+                "+1"]
+              [:div.big-score-39b8b scoreA]
+              [:button.score-btn-261c4.red
+                {:on-click (when-not (zero? scoreA) (partial click-score-down :scoreA))
+                 :on-touch-start (when-not (zero? scoreA) (partial click-score-down :scoreA))}
+                "-1"]]
+            [:div.center-f5e42
+              [:div.small-vs-fb4ff [:span "vs"]]]
+            [:div.right-6c20f
+              [:div.big-name-c7484 [:span teamB-name]]
+              [:button.score-btn-261c4
+                {:on-click (partial click-score-up :scoreB)
+                 :on-touch-start (partial click-score-up :scoreB)}
+                "+1"]
+              [:div.big-score-39b8b scoreB]
+              [:button.score-btn-261c4.red
+                {:on-click (when-not (zero? scoreB) (partial click-score-down :scoreB))
+                 :on-touch-start (when-not (zero? scoreB) (partial click-score-down :scoreB))}
+                "-1"]]]
+          [:div.status-tabs-61ba0
+            [:div {:class (when (= status "scheduled") "active-32daa")
+                   :on-click (partial click-status-tab "scheduled")
+                   :on-touch-start (partial click-status-tab "scheduled")}
+              "Scheduled"]
+            [:div {:class (when (= status "in_progress") "active-32daa")
+                   :on-click (partial click-status-tab "in_progress")
+                   :on-touch-start (partial click-status-tab "in_progress")}
+              "In Progress"]
+            [:div {:class (when (= status "finished") "active-32daa")
+                   :on-click (partial click-status-tab "finished")
+                   :on-touch-start (partial click-status-tab "finished")}
+              "Final"]]]
         [:div.bottom-5fd4c
           [:button.btn-215d7 {:on-click click-edit-game-cancel-btn}
             "Cancel"]
@@ -612,7 +660,7 @@
   [{:keys [game-id
            name
            start-time]}]
-  [:div
+  [:div.game-row-d96c7
     (str start-time " - " name)
     [:button {:on-click (partial click-edit-game game-id)} "Edit"]])
 
