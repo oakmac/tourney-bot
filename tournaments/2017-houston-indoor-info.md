@@ -59,7 +59,7 @@ create highly competitive match ups each round.
 
 **$250 per team if paid before Feb 19. $300 per team if paid after Feb 19.**
 
-Please PayPal mblyle@gmail.com -- only personal PayPal and no credit cards, as
+Please PayPal <mblyle@gmail.com> -- only personal PayPal and no credit cards, as
 PayPal takes a fee from those.
 
 Registration is open until all bids have been filled. Bids are secured once
@@ -89,7 +89,7 @@ roller pulls.
 
 There very well could be, however we need someone to help organize it (plan
 dates/times, collect payment, etc). If you are interested, please contact
-mblyle@gmail.com.
+<mblyle@gmail.com>.
 
 There are also some indoor pickup games in Houston you can checkout before the
 tournament:
@@ -127,7 +127,7 @@ event will be donated to support the growth of Houston Youth Ultimate.
 
 It is not uncommon for some teams to inquire for 1-2 additional players, or for
 enough interested pickups to justify forming a team. If you are interested in
-picking up, please email mblyle@gmail.com and while we cannot make guarantees,
+picking up, please email <mblyle@gmail.com> and while we cannot make guarantees,
 we will do our best to help you find a team.
 
 [7115 Clarewood, Houston TX, 77036]:https://www.google.com/maps/place/7115+Clarewood+Dr,+Houston,+TX+77036
