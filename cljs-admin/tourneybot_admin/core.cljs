@@ -702,15 +702,22 @@
 
 (rum/defc GamesList < rum/static
   [title games]
-  [:section
-    [:h2.title-eef62 title]
-    [:div.flex-052ba
-      [:div.col-beeb5
-        [:table.tbl-988bd
-          [:tbody
-            (map-indexed GameRow2 (sort-by :start-time games))]]]
-      [:div.col-beeb5
-        "TODO: swiss results table here"]]])
+  (let [is-swiss-round? (-> games first is-swiss-game?)
+        is-bracket-play? false
+        results ()]
+    [:section
+      [:h2.title-eef62 title]
+      [:div.flex-052ba
+        [:div.col-beeb5
+          [:table.tbl-988bd
+            [:tbody
+              (map-indexed GameRow2 (sort-by :start-time games))]]]
+        (when is-swiss-round?
+          [:div.col-beeb5
+            [:h2.title-eef62 (str title " Results")]
+            (SwissResultsTable results)])
+        (when is-bracket-play?
+          [:div "TODO: bracket display goes here"])]]))
 
 ;;------------------------------------------------------------------------------
 ;; Footer
