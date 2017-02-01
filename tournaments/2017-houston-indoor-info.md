@@ -23,21 +23,24 @@ Please send all bids, questions, or team requests to Matt Lyle
 
 Saturday, March 25, 2017
 
-9:00am - 6:00pm
+7:00am - 3:00pm
 
 ## Location
 
-[Indoor Soccer 59] @ [7115 Clarewood, Houston TX, 77036]
+[Southwest Indoor Soccer] @ [12950 Sugar Ridge Blvd 77477]
 
-This is the same venue we utilized last year with widespread positive feedback.
+This is a different venue than previous years.
+
+[Southwest Indoor Soccer]:http://www.letsplaysoccer.com/facilities/15
+[12950 Sugar Ridge Blvd 77477]:https://www.google.com/maps/place/12950+Sugar+Ridge+Blvd+77477
 
 ## Teams Structure
 
-**8-12 Coed teams**
+**10 Coed teams**
 
-**2-2 format, roster max of 10 players**
+**2-2 format, roster max of 11 players**
 
-Roster max limit is 10 players per team. Game play is 4-on-4 (2/2 gender ratio)
+Roster max limit is 11 players per team. Game play is 4-on-4 (2/2 gender ratio)
 with normal subbing.
 
 **New for 2017:** We are once again tweaking the format. For this year we will
@@ -57,7 +60,7 @@ create highly competitive match ups each round.
 
 ## Cost
 
-**$250 per team if paid before Feb 19. $300 per team if paid after Feb 19.**
+**$200 per team if paid before Feb 19. $300 per team if paid after Feb 19.**
 
 Please PayPal <mblyle@gmail.com> -- only personal PayPal and no credit cards, as
 PayPal takes a fee from those.
@@ -76,6 +79,7 @@ date is ideal, it did not work out this year.
 #### What type of shoes can I wear at the venue?
 
 Regular soccer or football style cleats are acceptable, as well as turf cleats.
+The field is rubbery, soft "field turf".
 
 #### Are there any special rules?
 
@@ -84,6 +88,11 @@ each of the captains. The most significant rules changes are that there is no
 halftime, the stall is at 6 (first utterance of the 'sssssss' in six), the walls
 and nets are out of bounds, the brick is mid field, and no upside down/blade/or
 roller pulls.
+
+#### How many games is my team guaranteed?
+
+This will be determined based on the final number of teams, but you can expect
+to play a minimum of 4-5 games, up to a max of 7.
 
 #### Will there be an opportunity to play indoor pick-up before the tournament?
 
@@ -105,11 +114,7 @@ could also use some people to help organize indoor pick-up (see above).
 
 #### Can I bring a cooler of food or drinks to the venue?
 
-**Absolutely NOT**. The venue is very strict on not allowing outside food or
-drink inside (they even fussed us about Starbucks cups last year, and people
-with cooler were asked to take them outside...I'm not joking). Water bottles are
-OK, but please leave any coolers of additional food or drink in your car as you
-are more than welcome to enjoy them outside the venue doors.
+Yes. Unlike last year, outside food and drink is welcome at the facility.
 
 #### Are you aware there is a coed tournament in New Orleans the same weekend?
 
@@ -118,7 +123,7 @@ support the NOLA community and consider the indoor tournament as an alternative
 option for those unable to travel for the weekend or looking for an event that
 can accommodate a smaller roster size.
 
-#### $250-$300? Are you trying to make a profit off this event?
+#### $200-$300? Are you trying to make a profit off this event?
 
 No. The bid cost is essentially set to break even. Any "profit" gathered by the
 event will be donated to support the growth of Houston Youth Ultimate.
@@ -129,6 +134,3 @@ It is not uncommon for some teams to inquire for 1-2 additional players, or for
 enough interested pickups to justify forming a team. If you are interested in
 picking up, please email <mblyle@gmail.com> and while we cannot make guarantees,
 we will do our best to help you find a team.
-
-[7115 Clarewood, Houston TX, 77036]:https://www.google.com/maps/place/7115+Clarewood+Dr,+Houston,+TX+77036
-[Indoor Soccer 59]:http://www.indoorsoccer59.com
