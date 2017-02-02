@@ -891,14 +891,23 @@
 ;; Error Modal
 ;;------------------------------------------------------------------------------
 
+(defn- click-reload-btn [js-evt]
+  (neutralize-event js-evt)
+  (js/location.reload))
+
 (rum/defc ErrorModal < rum/static
   [txt]
   [:div
     [:div.modal-layer2-667e1]
-    [:div.loading-modal-0a203
-      [:div.wrapper-d214e
-        ;; (SVGIcon "spinny-846e4" "cog")
-        "TODO: handle errors here, attempt to reload the state"]]])
+    [:div.error-modal-c1d65
+      [:div.modal-inner-e530d
+        [:div.error-bar-2cd03
+          (SVGIcon "error-icon-82a21" "warningTriangle")
+          "Update Failed"]
+        [:p.help-msg-f56fd "Please reload the page and try again."]
+        [:div.centered-bafb6
+          [:button.btn-primary-7f246 {:on-click click-reload-btn}
+            "Reload"]]]]])
 
 ;;------------------------------------------------------------------------------
 ;; Loading Modal

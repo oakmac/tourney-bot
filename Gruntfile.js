@@ -86,10 +86,9 @@ grunt.initConfig({
 
     // remove some dev files
     post: [
-      '00-publish/js/admin.js',
-      '00-publish/js/client.js',
-      '00-publish/dev.html',
-      '00-publish/admin/dev.html'
+      '00-publish/js/admin-dev.js',
+      '00-publish/js/client-dev.js',
+      '00-publish/tournament.json'
     ]
   },
 

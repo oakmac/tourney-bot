@@ -10,6 +10,9 @@
 @primaryActionColor: #38c;
 @smallBreakpoint: 750px;
 @modalZ: 100;
+@errorRed: #ff3939;
+@warningYellow: #ffff41;
+@successGreen: #148414;
 
 //------------------------------------------------------------------------------
 // Tag Selectors
@@ -818,6 +821,23 @@ footer {
   width: 10px;
 }
 
+.modal-inner-e530d {
+  color: #222;
+  font-weight: 300;
+  padding: 20px;
+}
+
+.error-modal-c1d65 {
+  background: #fff;
+  border-radius: 3px;
+  left: 50%;
+  position: fixed;
+  top: 25%;
+  transform: translate(-50%, 0);
+  width: 90%;
+  z-index: @modalZ + 101;
+}
+
 .loading-modal-0a203 {
   background: #fff;
   border-radius: 3px;
@@ -835,6 +855,24 @@ footer {
   font-weight: 300;
   margin: 30px 0;
   text-align: center;
+}
+
+.error-icon-82a21 {
+  display: inline-block;
+  fill: #222;
+  height: 24px;
+  margin: 0 6px -2px 0;
+  width: 24px;
+}
+
+.error-bar-2cd03 {
+  background: @warningYellow;
+  padding: 16px;
+  font-size: 24px;
+}
+
+.help-msg-f56fd {
+  font-size: 20px;
 }
 
 .spinny-846e4 {
@@ -902,6 +940,10 @@ footer {
 
 .right-6c20f {
   flex: 47;
+  text-align: center;
+}
+
+.centered-bafb6 {
   text-align: center;
 }
 
