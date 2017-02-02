@@ -42,6 +42,8 @@
 (when in-dev-mode?
   (js-log "TourneyBot dev mode started."))
 
+(def saving-txt "Saving…")
+
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
@@ -92,7 +94,7 @@
    :edit-game-modal-game nil
 
    ;; active page / group-id
-   :active-page "swiss-round-1"})
+   :active-page "teams"})
 
    ; :simulated-scoreA 0
    ; :simulated-scoreB 0})
@@ -165,24 +167,33 @@
 (fetch-tourney-state!)
 
 ;;------------------------------------------------------------------------------
-;; Update games when the state changes
+;; Save Tournament State
 ;;------------------------------------------------------------------------------
 
-; (def upload-rate-ms 2500)
+;; NOTE: this list should probably be in common or tourney-nerd?
+(def game-state-keys
+  "page-state map keys that we want to save on the server"
+  #{:teams :games :version :title :tiesAllowed})
 
-; ;; FIXME: change this to be "update event", not just games
-; (defn- upload-games!
-;   "Upload the games to tournament.json"
-;   []
-;   (let [{:keys [games password password-valid?]} @page-state]
-;     (when (and @initial-state-loaded?
-;                password-valid?
-;                (not (blank? password))
-;                (map? games))
-;       (update-event! password games always-nil always-nil))))
+(defn- generic-success-fn []
+  (swap! page-state assoc :loading-modal-showing? false))
 
-; (when-not in-dev-mode?
-;   (js/setInterval upload-games! upload-rate-ms))
+(defn- generic-error-fn []
+  (swap! page-state assoc :error-modal-showing? true
+                          :loading-modal-showing? false))
+
+(defn- save-state!
+  ([]
+   (save-state! generic-success-fn generic-error-fn))
+  ([success-fn]
+   (save-state! success-fn generic-error-fn))
+  ([success-fn error-fn]
+   ;; bump the version
+   (swap! page-state update-in [:version] inc)
+   ;; send the new state
+   (let [current-state @page-state
+         game-state (select-keys current-state game-state-keys)]
+     (update-event! (:password current-state) game-state success-fn error-fn))))
 
 ;;------------------------------------------------------------------------------
 ;; SVG Icon
@@ -199,7 +210,7 @@
 ;; Swiss Results Table
 ;;------------------------------------------------------------------------------
 
-;; TODO: take "ties-allowed?" into account here
+;; TODO: take "tiesAllowed?" into account here
 (rum/defc SwissResultsRow < rum/static
   [idx {:keys [team-name games-won games-lost games-tied
                points-won points-lost points-diff
@@ -556,7 +567,7 @@
 (defn- click-edit-game-save-btn [js-evt]
   (neutralize-event js-evt)
   (swap! page-state assoc :loading-modal-showing? true
-                          :loading-modal-txt "Saving…")
+                          :loading-modal-txt saving-txt)
   ;; TODO: update the version and send the new state object
   (js/setTimeout
     (fn [] (swap! page-state assoc :loading-modal-showing? false
@@ -646,6 +657,94 @@
   [:div
     [:div.modal-layer-20e76]
     (EditGameModalBody game)])
+
+;;------------------------------------------------------------------------------
+;; Teams
+;;------------------------------------------------------------------------------
+
+(defn- change-team-name [js-evt]
+  (let [new-txt (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc-in [:edit-team :name] new-txt)))
+
+(defn- change-captain-name [js-evt]
+  (let [new-txt (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc-in [:edit-team :captain] new-txt)))
+
+(defn- close-edit-team-modal! [js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state assoc :edit-team-modal-showing? false
+                          :edit-team nil))
+
+(defn- click-edit-team-save-btn [js-evt]
+  (neutralize-event js-evt)
+  (let [edit-team (:edit-team @page-state)
+        new-captain (:captain edit-team)
+        new-name (:name edit-team)
+        team-id (:id edit-team)]
+    ;; update the UI state
+    (swap! page-state assoc :edit-team-modal-showing? false
+                            :edit-team nil
+                            :loading-modal-showing? true
+                            :loading-modal-txt saving-txt)
+    ;; update the team
+    (swap! page-state update-in [:teams team-id] merge
+      {:name new-name
+       :captain new-captain})
+    ;; save the new state
+    (save-state!)))
+
+(rum/defc EditTeamModalBody < rum/static
+  [{:keys [id name captain]}]
+  [:div.halfscreen-modal-bf210
+    [:div.wrapper-50f2f
+      [:div.top-d8bc3
+        [:div.inner-8cd7f
+          [:label.label-cee3e "Team Name:"]
+          [:input.big-input-e8342
+            {:on-change change-team-name
+             :type "text"
+             :value name}]
+          [:label.label-cee3e "Captain:"]
+          [:input.big-input-e8342
+            {:on-change change-captain-name
+             :type "text"
+             :value captain}]]]
+      [:div.bottom-5fd4c
+        [:button.btn-215d7 {:on-click close-edit-team-modal!}
+          "Cancel"]
+        [:div.spacer-b3729]
+        [:button.btn-primary-7f246 {:on-click click-edit-team-save-btn}
+          "Save & Close"]]]])
+
+(rum/defc EditTeamModal < rum/static
+  [team]
+  [:div
+    [:div.modal-layer-20e76 {:on-click close-edit-team-modal!}]
+    (EditTeamModalBody team)])
+
+(defn- click-edit-team-btn [team js-evt]
+  (neutralize-event js-evt)
+  (swap! page-state assoc :edit-team-modal-showing? true
+                          :edit-team team))
+
+(rum/defc TeamRow < rum/static
+  [team]
+  [:div.team-row-f5ef3
+    [:div.row-left-87ce4
+      [:div.team-name-37bbb (:name team)]
+      [:div.captain-ea163 (:captain team)]]
+    [:div.row-right-eb8a9
+      [:button.btn-primary-7f246
+        {:on-click (partial click-edit-team-btn team)}
+        "Edit"]]])
+
+(rum/defc TeamsPage < rum/static
+  [teams]
+  (let [teams-list (map
+                     (fn [[team-id team]] (assoc team :id team-id))
+                     teams)]
+    [:div
+      (map TeamRow teams-list)]))
 
 ;;------------------------------------------------------------------------------
 ;; Games Body
@@ -789,6 +888,19 @@
              :value "Login"}])]]])
 
 ;;------------------------------------------------------------------------------
+;; Error Modal
+;;------------------------------------------------------------------------------
+
+(rum/defc ErrorModal < rum/static
+  [txt]
+  [:div
+    [:div.modal-layer2-667e1]
+    [:div.loading-modal-0a203
+      [:div.wrapper-d214e
+        ;; (SVGIcon "spinny-846e4" "cog")
+        "TODO: handle errors here, attempt to reload the state"]]])
+
+;;------------------------------------------------------------------------------
 ;; Loading Modal
 ;;------------------------------------------------------------------------------
 
@@ -814,6 +926,12 @@
   (swap! page-state assoc :active-page page-id
                           :menu-showing? false))
 
+(defn- click-teams-menu-link [js-evt]
+  (neutralize-event js-evt)
+  (let [teams (:teams @page-state)]
+    (swap! page-state assoc :active-page "teams"
+                            :menu-showing? false)))
+
 (declare click-sign-out)
 
 (rum/defc Menu < rum/static
@@ -821,11 +939,12 @@
   [:div
     [:div.modal-layer-20e76 {:on-click close-modal}]
     [:div.modal-body-41add
-      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-1")} "Swiss Round 1"]
-      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-2")} "Swiss Round 2"]
-      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-3")} "Swiss Round 3"]
-      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-4")} "Swiss Round 4"]
-      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "bracket-play")} "Bracket Play"]
+      [:div.menu-link-14aa1 {:on-click click-teams-menu-link} "Teams"]
+      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-1")} "Swiss Round 1"]
+      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-2")} "Swiss Round 2"]
+      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-3")} "Swiss Round 3"]
+      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-4")} "Swiss Round 4"]
+      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "bracket-play")} "Bracket Play"]
       [:div.menu-link-14aa1 {:on-click click-sign-out}
         (SVGIcon "signout-7f21d" "signOut") "Sign out"]]])
 
@@ -869,22 +988,35 @@
   [{:keys [active-page
            edit-game-modal-game
            edit-game-modal-showing?
+           edit-team-modal-showing?
+           edit-team
+           error-modal-showing?
            games
            loading-modal-showing?
            loading-modal-txt
            menu-showing?
+           teams
            title]}]
   (let [active-games (get-games-in-group games active-page)]
     [:div.admin-container
       (Header title)
-      (GamesList (get group-id->group-name active-page) active-games)
+      (when (= active-page "teams")
+        (TeamsPage teams))
+
+      ;; TODO: finish the games pages
+      ;; (GamesList (get group-id->group-name active-page) active-games)
+
       (Footer)
       (when menu-showing?
         (Menu))
       (when loading-modal-showing?
         (LoadingModal loading-modal-txt))
+      (when error-modal-showing?
+        (ErrorModal))
       (when edit-game-modal-showing?
-        (EditGameModal edit-game-modal-game))]))
+        (EditGameModal edit-game-modal-game))
+      (when edit-team-modal-showing?
+        (EditTeamModal edit-team))]))
 
 ;;------------------------------------------------------------------------------
 ;; Top Level Component
