@@ -1,0 +1,14 @@
+// This file exists for developer convenience to run the node web server during
+// development.
+//
+// "forever" is a tool to help run node.js processes in the background.
+// https://github.com/foreverjs/forever
+//
+// 1. Install forever: "npm install -g forever"
+// 2. Run "forever start forever.json"
+{
+    "uid": "tourney-bot",
+    "append": true,
+    "watch": true,
+    "script": "server.js"
+}
