@@ -40,8 +40,5 @@
       "dataType" "text"
       "error" error-fn
       "method" "post"
-      "success" (fn [response-txt]
-                  (if (= response-txt "true")
-                    (success-fn)
-                    (error-fn)))
+      "success" success-fn
       "url" "../api/update.php")))

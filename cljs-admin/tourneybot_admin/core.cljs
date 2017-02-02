@@ -734,7 +734,7 @@
       [:div.team-name-37bbb (:name team)]
       [:div.captain-ea163 (:captain team)]]
     [:div.row-right-eb8a9
-      [:button.btn-primary-7f246
+      [:button.btn-secondary-a6e0d
         {:on-click (partial click-edit-team-btn team)}
         "Edit"]]])
 
