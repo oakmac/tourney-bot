@@ -13,6 +13,7 @@
 @errorRed: #ff3939;
 @warningYellow: #ffff41;
 @successGreen: #148414;
+@maxModalWidth: 500px;
 
 //------------------------------------------------------------------------------
 // Tag Selectors
@@ -747,10 +748,11 @@ footer {
   z-index: @modalZ + 1;
 }
 
-.halfscreen-modal-bf210 {
+.edit-team-modal-bf210 {
   background: #fff;
   border-radius: 3px;
   left: 50%;
+  max-width: @maxModalWidth;
   position: fixed;
   top: 20%;
   transform: translate(-50%, 0);
@@ -774,7 +776,6 @@ footer {
   background: #ececec;
   border-top: 1px solid #ddd;
   display: flex;
-  //padding: 15px;
   padding: 10px 15px;
 }
 
@@ -831,6 +832,7 @@ footer {
   background: #fff;
   border-radius: 3px;
   left: 50%;
+  max-width: @maxModalWidth;
   position: fixed;
   top: 25%;
   transform: translate(-50%, 0);
@@ -842,6 +844,7 @@ footer {
   background: #fff;
   border-radius: 3px;
   left: 50%;
+  max-width: @maxModalWidth;
   position: fixed;
   top: 25%;
   transform: translate(-50%, 0);

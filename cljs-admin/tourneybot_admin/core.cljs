@@ -695,7 +695,7 @@
 
 (rum/defc EditTeamModalBody < rum/static
   [{:keys [id name captain]}]
-  [:div.halfscreen-modal-bf210
+  [:div.edit-team-modal-bf210
     [:div.wrapper-50f2f
       [:div.top-d8bc3
         [:div.inner-8cd7f
