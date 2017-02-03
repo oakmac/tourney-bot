@@ -25,10 +25,10 @@
 ;; Constants
 ;;------------------------------------------------------------------------------
 
-(def info-tab "INFO-TAB")
-(def schedule-tab "SCHEDULE-TAB")
-(def results-tab "RESULTS-TAB")
-(def tab-values #{info-tab schedule-tab results-tab})
+(def info-tab-id "INFO-TAB")
+(def schedule-tab-id "SCHEDULE-TAB")
+(def results-tab-id "RESULTS-TAB")
+(def tab-values #{info-tab-id schedule-tab-id results-tab-id})
 
 (def sort-on-name "SORT-BY-NAME")
 (def sort-on-record "SORT-BY-RECORD")
@@ -45,6 +45,10 @@
 ;; TODO: allow this to be overriden with a query param
 (def refresh-rate-ms 5000)
 
+;; TODO: this probably belongs in util or common namespace
+(defn- game-scheduled? [g]
+  (= scheduled-status (:status g)))
+
 ;;------------------------------------------------------------------------------
 ;; Page State Atom
 ;;------------------------------------------------------------------------------
@@ -53,7 +57,7 @@
   {:hide-finished-games? false
    :schedule-search-text ""
    :sort-results-by sort-on-name
-   :tab info-tab})
+   :tab info-tab-id})
 
 (def page-state (atom initial-page-state))
 
@@ -400,12 +404,12 @@
       name]])
 
 (rum/defc NavTabs < rum/static
-  [current-tab]
+  [current-tab tournament-has-started?]
   [:nav
     [:ul
-      (Tab "Info" info-tab current-tab)
-      (Tab "Schedule" schedule-tab current-tab)
-      (Tab "Results" results-tab current-tab)]])
+      (Tab "Info" info-tab-id current-tab)
+      (Tab "Schedule" schedule-tab-id current-tab)
+      (Tab (if tournament-has-started? "Results" "Teams") results-tab-id current-tab)]])
 
 ;;------------------------------------------------------------------------------
 ;; Footer
@@ -424,19 +428,23 @@
 
 (rum/defc IndexApp < rum/static
   [state]
-  (let [current-tab (:tab state)]
+  (let [current-tab (:tab state)
+        games (:games state)
+        tournament-has-started? (not (or (not games)
+                                         (zero? (count (vals games)))
+                                         (every? game-scheduled? (vals games))))]
     [:div
       [:header
         [:h1 (:title state)]
-        (NavTabs current-tab)]
+        (NavTabs current-tab tournament-has-started?)]
       ;; NOTE: we fill this <div> with raw HTML content so it's important that
       ;;       react.js never touches it
       ;; TODO: change this to work as a Rum component
       [:article#infoContainer
-        {:style {:display (if (= info-tab current-tab) "block" "none")}}]
-      (when (= current-tab schedule-tab)
+        {:style {:display (if (= info-tab-id current-tab) "block" "none")}}]
+      (when (= current-tab schedule-tab-id)
         (SchedulePage state))
-      (when (= current-tab results-tab)
+      (when (= current-tab results-tab-id)
         (ResultsPage state))
       (Footer)]))
 

@@ -92,12 +92,10 @@
    :loading-modal-txt ""
    :edit-game-modal-showing? false
    :edit-game-modal-game nil
+   :error-modal-showing? false
 
    ;; active page / group-id
    :active-page "teams"})
-
-   ; :simulated-scoreA 0
-   ; :simulated-scoreB 0})
 
 (def page-state (atom initial-page-state))
 
@@ -823,7 +821,6 @@
 ;;------------------------------------------------------------------------------
 
 ;; TODO: link to the client site from the admin page, open in a new window
-
 (rum/defc Footer < rum/static
   []
   [:footer
@@ -943,7 +940,7 @@
 
 (declare click-sign-out)
 
-(rum/defc Menu < rum/static
+(rum/defc LeftNavMenu < rum/static
   []
   [:div
     [:div.modal-layer-20e76 {:on-click close-modal}]
@@ -1017,7 +1014,7 @@
 
       (Footer)
       (when menu-showing?
-        (Menu))
+        (LeftNavMenu))
       (when loading-modal-showing?
         (LoadingModal loading-modal-txt))
       (when error-modal-showing?
