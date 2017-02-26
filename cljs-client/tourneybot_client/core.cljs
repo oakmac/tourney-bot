@@ -17,6 +17,7 @@
                              fetch-ajax-text
                              fetch-json-as-cljs
                              game->date
+                             index-key-fn-mixin
                              js-log
                              log
                              tourney-bot-url]]))
@@ -187,8 +188,8 @@
       [:span.dash "-"]
       [:span.big-num games-lost]
       (when ties-allowed?
-        (list [:span.dash "-"]
-              [:span.big-num games-tied]))]
+        (list [:span.dash {:key 1} "-"]
+              [:span.big-num {:key 2} games-tied]))]
     [:div.small-points
       [:span.small-point (str "+" points-won)]
       [:span ", "]
@@ -198,8 +199,8 @@
                            points-diff
                            (str "+" points-diff))]]])
 
-(rum/defc ResultRow < rum/static
-  [ties-allowed? result]
+(rum/defc ResultRow < (merge rum/static index-key-fn-mixin)
+  [idx result ties-allowed?]
   (let [no-games-played? (zero? (:games-played result))]
     [:tr
       [:td.place (when-not no-games-played? (str "#" (:place result)))]
@@ -240,7 +241,7 @@
       [:table
         (ResultsTableHeader ties-allowed?)
         [:tbody
-          (map (partial ResultRow ties-allowed?) results)]]]))
+          (map-indexed #(ResultRow %1 %2 ties-allowed?) results)]]]))
 
 ;;------------------------------------------------------------------------------
 ;; Schedule Page
@@ -282,8 +283,8 @@
       "")])
 
 ;; TODO: highlight search match text in yellow; stretch goal :)
-(rum/defc ScheduleRow < rum/static
-  [teams game]
+(rum/defc ScheduleRow < (merge rum/static index-key-fn-mixin)
+  [idx game teams]
   (let [game-name (:name game)
         status (:status game)
         teamA-id (keyword (:teamA-id game))
@@ -302,7 +303,7 @@
       [:td.game-cell
         (if (and (not teamA-name) (not teamB-name))
           [:div.pending-game game-name]
-          (list [:div teamA-name
+          (list [:div {:key 1} teamA-name
                       (when show-scores?
                         (str " (" scoreA ")"))
                       [:span.vs "vs"]
@@ -311,17 +312,17 @@
                       teamB-name
                       (when status
                         (GameStatus status))]
-                [:div.sub-name game-name]))]]))
+                [:div.sub-name {:key 2} game-name]))]]))
 
-(rum/defc SingleDaySchedule < rum/static
-  [teams games date]
+(rum/defc SingleDaySchedule < (merge rum/static index-key-fn-mixin)
+  [idx date teams games]
   (let [games-on-this-day (filter #(= date (game->date %)) games)
         games-on-this-day (sort-by :start-time games-on-this-day)]
     [:div
       [:h3 (format-date date)]
       [:table.schedule-tbl
         [:tbody
-          (map (partial ScheduleRow teams) games-on-this-day)]]]))
+          (map-indexed #(ScheduleRow %1 %2 teams) games-on-this-day)]]]))
 
 (defn- on-change-schedule-search [js-evt]
   (let [new-text (aget js-evt "currentTarget" "value")]
@@ -384,7 +385,7 @@
             [:span.label-text "Hide finished games"]]]]
       (if (empty? filtered-games2)
         [:div.no-search-results "No games found."]
-        (map (partial SingleDaySchedule teams filtered-games2) tourney-dates))]))
+        (map-indexed #(SingleDaySchedule %1 %2 teams filtered-games2) tourney-dates))]))
 
 ;;------------------------------------------------------------------------------
 ;; Navigation Tabs

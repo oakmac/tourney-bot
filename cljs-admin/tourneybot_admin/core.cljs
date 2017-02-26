@@ -19,16 +19,14 @@
                              by-id
                              fetch-ajax-text
                              fetch-json-as-cljs
+                             index-key-fn-mixin
                              js-log
-                             neutralize-event
                              log
+                             neutralize-event
                              one?
                              tourney-bot-url]]
     [tourneybot-admin.api :refer [check-password
                                   update-event!]]))
-
-;; TODO: set up some logic such that when a quarterfinals game is finished, it
-;;       automatically seeds the team into the next bracket game
 
 ;;------------------------------------------------------------------------------
 ;; Constants
@@ -725,8 +723,8 @@
   (swap! page-state assoc :edit-team-modal-showing? true
                           :edit-team team))
 
-(rum/defc TeamRow < rum/static
-  [team]
+(rum/defc TeamRow < (merge rum/static index-key-fn-mixin)
+  [idx team]
   [:div.team-row-f5ef3
     [:div.row-left-87ce4
       [:div.team-name-37bbb (:name team)]
@@ -742,7 +740,7 @@
                      (fn [[team-id team]] (assoc team :id team-id))
                      teams)]
     [:div
-      (map TeamRow teams-list)]))
+      (map-indexed #(TeamRow %1 %2) teams-list)]))
 
 ;;------------------------------------------------------------------------------
 ;; Games Body
@@ -946,11 +944,11 @@
     [:div.modal-layer-20e76 {:on-click close-modal}]
     [:div.modal-body-41add
       [:div.menu-link-14aa1 {:on-click click-teams-menu-link} "Teams"]
-      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-1")} "Swiss Round 1"]
-      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-2")} "Swiss Round 2"]
-      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-3")} "Swiss Round 3"]
-      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-4")} "Swiss Round 4"]
-      ; [:div.menu-link-14aa1 {:on-click (partial click-menu-link "bracket-play")} "Bracket Play"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-1")} "Swiss Round 1"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-2")} "Swiss Round 2"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-3")} "Swiss Round 3"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-4")} "Swiss Round 4"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "bracket-play")} "Bracket Play"]
       [:div.menu-link-14aa1 {:on-click click-sign-out}
         (SVGIcon "signout-7f21d" "signOut") "Sign out"]]])
 

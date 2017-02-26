@@ -9,6 +9,7 @@
 {
     "uid": "tourney-bot",
     "append": true,
-    "watch": true,
+    "watch": false,
     "script": "server.js"
 }
+

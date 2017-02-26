@@ -8,6 +8,16 @@
 (def tourney-bot-url "https://github.com/oakmac/tourney-bot")
 
 ;;------------------------------------------------------------------------------
+;; React Key Function
+;;------------------------------------------------------------------------------
+
+(def index-key-fn-mixin
+  "This mixin can be used with Rum components when the first argument passed to
+   the function is suitable as a React key. This is common when using
+   map-indexed to iterate over a collection."
+  {:key-fn (fn [idx _] (str idx))})
+
+;;------------------------------------------------------------------------------
 ;; Logging
 ;;------------------------------------------------------------------------------
 
