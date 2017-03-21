@@ -55,14 +55,23 @@
 <button id="saveBtn">Save State</button>
 <script src="../js/jquery-2.2.1.min.js"></script>
 <script>
+var currentVersion = null;
+
 function fetchState() {
-  $.getJSON('../tournament.json', function(freshState) {
+  $.getJSON('../api/latest.php?_' + Math.random(), function(freshState) {
+    currentVersion = freshState.version
+    delete freshState.version
+    delete freshState.ctime
     $('#jsonInputField').val(JSON.stringify(freshState, null, 2));
   });
 }
 
 function saveSuccess() {
   window.location.href = window.location.href;
+}
+
+function saveError(err) {
+  alert(err.responseText)
 }
 
 function clickSaveBtn() {
@@ -88,16 +97,19 @@ function clickSaveBtn() {
     .css('opacity', 0.5)
     .html('Saving...');
 
+  // bump the version
+  newState.version = currentVersion + 1
+
   // upload the new state
   $.ajax({
     data: {
-      method: 'update-state',
-      password: password,
-      'tournament-state': JSON.stringify(newState)
+      data: JSON.stringify(newState),
+      password: password
     },
+    error: saveError,
     method: 'post',
     success: saveSuccess,
-    url: '../api.php'
+    url: '../api/update.php'
   });
 }
 
