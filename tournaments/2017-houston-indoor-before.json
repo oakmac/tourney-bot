@@ -1,0 +1,265 @@
+{
+  "teams": {
+    "team1": {
+      "name": "Huck Off",
+      "captain": "Chase Thomas"
+    },
+    "team2": {
+      "name": "Mathletes",
+      "captain": "Cat Belgarde "
+    },
+    "team3": {
+      "name": "Exploding Kittens",
+      "captain": "Matt Lyle"
+    },
+    "team4": {
+      "name": "Pizza Roll",
+      "captain": "Naomi Trang"
+    },
+    "team5": {
+      "name": "Undecided",
+      "captain": "Nathan Scott"
+    },
+    "team6": {
+      "name": "League City",
+      "captain": "Jeff Kitchens"
+    },
+    "team7": {
+      "name": "Ascension",
+      "captain": "Zach Anderson"
+    },
+    "team8": {
+      "name": "Skied Rice",
+      "captain": "Valerie Pinillos"
+    }
+  },
+  "title": "2017 Houston Indoor",
+  "tiesAllowed": true,
+  "games": {
+    "game100": {
+      "group": "swiss-round-1",
+      "name": "Swiss Round 1, Game 1",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 0700",
+      "status": "scheduled",
+      "swiss-round": 1
+    },
+    "game101": {
+      "group": "swiss-round-1",
+      "name": "Swiss Round 1, Game 2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 0720",
+      "status": "scheduled",
+      "swiss-round": 1
+    },
+    "game102": {
+      "group": "swiss-round-1",
+      "name": "Swiss Round 1, Game 3",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 0740",
+      "status": "scheduled",
+      "swiss-round": 1
+    },
+    "game103": {
+      "group": "swiss-round-1",
+      "name": "Swiss Round 1, Game 4",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 0800",
+      "status": "scheduled",
+      "swiss-round": 1
+    },
+    "game200": {
+      "group": "swiss-round-2",
+      "name": "Swiss Round 2, Game 1",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 0820",
+      "status": "scheduled",
+      "swiss-round": 2
+    },
+    "game201": {
+      "group": "swiss-round-2",
+      "name": "Swiss Round 2, Game 2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 0840",
+      "status": "scheduled",
+      "swiss-round": 2
+    },
+    "game202": {
+      "group": "swiss-round-2",
+      "name": "Swiss Round 2, Game 3",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 0900",
+      "status": "scheduled",
+      "swiss-round": 2
+    },
+    "game203": {
+      "group": "swiss-round-2",
+      "name": "Swiss Round 2, Game 4",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 0920",
+      "status": "scheduled",
+      "swiss-round": 2
+    },
+    "game300": {
+      "group": "swiss-round-3",
+      "name": "Swiss Round 3, Game 1",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 0940",
+      "status": "scheduled",
+      "swiss-round": 3
+    },
+    "game301": {
+      "group": "swiss-round-3",
+      "name": "Swiss Round 3, Game 2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1000",
+      "status": "scheduled",
+      "swiss-round": 3
+    },
+    "game302": {
+      "group": "swiss-round-3",
+      "name": "Swiss Round 3, Game 3",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1020",
+      "status": "scheduled",
+      "swiss-round": 3
+    },
+    "game303": {
+      "group": "swiss-round-3",
+      "name": "Swiss Round 3, Game 4",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1040",
+      "status": "scheduled",
+      "swiss-round": 3
+    },
+    "game400": {
+      "group": "swiss-round-4",
+      "name": "Swiss Round 4, Game 1",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1100",
+      "status": "scheduled",
+      "swiss-round": 4
+    },
+    "game401": {
+      "group": "swiss-round-4",
+      "name": "Swiss Round 4, Game 2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1120",
+      "status": "scheduled",
+      "swiss-round": 4
+    },
+    "game402": {
+      "group": "swiss-round-4",
+      "name": "Swiss Round 4, Game 3",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1140",
+      "status": "scheduled",
+      "swiss-round": 4
+    },
+    "game403": {
+      "group": "swiss-round-4",
+      "name": "Swiss Round 4, Game 4",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1200",
+      "status": "scheduled",
+      "swiss-round": 4
+    },
+    "game500": {
+      "group": "swiss-round-5",
+      "name": "Swiss Round 5, Game 1",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1220",
+      "status": "scheduled",
+      "swiss-round": 5
+    },
+    "game501": {
+      "group": "swiss-round-5",
+      "name": "Swiss Round 5, Game 2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1240",
+      "status": "scheduled",
+      "swiss-round": 5
+    },
+    "game502": {
+      "group": "swiss-round-5",
+      "name": "Swiss Round 5, Game 3",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1300",
+      "status": "scheduled",
+      "swiss-round": 5
+    },
+    "game503": {
+      "group": "swiss-round-5",
+      "name": "Swiss Round 5, Game 4",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1320",
+      "status": "scheduled",
+      "swiss-round": 5
+    },
+    "game600": {
+      "group": "consolidation",
+      "name": "7th Place",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1340",
+      "status": "scheduled"
+    },
+    "game601": {
+      "group": "bracket-play",
+      "name": "Semi 1v4",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1400",
+      "status": "scheduled"
+    },
+    "game602": {
+      "group": "bracket-play",
+      "name": "Semi 2v3",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1420",
+      "status": "scheduled"
+    },
+    "game603": {
+      "group": "consolidation",
+      "name": "5th Place",
+      "scoreA": 0,
+      "scoreB": 0,
+      "start-time": "2017-03-25 1440",
+      "status": "scheduled"
+    },
+    "game900": {
+      "name": "Finals",
+      "pending-teamA": {
+        "winner-of": "game601"
+      },
+      "pending-teamB": {
+        "winner-of": "game602"
+      },
+      "start-time": "2017-03-25 1500",
+      "status": "scheduled",
+      "scoreA": 0,
+      "scoreB": 0
+    }
+  }
+}
