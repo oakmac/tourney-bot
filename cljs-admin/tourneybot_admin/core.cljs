@@ -209,7 +209,7 @@
 ;;------------------------------------------------------------------------------
 
 ;; TODO: take "tiesAllowed?" into account here
-(rum/defc SwissResultsRow < rum/static
+(rum/defc SwissResultsRow < (merge rum/static index-key-fn-mixin)
   [idx {:keys [team-name games-won games-lost games-tied
                points-won points-lost points-diff
                victory-points]}]
@@ -309,7 +309,7 @@
       (SwissResultsTable simulated-results)]))
 
 ;; TODO: calculate this from the games data instead of hard-coding
-(def last-swiss-round-num 4)
+(def last-swiss-round-num 5)
 
 (rum/defc SwissPanel < rum/static
   [teams all-games swiss-round simulated-scoreA simulated-scoreB]
@@ -344,13 +344,13 @@
                                                   games-only-in-this-round)))]
     [:div.swiss-panel-container
       (when prev-round-finished?
-        (list
+        [:div
           [:h3 (str "Swiss Round #" swiss-round " Matchups")]
           [:ul.matchups
-            (map (partial Matchup prev-round-games) (partition 2 prev-round-results))]))
+            (map (partial Matchup prev-round-games) (partition 2 prev-round-results))]])
 
       (when-not (zero? num-games-finished)
-        (list
+        [:div
           [:h3 (str "Swiss Round #" swiss-round " Results")
             [:span.game-count (str "(" num-games-finished "/" num-games-in-this-round " games played)")]]
           (SwissResultsTable results)
@@ -365,7 +365,7 @@
                      (not= swiss-round last-swiss-round-num))
             [:p.msg
               (str "This round is over. Match-ups for the next round can be "
-                   "found on the \"Swiss Round " next-swiss-round "\" tab.")])))]))
+                   "found on the \"Swiss Round " next-swiss-round "\" tab.")])])]))
 
 ;;------------------------------------------------------------------------------
 ;; Single Game Row
@@ -797,11 +797,26 @@
            :on-touch-start (partial click-edit-game game-id)}
           "Edit"]]]))
 
+(def page-titles
+  "Mapping of page-ids to titles."
+  {"swiss-round-1" "Swiss Round 1"
+   "swiss-round-2" "Swiss Round 2"
+   "swiss-round-3" "Swiss Round 3"
+   "swiss-round-4" "Swiss Round 4"
+   "swiss-round-5" "Swiss Round 5"
+   "bracket-play" "Bracket Play"
+   "all-games" "All Games"})
+
 (rum/defc GamesList < rum/static
-  [title games]
-  (let [is-swiss-round? (every? is-swiss-game? games)
+  [teams all-games page-id]
+  (let [title (get page-titles page-id)
+        games (get-games-in-group all-games page-id)
+        is-swiss-round? (every? is-swiss-game? games)
         is-bracket-play? false
-        results ()]
+        swiss-round (:swiss-round (first games) false)]
+        ; games-for-this-swiss-round (filter #(<= (:swiss-round (second %)) swiss-round)
+        ;                                    (vals games))
+        ; swiss-round-results (games->results)]
     [:section
       [:h2.title-eef62 title]
       [:div.flex-052ba
@@ -813,8 +828,9 @@
           [:div.spacer-b3729])
         (when is-swiss-round?
           [:div.col-beeb5
-            [:h2.title-eef62 (str title " Results")]
-            (SwissResultsTable results)])
+            ; [:h2.title-eef62 (str title " Results")]
+            ; (SwissResultsTable swiss-round-results)])
+            (SwissPanel teams all-games swiss-round 0 0)])
         (when is-bracket-play?
           [:div "TODO: bracket display goes here"])]]))
 
@@ -981,16 +997,6 @@
 ;; Admin App
 ;;------------------------------------------------------------------------------
 
-(def page-titles
-  "Mapping of page-ids to titles."
-  {"swiss-round-1" "Swiss Round 1"
-   "swiss-round-2" "Swiss Round 2"
-   "swiss-round-3" "Swiss Round 3"
-   "swiss-round-4" "Swiss Round 4"
-   "swiss-round-5" "Swiss Round 5"
-   "bracket-play" "Bracket Play"
-   "all-games" "All Games"})
-
 (rum/defc AdminApp < rum/static
   [{:keys [active-page
            edit-game-modal-game
@@ -1004,23 +1010,22 @@
            menu-showing?
            teams
            title]}]
-  (let [active-games (get-games-in-group games active-page)]
-    [:div.admin-container
-      (Header title)
-      (if (= active-page "teams")
-        (TeamsPage teams)
-        (GamesList (get page-titles active-page) active-games))
-      (Footer)
-      (when menu-showing?
-        (LeftNavMenu))
-      (when loading-modal-showing?
-        (LoadingModal loading-modal-txt))
-      (when error-modal-showing?
-        (ErrorModal))
-      (when edit-game-modal-showing?
-        (EditGameModal edit-game-modal-game))
-      (when edit-team-modal-showing?
-        (EditTeamModal edit-team))]))
+  [:div.admin-container
+    (Header title)
+    (if (= active-page "teams")
+      (TeamsPage teams)
+      (GamesList teams games active-page))
+    (Footer)
+    (when menu-showing?
+      (LeftNavMenu))
+    (when loading-modal-showing?
+      (LoadingModal loading-modal-txt))
+    (when error-modal-showing?
+      (ErrorModal))
+    (when edit-game-modal-showing?
+      (EditGameModal edit-game-modal-game))
+    (when edit-team-modal-showing?
+      (EditTeamModal edit-team))])
 
 ;;------------------------------------------------------------------------------
 ;; Top Level Component
