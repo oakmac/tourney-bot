@@ -9,7 +9,7 @@
       "captain": "Cat Belgarde "
     },
     "team3": {
-      "name": "Exploding Kittens",
+      "name": "Get Off My Lawn!",
       "captain": "Matt Lyle"
     },
     "team4": {
@@ -43,41 +43,49 @@
       "scoreB": 0,
       "start-time": "2017-03-25 0700",
       "status": "scheduled",
-      "swiss-round": 1
+      "swiss-round": 1,
+      "teamA-id": "team6",
+      "teamB-id": "team8"
     },
     "game101": {
       "group": "swiss-round-1",
       "name": "Swiss Round 1, Game 2",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 0720",
+      "start-time": "2017-03-25 0719",
       "status": "scheduled",
-      "swiss-round": 1
+      "swiss-round": 1,
+      "teamA-id": "team1",
+      "teamB-id": "team5"
     },
     "game102": {
       "group": "swiss-round-1",
       "name": "Swiss Round 1, Game 3",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 0740",
+      "start-time": "2017-03-25 0738",
       "status": "scheduled",
-      "swiss-round": 1
+      "swiss-round": 1,
+      "teamA-id": "team3",
+      "teamB-id": "team7"
     },
     "game103": {
       "group": "swiss-round-1",
       "name": "Swiss Round 1, Game 4",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 0800",
+      "start-time": "2017-03-25 0757",
       "status": "scheduled",
-      "swiss-round": 1
+      "swiss-round": 1,
+      "teamA-id": "team2",
+      "teamB-id": "team4"
     },
     "game200": {
       "group": "swiss-round-2",
       "name": "Swiss Round 2, Game 1",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 0820",
+      "start-time": "2017-03-25 0816",
       "status": "scheduled",
       "swiss-round": 2
     },
@@ -86,7 +94,7 @@
       "name": "Swiss Round 2, Game 2",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 0840",
+      "start-time": "2017-03-25 0835",
       "status": "scheduled",
       "swiss-round": 2
     },
@@ -95,7 +103,7 @@
       "name": "Swiss Round 2, Game 3",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 0900",
+      "start-time": "2017-03-25 0854",
       "status": "scheduled",
       "swiss-round": 2
     },
@@ -104,7 +112,7 @@
       "name": "Swiss Round 2, Game 4",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 0920",
+      "start-time": "2017-03-25 0913",
       "status": "scheduled",
       "swiss-round": 2
     },
@@ -113,7 +121,7 @@
       "name": "Swiss Round 3, Game 1",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 0940",
+      "start-time": "2017-03-25 0932",
       "status": "scheduled",
       "swiss-round": 3
     },
@@ -122,7 +130,7 @@
       "name": "Swiss Round 3, Game 2",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1000",
+      "start-time": "2017-03-25 0951",
       "status": "scheduled",
       "swiss-round": 3
     },
@@ -131,7 +139,7 @@
       "name": "Swiss Round 3, Game 3",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1020",
+      "start-time": "2017-03-25 1010",
       "status": "scheduled",
       "swiss-round": 3
     },
@@ -140,7 +148,7 @@
       "name": "Swiss Round 3, Game 4",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1040",
+      "start-time": "2017-03-25 1029",
       "status": "scheduled",
       "swiss-round": 3
     },
@@ -149,7 +157,7 @@
       "name": "Swiss Round 4, Game 1",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1100",
+      "start-time": "2017-03-25 1048",
       "status": "scheduled",
       "swiss-round": 4
     },
@@ -158,7 +166,7 @@
       "name": "Swiss Round 4, Game 2",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1120",
+      "start-time": "2017-03-25 1107",
       "status": "scheduled",
       "swiss-round": 4
     },
@@ -167,7 +175,7 @@
       "name": "Swiss Round 4, Game 3",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1140",
+      "start-time": "2017-03-25 1126",
       "status": "scheduled",
       "swiss-round": 4
     },
@@ -176,7 +184,7 @@
       "name": "Swiss Round 4, Game 4",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1200",
+      "start-time": "2017-03-25 1145",
       "status": "scheduled",
       "swiss-round": 4
     },
@@ -185,7 +193,7 @@
       "name": "Swiss Round 5, Game 1",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1220",
+      "start-time": "2017-03-25 1204",
       "status": "scheduled",
       "swiss-round": 5
     },
@@ -194,7 +202,7 @@
       "name": "Swiss Round 5, Game 2",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1240",
+      "start-time": "2017-03-25 1223",
       "status": "scheduled",
       "swiss-round": 5
     },
@@ -203,7 +211,7 @@
       "name": "Swiss Round 5, Game 3",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1300",
+      "start-time": "2017-03-25 1242",
       "status": "scheduled",
       "swiss-round": 5
     },
@@ -212,7 +220,7 @@
       "name": "Swiss Round 5, Game 4",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1320",
+      "start-time": "2017-03-25 1301",
       "status": "scheduled",
       "swiss-round": 5
     },
@@ -221,7 +229,7 @@
       "name": "7th Place",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1340",
+      "start-time": "2017-03-25 1320",
       "status": "scheduled"
     },
     "game601": {
@@ -229,7 +237,7 @@
       "name": "Semi 1v4",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1400",
+      "start-time": "2017-03-25 1336",
       "status": "scheduled"
     },
     "game602": {
@@ -237,7 +245,7 @@
       "name": "Semi 2v3",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1420",
+      "start-time": "2017-03-25 1356",
       "status": "scheduled"
     },
     "game603": {
@@ -245,7 +253,7 @@
       "name": "5th Place",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1440",
+      "start-time": "2017-03-25 1416",
       "status": "scheduled"
     },
     "game900": {
@@ -256,7 +264,7 @@
       "pending-teamB": {
         "winner-of": "game602"
       },
-      "start-time": "2017-03-25 1500",
+      "start-time": "2017-03-25 1432",
       "status": "scheduled",
       "scoreA": 0,
       "scoreB": 0
