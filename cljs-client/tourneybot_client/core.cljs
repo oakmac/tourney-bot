@@ -6,7 +6,7 @@
     [goog.functions :refer [once]]
     [rum.core :as rum]
     [tourneybot.data :refer [ensure-tournament-state
-                             finished-status
+                             final-status
                              game-finished?
                              game-statuses
                              games->results
@@ -276,8 +276,8 @@
       in-progress-status
       "in progress"
 
-      finished-status
-      "finished"
+      final-status
+      "final"
 
       ;; NOTE: this should never happen
       "")])
@@ -294,7 +294,7 @@
         scoreA (:scoreA game)
         scoreB (:scoreB game)
         show-scores? (and (or (= status in-progress-status)
-                              (= status finished-status))
+                              (= status final-status))
                           scoreA
                           scoreB)]
     ;; highlight this row if the game is in progress

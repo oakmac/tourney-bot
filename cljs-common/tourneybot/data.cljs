@@ -9,8 +9,8 @@
 
 (def scheduled-status "scheduled")
 (def in-progress-status "in_progress")
-(def finished-status "finished")
-(def game-statuses #{scheduled-status in-progress-status finished-status})
+(def final-status "final")
+(def game-statuses #{scheduled-status in-progress-status final-status})
 
 ;;------------------------------------------------------------------------------
 ;; Predicates
@@ -37,8 +37,10 @@
 (defn is-swiss-game? [g]
   (integer? (:swiss-round g)))
 
+;; NOTE: "finished" is legacy here
 (defn game-finished? [game]
-  (= finished-status (:status game)))
+  (or (= final-status (:status game))
+      (= "finished" (:status game))))
 
 (defn valid-score? [score]
   (and (integer? score)

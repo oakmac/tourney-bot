@@ -6,7 +6,7 @@
     [goog.functions :refer [once]]
     [rum.core :as rum]
     [tourneybot.data :refer [ensure-tournament-state
-                             finished-status
+                             final-status
                              game-finished?
                              game-statuses
                              games->results
@@ -62,10 +62,12 @@
   [all-games group-id]
   (let [games-coll (map (fn [[game-id game]] (assoc game :game-id game-id))
                         all-games)]
-    (filter
-      (fn [game]
-        (= group-id (:group game)))
-      games-coll)))
+    (if (= group-id "all-games")
+      games-coll
+      (filter
+        (fn [game]
+          (= group-id (:group game)))
+        games-coll))))
 
 (def date-format "YYYY-MM-DD HHmm")
 
@@ -283,7 +285,7 @@
         teamB-id (keyword (:teamB-id final-game ""))
         teamA-name (get-in teams [teamA-id :name] "")
         teamB-name (get-in teams [teamB-id :name] "")
-        simulated-game [:simulated-game (merge final-game {:status finished-status
+        simulated-game [:simulated-game (merge final-game {:status final-status
                                                            :scoreA simulated-scoreA
                                                            :scoreB simulated-scoreB})]
         simulated-games (conj games-for-this-round simulated-game)
@@ -333,12 +335,12 @@
                                          games-for-this-round)
         num-games-in-this-round (count games-only-in-this-round)
         ;; are all the games in this swiss round finished?
-        num-games-finished (count (filter #(= (:status (second %)) finished-status)
+        num-games-finished (count (filter #(= (:status (second %)) final-status)
                                           games-only-in-this-round))
         all-finished? (= num-games-in-this-round num-games-finished)
         one-game-left? (= num-games-in-this-round (inc num-games-finished))
         final-game-in-this-round (when one-game-left?
-                                   (first (filter #(not= (:status (second %)) finished-status)
+                                   (first (filter #(not= (:status (second %)) final-status)
                                                   games-only-in-this-round)))]
     [:div.swiss-panel-container
       (when prev-round-finished?
@@ -423,7 +425,7 @@
   (neutralize-event js-evt)
   (swap! page-state assoc-in [:games (keyword game-id) :status] status-val)
   ;; reset the simulated scores anytime a game is marked as Finished
-  (when (= status-val finished-status)
+  (when (= status-val final-status)
     (swap! page-state assoc :simulated-scoreA 0
                             :simulated-scoreB 0)))
 
@@ -441,7 +443,7 @@
 (def status-text
   {scheduled-status "Scheduled"
    in-progress-status "In Progress"
-   finished-status "Finished"})
+   final-status "Finished"})
 
 (rum/defc StatusInput < rum/static
  [game-id status-val current-status disabled?]
@@ -466,7 +468,7 @@
         scoreB (:scoreB game 0)
         any-points? (or (pos? scoreA) (pos? scoreB))
         game-name (:name game)
-        finished? (= status finished-status)
+        finished? (game-finished? game)
         scorable? (or finished?
                       (= status in-progress-status))]
     [:div.game-row-container
@@ -503,7 +505,7 @@
             [:td {:col-span "3"}
               (StatusInput game-id scheduled-status status any-points?)
               (StatusInput game-id in-progress-status status (not both-teams-selected?))
-              (StatusInput game-id finished-status status (not both-teams-selected?))]]]]]))
+              (StatusInput game-id final-status status (not both-teams-selected?))]]]]]))
 
 ;;------------------------------------------------------------------------------
 ;; Game Groups Tabs
@@ -629,17 +631,17 @@
                  :on-touch-start (when-not (zero? scoreB) (partial click-score-down :scoreB))}
                 "-1"]]]
           [:div.status-tabs-61ba0
-            [:div {:class (when (= status "scheduled") "active-32daa")
-                   :on-click (partial click-status-tab "scheduled")
-                   :on-touch-start (partial click-status-tab "scheduled")}
+            [:div {:class (when (= status scheduled-status) "active-32daa")
+                   :on-click (partial click-status-tab scheduled-status)
+                   :on-touch-start (partial click-status-tab scheduled-status)}
               "Scheduled"]
-            [:div {:class (when (= status "in_progress") "active-32daa")
-                   :on-click (partial click-status-tab "in_progress")
-                   :on-touch-start (partial click-status-tab "in_progress")}
+            [:div {:class (when (= status in-progress-status) "active-32daa")
+                   :on-click (partial click-status-tab in-progress-status)
+                   :on-touch-start (partial click-status-tab in-progress-status)}
               "In Progress"]
-            [:div {:class (when (= status "finished") "active-32daa")
-                   :on-click (partial click-status-tab "finished")
-                   :on-touch-start (partial click-status-tab "finished")}
+            [:div {:class (when (= status final-status) "active-32daa")
+                   :on-click (partial click-status-tab final-status)
+                   :on-touch-start (partial click-status-tab final-status)}
               "Final"]]]
         [:div.bottom-5fd4c
           [:button.btn-215d7 {:on-click click-edit-game-cancel-btn}
@@ -770,17 +772,17 @@
     [:div.game-row-02b81
       [:div
         [:span.team-name (str teamA-name
-                              (when (or (= status "in_progress") (= status "finished"))
+                              (when (or (= status in-progress-status) (= status final-status))
                                 (str " (" scoreA ")")))]
         [:span.vs "vs"]
-        [:span.team-name (str (when (or (= status "in_progress") (= status "finished"))
+        [:span.team-name (str (when (or (= status in-progress-status) (= status final-status))
                                 (str "(" scoreB ") "))
                               teamB-name)]]
       [:div
         [:span.status (status-name status)]
         [:span.game-name (str " - " name)]]]))
 
-(rum/defc GameRow2 < rum/static
+(rum/defc GameRow2 < (merge rum/static index-key-fn-mixin)
   [idx game]
   (let [{:keys [game-id name start-time status teamA-id teamB-id]} game]
     [:tr {:class (if (even? idx) "even-fa3d0" "odd-fd05d")}
@@ -797,7 +799,7 @@
 
 (rum/defc GamesList < rum/static
   [title games]
-  (let [is-swiss-round? (-> games first is-swiss-game?)
+  (let [is-swiss-round? (every? is-swiss-game? games)
         is-bracket-play? false
         results ()]
     [:section
@@ -807,6 +809,8 @@
           [:table.tbl-988bd
             [:tbody
               (map-indexed GameRow2 (sort-by :start-time games))]]]
+        (when (or is-swiss-round? is-bracket-play?)
+          [:div.spacer-b3729])
         (when is-swiss-round?
           [:div.col-beeb5
             [:h2.title-eef62 (str title " Results")]
@@ -930,12 +934,6 @@
   (swap! page-state assoc :active-page page-id
                           :menu-showing? false))
 
-(defn- click-teams-menu-link [js-evt]
-  (neutralize-event js-evt)
-  (let [teams (:teams @page-state)]
-    (swap! page-state assoc :active-page "teams"
-                            :menu-showing? false)))
-
 (declare click-sign-out)
 
 (rum/defc LeftNavMenu < rum/static
@@ -943,11 +941,13 @@
   [:div
     [:div.modal-layer-20e76 {:on-click close-modal}]
     [:div.modal-body-41add
-      [:div.menu-link-14aa1 {:on-click click-teams-menu-link} "Teams"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "teams")} "Teams"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "all-games")} "All Games"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-1")} "Swiss Round 1"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-2")} "Swiss Round 2"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-3")} "Swiss Round 3"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-4")} "Swiss Round 4"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-5")} "Swiss Round 5"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "bracket-play")} "Bracket Play"]
       [:div.menu-link-14aa1 {:on-click click-sign-out}
         (SVGIcon "signout-7f21d" "signOut") "Sign out"]]])
@@ -981,12 +981,15 @@
 ;; Admin App
 ;;------------------------------------------------------------------------------
 
-(def group-id->group-name
+(def page-titles
+  "Mapping of page-ids to titles."
   {"swiss-round-1" "Swiss Round 1"
    "swiss-round-2" "Swiss Round 2"
    "swiss-round-3" "Swiss Round 3"
    "swiss-round-4" "Swiss Round 4"
-   "bracket-play" "Bracket Play"})
+   "swiss-round-5" "Swiss Round 5"
+   "bracket-play" "Bracket Play"
+   "all-games" "All Games"})
 
 (rum/defc AdminApp < rum/static
   [{:keys [active-page
@@ -1004,12 +1007,9 @@
   (let [active-games (get-games-in-group games active-page)]
     [:div.admin-container
       (Header title)
-      (when (= active-page "teams")
-        (TeamsPage teams))
-
-      ;; TODO: finish the games pages
-      ;; (GamesList (get group-id->group-name active-page) active-games)
-
+      (if (= active-page "teams")
+        (TeamsPage teams)
+        (GamesList (get page-titles active-page) active-games))
       (Footer)
       (when menu-showing?
         (LeftNavMenu))
@@ -1043,7 +1043,7 @@
   [_kwd _the-atom _old-state new-state]
   (rum/mount (AdminPage new-state) app-container-el))
 
-(add-watch page-state :main on-change-page-state)
+(add-watch page-state :render-loop on-change-page-state)
 
 ;;------------------------------------------------------------------------------
 ;; Init

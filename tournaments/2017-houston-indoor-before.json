@@ -225,7 +225,7 @@
       "swiss-round": 5
     },
     "game600": {
-      "group": "consolidation",
+      "group": "bracket-play",
       "name": "7th Place",
       "scoreA": 0,
       "scoreB": 0,
@@ -249,7 +249,7 @@
       "status": "scheduled"
     },
     "game603": {
-      "group": "consolidation",
+      "group": "bracket-play",
       "name": "5th Place",
       "scoreA": 0,
       "scoreB": 0,
@@ -257,6 +257,7 @@
       "status": "scheduled"
     },
     "game900": {
+      "group": "bracket-play",
       "name": "Finals",
       "pending-teamA": {
         "winner-of": "game601"
