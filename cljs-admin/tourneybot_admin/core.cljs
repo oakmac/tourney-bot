@@ -723,6 +723,38 @@
       (map-indexed #(TeamRow %1 %2) teams-list)]))
 
 ;;------------------------------------------------------------------------------
+;; Schedule Page
+;;------------------------------------------------------------------------------
+
+;; NOTE: this is a hack for the 2017 tournament
+;;       make sure the game-ids are in descending order of how you want the tournament to run
+
+(defn- on-change-time-input [game-id js-evt]
+  (let [new-txt (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc-in [:games game-id :start-time] new-txt)))
+
+(rum/defc GameTimeInput < (merge rum/static index-key-fn-mixin)
+  [idx game]
+  [:div.time-input-row
+    [:div (:name game)]
+    [:div [:input {:on-change (partial on-change-time-input (:game-id game))
+                   :type "text"
+                   :value (:start-time game)}]]])
+
+(rum/defc SchedulePage < rum/static
+  [games]
+  (let [games-list (map
+                     (fn [[game-id game]] (assoc game :game-id game-id))
+                     games)
+        games-list (sort-by :game-id games-list)]
+    [:div
+      [:div.time-input-row
+        [:button.btn-primary-7f246 {:on-click (fn [_] (save-state!))} "Save Schedule"]]
+      (map-indexed GameTimeInput games-list)
+      [:div.time-input-row
+        [:button.btn-primary-7f246 {:on-click (fn [_] (save-state!))} "Save Schedule"]]]))
+
+;;------------------------------------------------------------------------------
 ;; Games Body
 ;;------------------------------------------------------------------------------
 
@@ -937,6 +969,7 @@
     [:div.modal-layer-20e76 {:on-click close-modal}]
     [:div.modal-body-41add
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "teams")} "Teams"]
+      [:div.menu-link-14aa1 {:on-click (partial click-menu-link "schedule")} "Schedule"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "all-games")} "All Games"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-1")} "Swiss Round 1"]
       [:div.menu-link-14aa1 {:on-click (partial click-menu-link "swiss-round-2")} "Swiss Round 2"]
@@ -993,9 +1026,10 @@
            title]}]
   [:div.admin-container
     (Header title)
-    (if (= active-page "teams")
-      (TeamsPage teams)
-      (GamesList teams games active-page simulated-scoreA simulated-scoreB))
+    (condp = active-page
+      "teams" (TeamsPage teams)
+      "schedule" (SchedulePage games)
+      :else (GamesList teams games active-page simulated-scoreA simulated-scoreB))
     (Footer)
     (when menu-showing?
       (LeftNavMenu))
