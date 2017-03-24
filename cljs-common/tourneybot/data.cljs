@@ -46,6 +46,28 @@
   (and (integer? score)
        (>= score 0)))
 
+(defn- has-pending-team? [game]
+  (or (:pending-teamA game)
+      (:pending-teamB game)))
+
+;;------------------------------------------------------------------------------
+;; Misc
+;;------------------------------------------------------------------------------
+
+(defn- winner
+  "Returns the game-id of the winning team."
+  [game]
+  (if (> (:scoreA game) (:scoreB game))
+    (:teamA-id game)
+    (:teamB-id game)))
+
+(defn- loser
+  "Returns the game-id of the losing team."
+  [game]
+  (if (< (:scoreA game) (:scoreB game))
+    (:teamA-id game)
+    (:teamB-id game)))
+
 ;;------------------------------------------------------------------------------
 ;; Ensure tournament.json integrity
 ;;------------------------------------------------------------------------------
@@ -97,15 +119,17 @@
 (def victory-points-for-a-tie 1000)
 
 (def empty-result
-  {:team-id nil
-   :games-won 0
-   :games-lost 0
-   :games-tied 0
+  {:games-lost 0
    :games-played 0
-   :points-won 0
+   :games-tied 0
+   :games-won 0
+   :points-diff 0
    :points-lost 0
    :points-played 0
-   :points-diff 0
+   :points-won 0
+   :team-id nil
+   :team-name nil
+   :team-captain nil
    :victory-points 0})
 
 (defn- add-game-to-result [result game]
@@ -129,14 +153,14 @@
         scored-for (if (= team-id teamA-id) scoreA scoreB)
         scored-against (if (= team-id teamA-id) scoreB scoreA)]
     (assoc result
-      :games-won (if won? (inc games-won) games-won)
       :games-lost (if lost? (inc games-lost) games-lost)
-      :games-tied (if tied? (inc games-tied) games-tied)
       :games-played (inc games-played)
-      :points-won (+ points-won scored-for)
+      :games-tied (if tied? (inc games-tied) games-tied)
+      :games-won (if won? (inc games-won) games-won)
+      :points-diff (+ points-diff scored-for (* -1 scored-against))
       :points-lost (+ points-lost scored-against)
       :points-played (+ points-played scoreA scoreB)
-      :points-diff (+ points-diff scored-for (* -1 scored-against))
+      :points-won (+ points-won scored-for)
       :victory-points (+ victory-points
                          (if won? victory-points-for-a-win 0)
                          (if tied? victory-points-for-a-tie 0)
@@ -191,7 +215,8 @@
 
 (defn create-matchups
   "Calculates the next Swiss round matchups.
-   Returns a set of sets, with the inner set being #{teamA-id teamB-id}"
+   Returns a vector of matchups. Each matchup is a vector of [teamA-id teamB-id]
+   The vectors are in-order. ie: the top team is at (ffirst) position"
   [teams games swiss-round]
   (let [;; find games below the target swiss round
         games-to-look-at (filter #(and (is-swiss-game? (second %))
@@ -209,8 +234,8 @@
         ;; list to pull team-ids from
         sorted-team-ids (atom (vec (map :team-id results)))
         num-matchups-to-create (half (count @sorted-team-ids))
-        ;; we will fill the new-matchups set until the sorted-team-ids list is empty
-        new-matchups (atom #{})]
+        ;; we will fill the new-matchups vector until the sorted-team-ids list is empty
+        new-matchups (atom [])]
     ;; create the matchups for this swiss round
     (dotimes [i num-matchups-to-create]
       (let [;; take the first team in the list
@@ -223,14 +248,15 @@
             _ (while (and (not @match-found?)
                           (< @j (count @sorted-team-ids)))
                 (let [team-id (nth @sorted-team-ids @j)
-                      possible-matchup #{teamA-id team-id}
-                      teams-already-played? (contains? prior-matchups possible-matchup)]
+                      possible-matchup [teamA-id team-id]
+                      possible-matchup-set (set possible-matchup)
+                      teams-already-played? (contains? prior-matchups possible-matchup-set)]
                   (if teams-already-played?
                     (swap! j inc) ;; try the next team in the list
                     (do
                       ;; we found a match; exit this loop
                       (reset! match-found? true)
-                      ;; add this matchup to the set
+                      ;; add this matchup to the new-matchups vector
                       (swap! new-matchups conj possible-matchup)
                       ;; remove this team-id from the possible teams
                       ;; NOTE: this would faster using subvec
@@ -242,9 +268,51 @@
 ;; Tournament Advancer
 ;;------------------------------------------------------------------------------
 
+(defn- advance-pending-game
+  [state pending-game]
+  (let [pending-game-id (:game-id pending-game)
+
+        pending-teamA (:pending-teamA pending-game)
+        teamA-target-game-id (-> pending-teamA vals first keyword)
+        teamA-target-game (get-in state [:games teamA-target-game-id])
+        teamA-target-game-finished? (game-finished? teamA-target-game)
+        teamA-target-game-winner (winner teamA-target-game)
+        teamA-target-game-loser (loser teamA-target-game)
+
+        pending-teamB (:pending-teamB pending-game)
+        teamB-target-game-id (-> pending-teamB vals first keyword)
+        teamB-target-game (get-in state [:games teamB-target-game-id])
+        teamB-target-game-finished? (game-finished? teamB-target-game)
+        teamB-target-game-winner (winner teamB-target-game)
+        teamB-target-game-loser (loser teamB-target-game)
+
+        new-state (atom state)]
+    (when teamA-target-game-finished?
+      (swap! new-state assoc-in [:games pending-game-id :teamA-id]
+        (if (= :loser-of (-> pending-teamA keys first))
+          teamA-target-game-loser
+          teamA-target-game-winner)))
+    (when teamB-target-game-finished?
+      (swap! new-state assoc-in [:games pending-game-id :teamB-id]
+        (if (= :loser-of (-> pending-teamB keys first))
+          teamB-target-game-loser
+          teamB-target-game-winner)))
+    @new-state))
+
+(defn- advance-pending-games
+  "Given a tournament state, advances pending games if possible."
+  [state]
+  (let [all-games (:games state)
+        games-list (map (fn [[game-id game]] (assoc game :game-id game-id)) all-games)
+        games-with-pending-teams (filter has-pending-team? games-list)]
+    (reduce
+      advance-pending-game
+      state
+      games-with-pending-teams)))
+
 (defn advance-tournament
   "Given a tournament state, tries to advance it.
    ie: calculates Swiss Round matchups, fills brackets, scores pools, etc"
   [state]
-  ;; TODO: write me :)
-  nil)
+  (-> state
+      advance-pending-games))

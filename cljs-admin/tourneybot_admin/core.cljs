@@ -5,7 +5,9 @@
     [clojure.string :refer [blank? lower-case replace]]
     [goog.functions :refer [once]]
     [rum.core :as rum]
-    [tourneybot.data :refer [ensure-game
+    [tourneybot.data :refer [advance-tournament
+                             create-matchups
+                             ensure-game
                              ensure-tournament-state
                              final-status
                              game-finished?
@@ -268,12 +270,17 @@
         [:span.already-played
           (str "Whoops! These two teams already played in " (:name already-played?))])]))
 
+(rum/defc MatchupRow < (merge rum/static index-key-fn-mixin)
+  [idx [teamA-id teamB-id] teams]
+  (let [teamA-name (get-in teams [(keyword teamA-id) :name])
+        teamB-name (get-in teams [(keyword teamB-id) :name])]
+    [:li [:span teamA-name]
+         [:span.vs "vs"]
+         [:span teamB-name]]))
+
 ;;------------------------------------------------------------------------------
 ;; Next Round Simulator
 ;;------------------------------------------------------------------------------
-
-;; TODO: far better than a "next round simulator" would be a
-;;       "guaranteed next round matchup algorithm"
 
 ;; TODO: it would be nice if the matchups automatically populated the next round
 ;;       games if the teams had not played before
@@ -282,8 +289,9 @@
   (let [new-score (int (aget js-evt "currentTarget" "value"))]
     (swap! page-state assoc kwd new-score)))
 
+;; TODO: pass less arguments to this component
 (rum/defc NextRoundSimulator < rum/static
-  [teams games-for-this-round [final-game-id final-game]
+  [teams swiss-round games-for-this-round [final-game-id final-game]
    simulated-scoreA simulated-scoreB]
   (let [teamA-id (keyword (:teamA-id final-game ""))
         teamB-id (keyword (:teamB-id final-game ""))
@@ -293,9 +301,10 @@
                                                            :scoreA simulated-scoreA
                                                            :scoreB simulated-scoreB})]
         simulated-games (conj games-for-this-round simulated-game)
-        simulated-results (games->results teams simulated-games)]
+        simulated-results (games->results teams simulated-games)
+        matchups (create-matchups teams simulated-games swiss-round)]
     [:div.simulated-container
-      [:h3 "Last Game Simulated Results"]
+      [:h3 "Last Game Simulator"]
       [:div.input-row
         [:input {:on-change (partial on-change-simulated-input :simulated-scoreA)
                  :min "0"
@@ -310,7 +319,20 @@
                  :type "number"
                  :value simulated-scoreB}]
         [:span.team-name teamB-name]]
+      [:h3 (str "Swiss Round #" swiss-round " Simulated Matchups")]
+      [:ol.matchups
+        (map-indexed #(MatchupRow %1 %2 teams) matchups)]
+      [:h3 (str "Swiss Round #" swiss-round " Simulated Results")]
       (SwissResultsTable simulated-results)]))
+
+(rum/defc VictoryPoints < rum/static
+  [points]
+  [:span {:class (str "points " (if (pos? points) "pos" "neg"))}
+    (str "(" (add-sign-to-num points) ")")])
+
+(rum/defc TeamResultRow < (merge rum/static index-key-fn-mixin)
+  [idx {:keys [team-name victory-points]}]
+  [:li team-name (VictoryPoints victory-points)])
 
 ;; TODO: calculate this from the games data instead of hard-coding
 (def last-swiss-round-num 5)
@@ -350,8 +372,9 @@
       (when prev-round-finished?
         [:div
           [:h3 (str "Swiss Round #" swiss-round " Matchups")]
-          [:ul.matchups
-            (map (partial Matchup prev-round-games) (partition 2 prev-round-results))]])
+          [:ol.matchups
+            (map-indexed #(MatchupRow %1 %2 teams)
+                         (create-matchups teams all-games swiss-round))]])
 
       (when-not (zero? num-games-finished)
         [:div
@@ -361,7 +384,7 @@
 
           (when-not all-finished?
             (if one-game-left?
-              (NextRoundSimulator teams games-for-this-round final-game-in-this-round simulated-scoreA simulated-scoreB)
+              (NextRoundSimulator teams next-swiss-round games-for-this-round final-game-in-this-round simulated-scoreA simulated-scoreB)
               [:p.msg (str "When there is one game left in this round, you will be "
                            "able to simulate the results of the last game here.")]))
 
@@ -384,9 +407,6 @@
     (swap! page-state assoc-in [:games (keyword game-id) :start-time] new-time)))
 
 ;; TODO: need an on-blur function to make sure the time is formatted properly
-
-
-
 ;; TODO: prevent them from picking the same team for teamA and teamB
 
 (defn- compare-games [a b]
@@ -491,7 +511,7 @@
 (rum/defc TeamSelect < rum/static
   [teams game-id game team-key]
   (let [sorted-teams (sort compare-team-name teams)]
-    [:select.team-select
+    [:select.team-select-a556b
       {:on-change (partial on-change-team-dropdown game-id team-key)
        :value (team-key game)}
       [:option {:value ""} "-- Select a Team --"]
@@ -508,13 +528,9 @@
       [:div.wrapper-50f2f
         [:div.top-d8bc3
           [:h3.title-eef62 game-name]
-          [:div.flex-container-ac723
-            [:div.left-02b94
-              (TeamSelect teams game-id game :teamA-id)]
-            [:div.center-f5e42
-              [:div.small-vs-fb4ff [:span "vs"]]]
-            [:div.right-6c20f
-              (TeamSelect teams game-id game :teamB-id)]]]
+          [:div.select-wrapper-ee89a (TeamSelect teams game-id game :teamA-id)]
+          [:div.vs-783bc "vs"]
+          [:div.select-wrapper-ee89a (TeamSelect teams game-id game :teamB-id)]]
         [:div.bottom-5fd4c
           [:button.btn-215d7 {:on-click click-edit-game-cancel-btn}
             "Cancel"]
