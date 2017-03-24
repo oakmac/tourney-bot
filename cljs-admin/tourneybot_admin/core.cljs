@@ -361,12 +361,11 @@
                                          games-for-this-round)
         num-games-in-this-round (count games-only-in-this-round)
         ;; are all the games in this swiss round finished?
-        num-games-finished (count (filter #(= (:status (second %)) final-status)
-                                          games-only-in-this-round))
+        num-games-finished (count (filter game-finished? (vals games-only-in-this-round)))
         all-finished? (= num-games-in-this-round num-games-finished)
         one-game-left? (= num-games-in-this-round (inc num-games-finished))
         final-game-in-this-round (when one-game-left?
-                                   (first (filter #(not= (:status (second %)) final-status)
+                                   (first (filter #(not (game-finished? (second %)))
                                                   games-only-in-this-round)))]
     [:div.swiss-panel-container
       (when prev-round-finished?
