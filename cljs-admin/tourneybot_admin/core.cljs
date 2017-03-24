@@ -444,23 +444,20 @@
   (swap! page-state assoc :edit-game-modal-showing? false
                           :edit-game-modal-game nil))
 
+(defn- save-game-edit-success []
+  (swap! page-state assoc :loading-modal-showing? false
+                          :edit-game-modal-showing? false
+                          :edit-game-modal-game nil))
+
 (defn- click-edit-game-save-btn [js-evt]
   (neutralize-event js-evt)
   (swap! page-state assoc :loading-modal-showing? true
                           :loading-modal-txt saving-txt)
-
-  ;; ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzz
-  ;; THIS IS SUPER IMPORTANT
-  ;; ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzz
-  ;; TODO: update the version and send the new state object
-  (js/setTimeout
-    (fn [] (swap! page-state assoc :loading-modal-showing? false
-                                   :edit-game-modal-showing? false
-                                   :edit-game-modal-game nil))
-    1500))
-  ;; ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzz
-  ;; THIS IS SUPER IMPORTANT
-  ;; ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzz
+  (let [updated-game (:edit-game-modal-game @page-state)
+        game-id (:game-id updated-game)
+        game-without-id (dissoc updated-game :game-id)]
+    (swap! page-state assoc-in [:games game-id] game-without-id))
+  (save-state! save-game-edit-success))
 
 (defn- click-score-up [scoreX js-evt]
   (neutralize-event js-evt)
@@ -694,8 +691,8 @@
 
 (defn- click-edit-game [game-id js-evt]
   (neutralize-event js-evt)
-  ;; NOTE: this should always be true, just being defensive
-  (when-let [game-to-edit (get-in @page-state [:games game-id])]
+  (let [game-to-edit (get-in @page-state [:games game-id])
+        game-to-edit (assoc game-to-edit :game-id game-id)]
     (swap! page-state assoc :edit-game-modal-showing? true
                             :edit-game-modal-game game-to-edit)))
 
