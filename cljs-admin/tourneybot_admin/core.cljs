@@ -381,28 +381,7 @@
 
 ;; TODO: need an on-blur function to make sure the time is formatted properly
 
-(defn- on-change-team-dropdown [game-id team-key js-evt]
-  (let [team-id (aget js-evt "currentTarget" "value")]
-    (swap! page-state assoc-in [:games game-id team-key] team-id)))
 
-;; TODO: put the team record in here
-(rum/defc TeamOption < rum/static
-  [[team-id team]]
-  [:option {:value (name team-id)}
-    (:name team)])
-
-(defn- compare-team-name [[teamA-id teamA] [teamB-id teamB]]
-  (compare (:name teamA) (:name teamB)))
-
-;; TODO: consider using a better team input method than <select>
-(rum/defc TeamSelect < rum/static
-  [teams game-id game team-key]
-  (let [sorted-teams (sort compare-team-name teams)]
-    [:select.team-select
-      {:on-change (partial on-change-team-dropdown game-id team-key)
-       :value (team-key game)}
-      [:option {:value ""} "-- Select a Team --"]
-      (map TeamOption sorted-teams)]))
 
 ;; TODO: prevent them from picking the same team for teamA and teamB
 
@@ -456,103 +435,6 @@
         :on-touch-start (partial on-change-status game-id status-val)}
        (get status-text status-val)])))
 
-;; TODO: do not allow teamA and teamB to be the same in a single game
-(rum/defc GameRow < rum/static
-  [teams [game-id game]]
-  (let [{:keys [start-time teamA-id teamB-id]} game
-        status (get game :status scheduled-status)
-        teamA (get teams (keyword teamA-id) false)
-        teamB (get teams (keyword teamB-id) false)
-        both-teams-selected? (and teamA teamB)
-        scoreA (:scoreA game 0)
-        scoreB (:scoreB game 0)
-        any-points? (or (pos? scoreA) (pos? scoreB))
-        game-name (:name game)
-        finished? (game-finished? game)
-        scorable? (or finished?
-                      (= status in-progress-status))]
-    [:div.game-row-container
-      [:table {:data-game-id (name game-id)}
-        [:tbody
-          [:tr
-            [:td.label-cell "Name"]
-            [:td.name-input-cell
-              [:input {:on-change (partial on-change-game-name game-id)
-                       :type "text"
-                       :value game-name}]]
-            [:td.label-cell "Start Time"]
-            [:td [:input.time-input
-                   {:on-change (partial on-change-start-time game-id)
-                    :placeholder "YYYY-MM-DD HHMM"
-                    :type "text"
-                    :value start-time}]]]
-          [:tr
-            [:td.label-cell "Team A"]
-            [:td (if-not scorable?
-                   (TeamSelect teams game-id game :teamA-id)
-                   (:name teamA))]
-            [:td.label-cell (when both-teams-selected? "Score A")]
-            [:td.score-cell (when both-teams-selected? (ScoreInput game-id scoreA :scoreA finished?))]]
-          [:tr
-            [:td.label-cell "Team B"]
-            [:td (if-not scorable?
-                   (TeamSelect teams game-id game :teamB-id)
-                   (:name teamB))]
-            [:td.label-cell (when both-teams-selected? "Score B")]
-            [:td.score-cell (when both-teams-selected? (ScoreInput game-id scoreB :scoreB finished?))]]
-          [:tr
-            [:td.label-cell "Status"]
-            [:td {:col-span "3"}
-              (StatusInput game-id scheduled-status status any-points?)
-              (StatusInput game-id in-progress-status status (not both-teams-selected?))
-              (StatusInput game-id final-status status (not both-teams-selected?))]]]]]))
-
-;;------------------------------------------------------------------------------
-;; Game Groups Tabs
-;;------------------------------------------------------------------------------
-
-(defn- click-game-tab [tab-id js-evt]
-  (neutralize-event js-evt)
-  (swap! page-state assoc :tab-id tab-id))
-
-(rum/defc GamesTab < rum/static
-  [txt tab-id current-tab]
-  [:div {:class (str "htab" (when (= tab-id current-tab) " active"))
-         :on-click (partial click-game-tab tab-id)
-         :on-touch-start (partial click-game-tab tab-id)}
-    txt])
-
-(rum/defc GamesTabs < rum/static
-  [current-tab]
-  [:div.filters-container
-    (GamesTab "Swiss Round 1" "swiss-round-1" current-tab)
-    (GamesTab "Swiss Round 2" "swiss-round-2" current-tab)
-    (GamesTab "Swiss Round 3" "swiss-round-3" current-tab)
-    (GamesTab "Swiss Round 4" "swiss-round-4" current-tab)
-    (GamesTab "Bracket Play" "bracket-play" current-tab)])
-    ;; TODO: split up bracket play from 9th / 11th games?
-    ;; TODO: add a Results tab here
-
-;; TODO: this is a quick hack; move this to a data structure
-(defn- filter-games [all-games filter-val]
-  (filter #(= (:group (second %)) filter-val) all-games))
-
-(rum/defc GamesPage < rum/static
-  [{:keys [teams games tab-id simulated-scoreA simulated-scoreB]}]
-  (let [filtered-games (filter-games games tab-id)
-        sorted-games (sort compare-games filtered-games)
-        swiss-round (condp = tab-id
-                      "swiss-round-1" 1
-                      "swiss-round-2" 2
-                      "swiss-round-3" 3
-                      "swiss-round-4" 4
-                      false)]
-    [:article.games-container
-      (GamesTabs tab-id)
-      [:div.flex-container
-        [:div.left (map (partial GameRow teams) sorted-games)]
-        [:div.right (when swiss-round (SwissPanel teams games swiss-round simulated-scoreA simulated-scoreB))]]]))
-
 ;;------------------------------------------------------------------------------
 ;; Edit Game Modal
 ;;------------------------------------------------------------------------------
@@ -566,12 +448,19 @@
   (neutralize-event js-evt)
   (swap! page-state assoc :loading-modal-showing? true
                           :loading-modal-txt saving-txt)
+
+  ;; ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzz
+  ;; THIS IS SUPER IMPORTANT
+  ;; ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzz
   ;; TODO: update the version and send the new state object
   (js/setTimeout
     (fn [] (swap! page-state assoc :loading-modal-showing? false
                                    :edit-game-modal-showing? false
                                    :edit-game-modal-game nil))
     1500))
+  ;; ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzz
+  ;; THIS IS SUPER IMPORTANT
+  ;; ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzz
 
 (defn- click-score-up [scoreX js-evt]
   (neutralize-event js-evt)
@@ -585,9 +474,56 @@
   (neutralize-event js-evt)
   (swap! page-state assoc-in [:edit-game-modal-game :status] new-status))
 
+(defn- on-change-team-dropdown [game-id team-key js-evt]
+  (let [team-id (aget js-evt "currentTarget" "value")]
+    (swap! page-state assoc-in [:edit-game-modal-game team-key] team-id)))
+
+;; TODO: put the team record in here
+(rum/defc TeamOption < (merge rum/static index-key-fn-mixin)
+  [idx [team-id team]]
+  [:option {:value (name team-id)}
+    (:name team)])
+
+(defn- compare-team-name [[teamA-id teamA] [teamB-id teamB]]
+  (compare (:name teamA) (:name teamB)))
+
+(rum/defc TeamSelect < rum/static
+  [teams game-id game team-key]
+  (let [sorted-teams (sort compare-team-name teams)]
+    [:select.team-select
+      {:on-change (partial on-change-team-dropdown game-id team-key)
+       :value (team-key game)}
+      [:option {:value ""} "-- Select a Team --"]
+      (map-indexed TeamOption sorted-teams)]))
+
+(rum/defc EditGameModalBodyTeams < rum/static
+  [teams game]
+  (let [game-id (:game-id game)
+        game-name (:name game)
+        start-time (:start-time game)
+        teamA-id (:teamA-id game)
+        teamB-id (:teamB-id game)]
+    [:div.fullscreen-modal-6d79e
+      [:div.wrapper-50f2f
+        [:div.top-d8bc3
+          [:h3.title-eef62 game-name]
+          [:div.flex-container-ac723
+            [:div.left-02b94
+              (TeamSelect teams game-id game :teamA-id)]
+            [:div.center-f5e42
+              [:div.small-vs-fb4ff [:span "vs"]]]
+            [:div.right-6c20f
+              (TeamSelect teams game-id game :teamB-id)]]]
+        [:div.bottom-5fd4c
+          [:button.btn-215d7 {:on-click click-edit-game-cancel-btn}
+            "Cancel"]
+          [:div.spacer-b3729]
+          [:button.btn-primary-7f246 {:on-click click-edit-game-save-btn}
+            "Save & Close"]]]]))
+
 ;; TODO: come up with a visual "disabled" state for the "-1" buttons when
 ;;       score == 0
-(rum/defc EditGameModalBody < rum/static
+(rum/defc EditGameModalBodyScores < rum/static
   [{:keys [game-id
            name
            scoreA
@@ -650,11 +586,19 @@
           [:button.btn-primary-7f246 {:on-click click-edit-game-save-btn}
             "Save & Close"]]]]))
 
+(defn- game-has-teams-set? [game]
+  (and (string? (:teamA-id game))
+       (not (blank? (:teamA-id game)))
+       (string? (:teamB-id game))
+       (not (blank? (:teamB-id game)))))
+
 (rum/defc EditGameModal < rum/static
-  [game]
+  [teams game]
   [:div
     [:div.modal-layer-20e76]
-    (EditGameModalBody game)])
+    (if (game-has-teams-set? game)
+      (EditGameModalBodyScores game)
+      (EditGameModalBodyTeams teams game))])
 
 ;;------------------------------------------------------------------------------
 ;; Teams
@@ -1023,7 +967,7 @@
     (when error-modal-showing?
       (ErrorModal))
     (when edit-game-modal-showing?
-      (EditGameModal edit-game-modal-game))
+      (EditGameModal teams edit-game-modal-game))
     (when edit-team-modal-showing?
       (EditTeamModal edit-team))])
 

@@ -1,7 +1,7 @@
 {
   "teams": {
     "team1": {
-      "name": "Huck Off",
+      "name": "Purple Cobras",
       "captain": "Chase Thomas"
     },
     "team2": {
@@ -245,7 +245,7 @@
       "name": "Semi 2v3",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1356",
+      "start-time": "2017-03-25 1355",
       "status": "scheduled"
     },
     "game603": {
@@ -253,7 +253,7 @@
       "name": "5th Place",
       "scoreA": 0,
       "scoreB": 0,
-      "start-time": "2017-03-25 1416",
+      "start-time": "2017-03-25 1414",
       "status": "scheduled"
     },
     "game900": {
@@ -265,7 +265,7 @@
       "pending-teamB": {
         "winner-of": "game602"
       },
-      "start-time": "2017-03-25 1432",
+      "start-time": "2017-03-25 1430",
       "status": "scheduled",
       "scoreA": 0,
       "scoreB": 0
