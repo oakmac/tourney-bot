@@ -5,7 +5,8 @@
     [clojure.string :refer [blank? lower-case replace]]
     [goog.functions :refer [once]]
     [rum.core :as rum]
-    [tourneybot.data :refer [ensure-tournament-state
+    [tourneybot.data :refer [ensure-game
+                             ensure-tournament-state
                              final-status
                              game-finished?
                              game-statuses
@@ -692,7 +693,8 @@
 (defn- click-edit-game [game-id js-evt]
   (neutralize-event js-evt)
   (let [game-to-edit (get-in @page-state [:games game-id])
-        game-to-edit (assoc game-to-edit :game-id game-id)]
+        game-to-edit (assoc game-to-edit :game-id game-id)
+        game-to-edit (ensure-game game-to-edit)]
     (swap! page-state assoc :edit-game-modal-showing? true
                             :edit-game-modal-game game-to-edit)))
 

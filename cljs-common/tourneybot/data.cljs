@@ -67,6 +67,11 @@
       (assoc game2 :scoreB 0)
       game2)))
 
+(defn ensure-game [game]
+  (-> game
+      ensure-game-status
+      ensure-scores))
+
 (defn- ensure-games
   "Games must have scores, status, and ids"
   [state]
