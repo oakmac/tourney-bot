@@ -96,7 +96,10 @@
    :error-modal-showing? false
 
    ;; active page / group-id
-   :active-page "teams"})
+   :active-page "teams"
+
+   :simulated-scoreA 0
+   :simulated-scoreB 0})
 
 (def page-state (atom initial-page-state))
 
@@ -228,7 +231,7 @@
   [:thead
     [:tr
       [:th.place {:style {:width "5%"}}]
-      [:th.name {:style {:width "45%"}} "Name"]
+      [:th.name "Name"]
       [:th "Record"]
       [:th "Points"]
       [:th "Score"]]])
@@ -751,7 +754,7 @@
    "all-games" "All Games"})
 
 (rum/defc GamesList < rum/static
-  [teams all-games page-id]
+  [teams all-games page-id simulated-scoreA simulated-scoreB]
   (let [title (get page-titles page-id)
         games (get-games-in-group all-games page-id)
         is-swiss-round? (every? is-swiss-game? games)
@@ -773,7 +776,7 @@
           [:div.col-beeb5
             ; [:h2.title-eef62 (str title " Results")]
             ; (SwissResultsTable swiss-round-results)])
-            (SwissPanel teams all-games swiss-round 0 0)])
+            (SwissPanel teams all-games swiss-round simulated-scoreA simulated-scoreB)])
         (when is-bracket-play?
           [:div "TODO: bracket display goes here"])]]))
 
@@ -951,13 +954,15 @@
            loading-modal-showing?
            loading-modal-txt
            menu-showing?
+           simulated-scoreA
+           simulated-scoreB
            teams
            title]}]
   [:div.admin-container
     (Header title)
     (if (= active-page "teams")
       (TeamsPage teams)
-      (GamesList teams games active-page))
+      (GamesList teams games active-page simulated-scoreA simulated-scoreB))
     (Footer)
     (when menu-showing?
       (LeftNavMenu))

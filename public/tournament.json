@@ -133,7 +133,7 @@
       "name": "Swiss Round 2, Game 2",
       "start-time": "2016-02-28 1045",
       "swiss-round": 2,
-      "status": "in_progress",
+      "status": "final",
       "teamA-id": "team11",
       "teamB-id": "team12",
       "scoreA": 13,
@@ -147,7 +147,9 @@
       "group": "swiss-round-2",
       "teamA-id": "team13",
       "teamB-id": "team14",
-      "status": "scheduled"
+      "status": "final",
+      "scoreA": 8,
+      "scoreB": 4
     },
     "game23": {
       "name": "Swiss Round 2, Game 4",
@@ -156,19 +158,29 @@
       "group": "swiss-round-2",
       "teamA-id": "team15",
       "teamB-id": "team16",
-      "status": "scheduled"
+      "status": "final",
+      "scoreA": 12,
+      "scoreB": 12
     },
     "game24": {
       "name": "Swiss Round 2, Game 5",
       "start-time": "2016-02-28 1130",
       "swiss-round": 2,
-      "group": "swiss-round-2"
+      "group": "swiss-round-2",
+      "teamA-id": "team11",
+      "teamB-id": "team14",
+      "status": "final",
+      "scoreA": 4,
+      "scoreB": 4
     },
     "game25": {
       "name": "Swiss Round 2, Game 6",
       "start-time": "2016-02-28 1145",
       "swiss-round": 2,
-      "group": "swiss-round-2"
+      "group": "swiss-round-2",
+      "scoreA": 0,
+      "scoreB": 0,
+      "status": "scheduled"
     },
     "game30": {
       "name": "Swiss Round 3, Game 1",

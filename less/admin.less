@@ -390,6 +390,8 @@ footer {
 } // end .admin-container
 
 .swiss-panel-container {
+  padding: 0 2px;
+
   h2 {
     font-size: 18px;
     font-weight: 300;
@@ -477,7 +479,7 @@ footer {
 
   td {
     font-family: monospace;
-    font-size: 14px;
+    font-size: 13px;
     padding: 6px;
     text-align: right;
   }
@@ -489,6 +491,7 @@ footer {
 
   .name {
     font-family: "Roboto", sans-serif;
+    font-size: 14px;
     text-align: left;
   }
 
@@ -816,6 +819,12 @@ footer {
 
 .spacer-b3729 {
   width: 10px;
+}
+
+@media all and (max-width: @smallBreakpoint) {
+  .spacer-b3729 {
+    height: 20px;
+  }
 }
 
 .modal-inner-e530d {
