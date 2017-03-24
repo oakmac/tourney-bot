@@ -229,12 +229,13 @@
   [teams games swiss-round]
   (let [;; find games below the target swiss round
         games-to-look-at (filter #(and (is-swiss-game? (second %))
-                                       (< (:swiss-round (second %)) swiss-round))
+                                       (< (:swiss-round (second %)) swiss-round)
+                                       (game-finished? (second %)))
                                  games)
         ;; create a set of all the matchups that have occurred so far
         prior-matchups (reduce (fn [matchups game]
-                                 (let [teamA-id (-> game :teamA-id name)
-                                       teamB-id (-> game :teamB-id name)]
+                                 (let [teamA-id (name (:teamA-id game ""))
+                                       teamB-id (name (:teamB-id game ""))]
                                    (conj matchups #{teamA-id teamB-id})))
                                #{}
                                (vals games-to-look-at))

@@ -538,6 +538,23 @@
           [:button.btn-primary-7f246 {:on-click click-edit-game-save-btn}
             "Save & Close"]]]]))
 
+(defn- click-reset-game [js-evt]
+  (neutralize-event js-evt)
+  (when (js/confirm "Are you sure you want to reset this game?")
+    (swap! page-state assoc :loading-modal-showing? true
+                            :loading-modal-txt saving-txt)
+    (let [game-being-edited (:edit-game-modal-game @page-state)
+          game-id (:game-id game-being-edited)
+          game-being-edited (dissoc game-being-edited :game-id
+                                                      :teamA-id
+                                                      :teamB-id)
+          game-being-edited (assoc game-being-edited :scoreA 0
+                                                     :scoreB 0
+                                                     :status scheduled-status)
+          game-being-edited (ensure-game game-being-edited)]
+      (swap! page-state assoc-in [:games game-id] game-being-edited))
+    (save-state! save-game-edit-success)))
+
 ;; TODO: come up with a visual "disabled" state for the "-1" buttons when
 ;;       score == 0
 (rum/defc EditGameModalBodyScores < rum/static
@@ -597,11 +614,11 @@
                    :on-touch-start (partial click-status-tab final-status)}
               "Final"]]]
         [:div.bottom-5fd4c
-          [:button.btn-215d7 {:on-click click-edit-game-cancel-btn}
-            "Cancel"]
+          [:button.btn-215d7 {:on-click click-edit-game-cancel-btn} "Cancel"]
           [:div.spacer-b3729]
-          [:button.btn-primary-7f246 {:on-click click-edit-game-save-btn}
-            "Save & Close"]]]]))
+          [:button.btn-215d7 {:on-click click-reset-game} "Reset game"]
+          [:div.spacer-b3729]
+          [:button.btn-primary-7f246 {:on-click click-edit-game-save-btn} "Save & Close"]]]]))
 
 (defn- game-has-teams-set? [game]
   (and (string? (:teamA-id game))
