@@ -153,11 +153,13 @@
 ;;------------------------------------------------------------------------------
 
 (defn- fetch-tourney-state-success [new-state]
-  ;; TODO: make sure the version is the latest here
-  ;; merge the tournament state with the page state
-  (swap! page-state merge new-state)
-  ;; set the title tag
-  (aset js/document "title" (str (:title new-state) " - Admin")))
+  ;; FIXME: TOTAL HACK RIGHT HERE
+  (when-not (= "schedule" (:active-page @page-state))
+    ;; TODO: make sure the version is the latest here
+    ;; merge the tournament state with the page state
+    (swap! page-state merge new-state)
+    ;; set the title tag
+    (aset js/document "title" (str (:title new-state) " - Admin"))))
 
 (defn- fetch-tourney-state! []
   (fetch-json-as-cljs (tournament-state-url) fetch-tourney-state-success))
@@ -729,6 +731,11 @@
 ;; NOTE: this is a hack for the 2017 tournament
 ;;       make sure the game-ids are in descending order of how you want the tournament to run
 
+(defn- click-save-schedule []
+  (swap! page-state assoc :loading-modal-showing? true
+                          :loading-modal-txt saving-txt)
+  (save-state!))
+
 (defn- on-change-time-input [game-id js-evt]
   (let [new-txt (aget js-evt "currentTarget" "value")]
     (swap! page-state assoc-in [:games game-id :start-time] new-txt)))
@@ -749,10 +756,10 @@
         games-list (sort-by :game-id games-list)]
     [:div
       [:div.time-input-row
-        [:button.btn-primary-7f246 {:on-click (fn [_] (save-state!))} "Save Schedule"]]
+        [:button.btn-primary-7f246 {:on-click click-save-schedule} "Save Schedule"]]
       (map-indexed GameTimeInput games-list)
       [:div.time-input-row
-        [:button.btn-primary-7f246 {:on-click (fn [_] (save-state!))} "Save Schedule"]]]))
+        [:button.btn-primary-7f246 {:on-click click-save-schedule} "Save Schedule"]]]))
 
 ;;------------------------------------------------------------------------------
 ;; Games Body
@@ -1029,7 +1036,7 @@
     (condp = active-page
       "teams" (TeamsPage teams)
       "schedule" (SchedulePage games)
-      :else (GamesList teams games active-page simulated-scoreA simulated-scoreB))
+      (GamesList teams games active-page simulated-scoreA simulated-scoreB))
     (Footer)
     (when menu-showing?
       (LeftNavMenu))
