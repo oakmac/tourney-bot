@@ -89,10 +89,19 @@
       (assoc game2 :scoreB 0)
       game2)))
 
+(defn- ensure-realistic-status
+  "Game status cannot be 'scheduled' if there are scores."
+  [game]
+  (if (and (= scheduled-status (:status game))
+           (not (zero? (+ (:scoreA game) (:scoreB game)))))
+    (assoc game :status final-status)
+    game))
+
 (defn ensure-game [game]
   (-> game
       ensure-game-status
-      ensure-scores))
+      ensure-scores
+      ensure-realistic-status))
 
 (defn- ensure-games
   "Games must have scores, status, and ids"

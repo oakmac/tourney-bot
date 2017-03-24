@@ -479,7 +479,8 @@
                           :loading-modal-txt saving-txt)
   (let [updated-game (:edit-game-modal-game @page-state)
         game-id (:game-id updated-game)
-        game-without-id (dissoc updated-game :game-id)]
+        game-without-id (dissoc updated-game :game-id)
+        game-without-id (ensure-game game-without-id)]
     (swap! page-state assoc-in [:games game-id] game-without-id))
   (save-state! save-game-edit-success))
 
