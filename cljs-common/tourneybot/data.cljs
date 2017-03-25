@@ -278,13 +278,40 @@
 ;; Tournament Advancer
 ;;------------------------------------------------------------------------------
 
+(def semis-1v4-game-id :game601)
+(def semis-2v3-game-id :game602)
+(def fifth-place-game-id :game603)
+
 (defn- advance-2017-indoor-tournament
   [state]
-  ; (let [all-swiss-games (filter is-swiss-game? (vals (:games state)))
-  ;       all-swiss-rounds-finished? (every? game-finished? all-swiss-games)]
-  ;   ; (log all-swiss-games)
-  ;   (log all-swiss-rounds-finished?))
-  state)
+  (let [games-list (map (fn [[game-id game]] (assoc game :game-id game-id)) (:games state))
+        all-swiss-games (filter is-swiss-game? games-list)
+        all-swiss-games-finished? (every? game-finished? all-swiss-games)
+        total-number-of-games-finished (count (filter game-finished? games-list))
+        semis-1v4-game (get-in state [:games semis-1v4-game-id])
+        semis-2v3-game (get-in state [:games semis-2v3-game-id])
+        fifth-place-game (get-in state [:games fifth-place-game-id])
+        new-state (atom state)]
+    (when (and (= "2017 Houston Indoor") (:title state)
+               all-swiss-games-finished?
+               (= total-number-of-games-finished (count all-swiss-games))
+               semis-1v4-game
+               semis-2v3-game
+               fifth-place-game)
+      (let [results (games->results (:teams state) (:games state))]
+        (when-not (:teamA-id semis-1v4-game)
+          (swap! new-state update-in [:games semis-1v4-game-id] merge
+            {:teamA-id (:team-id (nth results 0))
+             :teamB-id (:team-id (nth results 3))}))
+        (when-not (:teamA-id semis-2v3-game)
+          (swap! new-state update-in [:games semis-2v3-game-id] merge
+            {:teamA-id (:team-id (nth results 1))
+             :teamB-id (:team-id (nth results 2))}))
+        (when-not (:teamA-id fifth-place-game)
+          (swap! new-state update-in [:games fifth-place-game-id] merge
+            {:teamA-id (:team-id (nth results 4))
+             :teamB-id (:team-id (nth results 5))}))))
+    @new-state))
 
 (defn- advance-pending-game
   [state pending-game]
