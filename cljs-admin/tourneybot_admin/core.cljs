@@ -177,7 +177,7 @@
 ;;------------------------------------------------------------------------------
 
 ;; NOTE: this list should probably be in common or tourney-nerd?
-(def game-state-keys
+(def tournament-state-keys
   "page-state map keys that we want to save on the server"
   #{:teams :games :version :title :tiesAllowed})
 
@@ -198,8 +198,9 @@
    (swap! page-state update-in [:version] inc)
    ;; send the new state
    (let [current-state @page-state
-         game-state (select-keys current-state game-state-keys)]
-     (update-event! (:password current-state) game-state success-fn error-fn))))
+         tournament-state (select-keys current-state tournament-state-keys)
+         advanced-tournament-state (advance-tournament tournament-state)]
+     (update-event! (:password current-state) advanced-tournament-state success-fn error-fn))))
 
 ;;------------------------------------------------------------------------------
 ;; SVG Icon

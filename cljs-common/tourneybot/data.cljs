@@ -278,6 +278,14 @@
 ;; Tournament Advancer
 ;;------------------------------------------------------------------------------
 
+(defn- advance-2017-indoor-tournament
+  [state]
+  ; (let [all-swiss-games (filter is-swiss-game? (vals (:games state)))
+  ;       all-swiss-rounds-finished? (every? game-finished? all-swiss-games)]
+  ;   ; (log all-swiss-games)
+  ;   (log all-swiss-rounds-finished?))
+  state)
+
 (defn- advance-pending-game
   [state pending-game]
   (let [pending-game-id (:game-id pending-game)
@@ -325,4 +333,5 @@
    ie: calculates Swiss Round matchups, fills brackets, scores pools, etc"
   [state]
   (-> state
-      advance-pending-games))
+      advance-pending-games
+      advance-2017-indoor-tournament))
