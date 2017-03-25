@@ -278,6 +278,56 @@
 ;; Tournament Advancer
 ;;------------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
+
+(def a-lot-of-points 50)
+
+(def swiss-r2g3-id :game202)
+(def swiss-r2g4-id :game203)
+
+(defn- advance-swiss-r2
+  [state]
+  (let [new-state (atom state)
+        swiss-r2g3 (get-in state [:games swiss-r2g3-id])
+        swiss-r2g4 (get-in state [:games swiss-r2g4-id])]
+    (when (and (game-finished? swiss-r2g3)
+               (not (game-finished? swiss-r2g4)))
+      (let [teams (:teams state)
+            all-games (:games state)
+            games1 (assoc all-games swiss-r2g4-id (merge swiss-r2g4
+                                                         {:scoreA a-lot-of-points
+                                                          :scoreB 0
+                                                          :status final-status}))
+            matchups1 (create-matchups teams games1 2)
+            games2 (assoc all-games swiss-r2g4-id (merge swiss-r2g4
+                                                         {:scoreA 0
+                                                          :scoreB a-lot-of-points
+                                                          :status final-status}))
+            matchups2 (create-matchups teams games2 2)]
+        (log matchups1)
+        (log matchups2)))
+
+    @new-state))
+
+
+
+
+
+
+
+
+
+
 (defn- always-have-active-game
   [state]
   (let [new-state (atom state)
@@ -378,3 +428,5 @@
       advance-pending-games
       advance-2017-indoor-tournament
       always-have-active-game))
+      ;; TODO: not finished yet
+      ; advance-swiss-r2))
