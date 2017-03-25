@@ -178,8 +178,13 @@
 
 ;; NOTE: this list should probably be in common or tourney-nerd?
 (def tournament-state-keys
-  "page-state map keys that we want to save on the server"
-  #{:teams :games :version :title :tiesAllowed})
+  "page-state keys that we want to save on the server"
+  #{:alwaysHaveActiveGame
+    :games
+    :teams
+    :tiesAllowed
+    :title
+    :version})
 
 (defn- generic-success-fn []
   (swap! page-state assoc :loading-modal-showing? false))

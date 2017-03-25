@@ -278,6 +278,21 @@
 ;; Tournament Advancer
 ;;------------------------------------------------------------------------------
 
+(defn- always-have-active-game
+  [state]
+  (let [new-state (atom state)
+        games-list (map (fn [[game-id game]] (assoc game :game-id game-id)) (:games state))
+        any-game-finished? (some game-finished? games-list)
+        all-games-finished? (every? game-finished? games-list)
+        sorted-games (sort-by :start-time games-list)
+        unfinished-games (drop-while game-finished? sorted-games)
+        active-game (first unfinished-games)]
+    (when (and (:alwaysHaveActiveGame state)
+               any-game-finished?
+               (not all-games-finished?))
+      (swap! new-state assoc-in [:games (:game-id active-game) :status] in-progress-status))
+    @new-state))
+
 (def semis-1v4-game-id :game601)
 (def semis-2v3-game-id :game602)
 (def fifth-place-game-id :game603)
@@ -361,4 +376,5 @@
   [state]
   (-> state
       advance-pending-games
-      advance-2017-indoor-tournament))
+      advance-2017-indoor-tournament
+      always-have-active-game))
