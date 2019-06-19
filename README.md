@@ -78,12 +78,6 @@ The role of PHP in TourneyBot is minimal and could be swapped out for something
 else easily. It was just the most convenient hosting option for me for the 2016
 tournament.
 
-Currently, the admin side architecture is such that only **one instance** of it
-is allowed at a time. If you have more than one instance running at a time,
-there is a dangerous race condition that will occur where each instance will
-silently overwrite edits made in the other. This is obviously bad and fixing it
-is tracked at [Issue #10].
-
 ## Future Development
 
 TourneyBot was primarily created for the 2016 Houston Indoor Ultimate Tournament
